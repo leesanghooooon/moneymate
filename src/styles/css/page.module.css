@@ -1,0 +1,139 @@
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardBody {
+  flex: 1;
+  padding: 100px 30px 30px 30px;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: auto auto;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Card size classes */
+.card-1 { grid-column: span 1; }
+.card-2 { grid-column: span 2; }
+.card-3 { grid-column: span 3; }
+.card-4 { grid-column: span 4; }
+.card-5 { grid-column: span 5; }
+.card-6 { grid-column: span 6; }
+.card-7 { grid-column: span 7; }
+.card-8 { grid-column: span 8; }
+.card-9 { grid-column: span 9; }
+.card-10 { grid-column: span 10; }
+.card-11 { grid-column: span 11; }
+.card-12 { grid-column: span 12; }
+
+/* Default card positions */
+.dashboardGrid > *:nth-child(1) {
+  grid-column: 1 / span 9;
+  grid-row: 1;
+}
+
+.dashboardGrid > *:nth-child(2) {
+  grid-column: 10 / span 3;
+  grid-row: 1;
+}
+
+.dashboardGrid > *:nth-child(3) {
+  grid-column: 1 / span 4;
+  grid-row: 2;
+}
+
+.dashboardGrid > *:nth-child(4) {
+  grid-column: 5 / span 4;
+  grid-row: 2;
+}
+
+.dashboardGrid > *:nth-child(5) {
+  grid-column: 9 / span 4;
+  grid-row: 2;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .dashboardGrid {
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+  
+  .dashboardGrid > *:nth-child(1) {
+    grid-column: 1 / span 5;
+    grid-row: 1;
+  }
+  
+  .dashboardGrid > *:nth-child(2) {
+    grid-column: 6 / span 3;
+    grid-row: 1;
+  }
+  
+  .dashboardGrid > *:nth-child(3) {
+    grid-column: 1 / span 4;
+    grid-row: 2;
+  }
+  
+  .dashboardGrid > *:nth-child(4) {
+    grid-column: 5 / span 4;
+    grid-row: 2;
+  }
+  
+  .dashboardGrid > *:nth-child(5) {
+    grid-column: 1 / span 8;
+    grid-row: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+  }
+  
+  .dashboardBody {
+    padding: 80px 20px 20px 20px;
+  }
+  
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+  
+  .dashboardGrid > * {
+    grid-column: 1;
+  }
+  
+  .dashboardGrid > *:nth-child(1) {
+    grid-row: 1;
+  }
+  
+  .dashboardGrid > *:nth-child(2) {
+    grid-row: 2;
+  }
+  
+  .dashboardGrid > *:nth-child(3) {
+    grid-row: 3;
+  }
+  
+  .dashboardGrid > *:nth-child(4) {
+    grid-row: 4;
+  }
+  
+  .dashboardGrid > *:nth-child(5) {
+    grid-row: 5;
+  }
+}
