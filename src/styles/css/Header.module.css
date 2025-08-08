@@ -11,6 +11,35 @@
   left: 250px;
   right: 0;
   z-index: 999;
+  transition: left 0.3s ease;
+}
+
+.header.sidebarClosed {
+  left: 80px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: none;
+}
+
+.menuButton:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .searchContainer {

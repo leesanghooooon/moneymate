@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Sidebar from '../fragments/Sidebar';
 import Header from '../fragments/Header';
 import RevenueCard from './components/RevenueCard';
@@ -8,11 +11,17 @@ import OrderCard from './components/OrderCard';
 import styles from '../styles/css/page.module.css';
 
 export default function Home() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className={styles.dashboard}>
-      <Sidebar />
-      <div className={styles.mainContent}>
-        <Header />
+      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <div className={`${styles.mainContent} ${!sidebarOpen ? styles.sidebarClosed : ''}`}>
+        <Header onMenuClick={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className={styles.dashboardBody}>
           <div className={styles.dashboardGrid}>
             <RevenueCard />
