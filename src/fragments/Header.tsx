@@ -1,19 +1,44 @@
 'use client';
 
+import { useState } from 'react';
 import styles from '../styles/css/Header.module.css';
 
-interface HeaderProps {
-  onMenuClick?: () => void;
-  sidebarOpen?: boolean;
-}
+const Header = () => {
+  const [activeMenu, setActiveMenu] = useState('home');
 
-const Header = ({ onMenuClick, sidebarOpen = true }: HeaderProps) => {
+  const menuItems = [
+    { id: 'home', label: 'Home' },
+    { id: 'expenses', label: 'Expenses' },
+    { id: 'income', label: 'Income' },
+    { id: 'statistics', label: 'Statistics' },
+  ];
+
   return (
-    <header className={`${styles.header} ${!sidebarOpen ? styles.sidebarClosed : ''}`}>
+    <header className={styles.header}>
       <div className={styles.headerLeft}>
-        <button className={styles.menuButton} onClick={onMenuClick}>
-          ☰
-        </button>
+        <div className={styles.logo}>
+          <h2>MoneyMate</h2>
+        </div>
+      </div>
+      
+      <div className={styles.headerCenter}>
+        <nav className={styles.navigation}>
+          <ul className={styles.menuList}>
+            {menuItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
+                  onClick={() => setActiveMenu(item.id)}
+                >
+                  <span className={styles.label}>{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      
+      <div className={styles.headerRight}>
         <div className={styles.searchContainer}>
           <div className={styles.searchBox}>
             <span className={styles.searchIcon}>🔍</span>
@@ -24,16 +49,16 @@ const Header = ({ onMenuClick, sidebarOpen = true }: HeaderProps) => {
             />
           </div>
         </div>
-      </div>
-      
-      <div className={styles.userSection}>
-        <div className={styles.userProfile}>
-          <span className={styles.userIcon}>🍔</span>
-          <span className={styles.userName}>Delicious Burger</span>
-          <span className={styles.dropdownIcon}>▼</span>
-        </div>
-        <div className={styles.notificationIcon}>
-          🔔
+        
+        <div className={styles.userSection}>
+          <div className={styles.userProfile}>
+            <span className={styles.userIcon}>👤</span>
+            <span className={styles.userName}>User</span>
+            <span className={styles.dropdownIcon}>▼</span>
+          </div>
+          <div className={styles.notificationIcon}>
+            🔔
+          </div>
         </div>
       </div>
     </header>

@@ -35,53 +35,150 @@
   width: 100%;
 }
 
+.chartContainer {
+  display: flex;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.yAxis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  height: 160px;
+  margin-right: 20px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.yAxisTick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 0;
+  position: relative;
+}
+
+.yAxisLabel {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.yAxisLine {
+  flex: 1;
+  height: 1px;
+  background-color: #e5e7eb;
+  opacity: 0.3;
+}
+
+.chartArea {
+  flex: 1;
+  position: relative;
+}
+
 .chartBars {
   display: flex;
   align-items: end;
-  gap: 4px;
-  height: 120px;
-  margin-bottom: 16px;
+  gap: 12px;
+  height: 160px;
+  padding: 8px 0 0 0;
+  position: relative;
+}
+
+.chartBars::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e5e7eb;
+  opacity: 0.3;
 }
 
 .barGroup {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
   height: 100%;
   justify-content: end;
 }
 
-.bar {
-  width: 100%;
-  border-radius: 2px;
-  transition: opacity 0.2s ease;
+.barStack {
+  width: 28px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  border-radius: 6px;
+  overflow: visible;
 }
 
-.bar:hover {
+.barSegment {
+  width: 100%;
+  border-radius: 0;
+  transition: opacity 0.2s ease;
+  min-height: 1px;
+  position: relative;
+}
+
+.barSegment:hover {
   opacity: 0.8;
 }
 
-.previousBar {
-  opacity: 0.6;
+/* 가장 마지막 스택(Food)의 위쪽을 타원형으로 */
+.barStack .barSegment:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.xAxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.xAxisTick {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.xAxisLabel {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .legend {
   display: flex;
-  gap: 16px;
+  gap: 24px;
   justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
 }
 
 .legendItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   color: #6b7280;
+  white-space: nowrap;
 }
 
 .legendColor {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
 } 

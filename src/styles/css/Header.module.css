@@ -8,43 +8,91 @@
   padding: 0 30px;
   position: fixed;
   top: 0;
-  left: 250px;
+  left: 0;
   right: 0;
   z-index: 999;
-  transition: left 0.3s ease;
-}
-
-.header.sidebarClosed {
-  left: 80px;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 20px;
+  flex: 0 0 auto;
+}
+
+.logo h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #8b5cf6;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.headerCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
 }
 
-.menuButton {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  color: #6b7280;
-  transition: all 0.2s ease;
-  display: none;
+.navigation {
+  display: flex;
+  align-items: center;
 }
 
-.menuButton:hover {
+.menuList {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 32px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.menuItem:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
+.menuItem.active {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.menuItem.active:hover {
+  background: #7c3aed;
+}
+
+.label {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 0 0 auto;
+}
+
 .searchContainer {
-  flex: 1;
-  max-width: 400px;
+  width: 300px;
 }
 
 .searchBox {
