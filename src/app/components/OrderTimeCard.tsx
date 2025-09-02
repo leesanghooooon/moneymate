@@ -1,72 +1,61 @@
+// OrderTimeCard.tsx
 'use client';
 
 import DashboardCard from './DashboardCard';
-import styles from '../../styles/css/OrderTimeCard.module.css';
+// import styles from '../../styles/css/OrderTimeCard.module.css';
+import styles from '../../styles/css/MostOrderedCard.module.css';
 
 const OrderTimeCard = () => {
-  const timeData = [
-    { time: 'Morning', percentage: 28, color: '#f59e0b' },
-    { time: 'Afternoon', percentage: 40, color: '#3b82f6' },
-    { time: 'Evening', percentage: 32, color: '#8b5cf6' },
-  ];
+    const expenditures = [
+        { id: '0', name: '골프 라운딩', price: 180000, icon: '🏌️‍♂️' },
+        { id: '1', name: '고급 레스토랑 외식', price: 220000, icon: '🍷' },
+        { id: '2', name: '백화점 쇼핑', price: 350000, icon: '🛍️' },
+        { id: '3', name: '국내 호텔 숙박', price: 280000, icon: '🏨' },
+        { id: '4', name: '노트북 구매', price: 1500000, icon: '💻' },
+    ];
 
-  const totalOrders = 1890;
+    // KRW 포맷 함수 (3자리 콤마 + '원')
+    const formatKRW = (v: number) => `${v.toLocaleString('ko-KR')}원`;
 
-  return (
-    <DashboardCard title="Order Time" showViewReport={true} cardSize="card-3">
-      <div className={styles.period}>From 1-6 Dec, 2020</div>
-      
-      <div className={styles.chartContainer}>
-        <div className={styles.donutChart}>
-          <div className={styles.donutCenter}>
-            <div className={styles.totalOrders}>{totalOrders}</div>
-            <div className={styles.ordersLabel}>orders</div>
-          </div>
-          <svg className={styles.donutSvg} viewBox="0 0 120 120">
-            {timeData.map((data, index) => {
-              const radius = 50;
-              const circumference = 2 * Math.PI * radius;
-              const strokeDasharray = circumference;
-              const strokeDashoffset = circumference - (data.percentage / 100) * circumference;
-              const startAngle = index * 120; // 360 / 3 = 120 degrees
-              const x1 = 60 + radius * Math.cos((startAngle - 90) * Math.PI / 180);
-              const y1 = 60 + radius * Math.sin((startAngle - 90) * Math.PI / 180);
-              const x2 = 60 + radius * Math.cos((startAngle + 120 - 90) * Math.PI / 180);
-              const y2 = 60 + radius * Math.sin((startAngle + 120 - 90) * Math.PI / 180);
-              
-              const largeArcFlag = data.percentage > 50 ? 1 : 0;
-              const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
-              
-              return (
-                <path
-                  key={data.time}
-                  d={pathData}
-                  fill="none"
-                  stroke={data.color}
-                  strokeWidth="8"
-                  strokeDasharray={strokeDasharray}
-                  strokeDashoffset={strokeDashoffset}
-                  transform="rotate(-90 60 60)"
-                />
-              );
-            })}
-          </svg>
-        </div>
-        
-        <div className={styles.legend}>
-          {timeData.map((data) => (
-            <div key={data.time} className={styles.legendItem}>
-              <div 
-                className={styles.legendColor} 
-                style={{ backgroundColor: data.color }}
-              ></div>
-              <span className={styles.legendText}>{data.time} ({data.percentage}%)</span>
+    // 금액 내림차순 정렬 후 TOP5만 사용
+    const topFive = [...expenditures]
+        .sort((a, b) => b.price - a.price)
+        .slice(0, 5);
+
+    return (
+        <DashboardCard title="The largest expenditure Top 5" cardSize="card-4">
+            <div className={styles.foodList}>
+                {topFive.map((item, idx) => (
+                    <div key={item.id} className={styles.foodItem} style={{ alignItems: 'center', gap: 12 }}>
+                        {/* 순위 뱃지 */}
+                        <div
+                            aria-label={`rank-${idx + 1}`}
+                            style={{
+                                minWidth: 20,
+                                fontSize: 25,
+                                fontWeight: 700,
+                                color: '#000',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {idx + 1}
+                        </div>
+
+                        {/* 아이콘 */}
+                        <div className={styles.foodIcon} style={{ fontSize: 22 }}>{item.icon}</div>
+
+                        {/* 이름/금액 */}
+                        <div className={styles.foodInfo} style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className={styles.foodName} style={{ fontWeight: 600 }}>{item.name}</div>
+                            <div className={styles.foodPrice} style={{ opacity: 0.8 }}>
+                                {formatKRW(item.price)}
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
-          ))}
-        </div>
-      </div>
-    </DashboardCard>
-  );
+        </DashboardCard>
+    );
 };
 
-export default OrderTimeCard; 
+export default OrderTimeCard;
