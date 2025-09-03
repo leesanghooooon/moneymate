@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '../fragments/Header';
 import RevenueCard from './components/RevenueCard';
 import OrderTimeCard from './components/OrderTimeCard';
 import RatingCard from './components/RatingCard';
@@ -11,7 +10,6 @@ import styles from '../styles/css/page.module.css';
 export default function Home() {
   return (
     <div className={styles.dashboard}>
-      <Header />
       <main className={styles.dashboardBody}>
         <div className={styles.dashboardGrid}>
           <RevenueCard />
