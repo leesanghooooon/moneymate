@@ -9,10 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "mysql2": "^3.14.4",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-tooltip": "^5.29.1"
+    "react-tooltip": "^5.29.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-react": "^5.28.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
