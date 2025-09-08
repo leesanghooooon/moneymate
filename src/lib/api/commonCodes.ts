@@ -9,18 +9,16 @@ export type CommonCode = {
   updated_at?: string;
 };
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Request failed (${res.status}): ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
+import { get } from './common';
 
 export async function getCommonCodes(groupCode: string, useYn: 'Y' | 'N' = 'Y'): Promise<CommonCode[]> {
-  const data = await fetchJson<{ data: CommonCode[] }>(`/api/common-codes?grp_cd=${encodeURIComponent(groupCode)}&use_yn=${useYn}`);
-  return data.data || [];
+  const response = await get<{ data: CommonCode[] }>('/common-codes', {
+    params: {
+      grp_cd: groupCode,
+      use_yn: useYn
+    }
+  });
+  return response.data.data || [];
 }
 
 export async function getCategories(): Promise<CommonCode[]> {
@@ -33,4 +31,29 @@ export async function getPayMethods(): Promise<CommonCode[]> {
 
 export async function getBanks(): Promise<CommonCode[]> {
   return getCommonCodes('BANK');
+}
+
+export interface Wallet {
+  wlt_id: number;
+  wlt_name: string;
+  wlt_type: string;
+  bank_cd: string | null;
+  is_default: string;
+}
+
+export async function getWallets(usr_id: string, wlt_type?: string): Promise<Wallet[]> {
+  const params: Record<string, string> = { usr_id };
+  if (wlt_type) {
+    params.wlt_type = wlt_type;
+  }
+  const response = await get<{ data: Wallet[] }>('/wallets', { params });
+  return response.data.data;
+}
+
+/**
+ * 카드사 정보를 조회하는 API
+ * @returns Promise<CommonCode[]> 카드사 코드 목록
+ */
+export async function getCards(): Promise<CommonCode[]> {
+  return getCommonCodes('CARD');
 } 

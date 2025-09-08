@@ -1,64 +1,55 @@
-import { query } from './db';
-
-export type WhereFilters = Record<string, any>;
-
-function buildWhereClause(filters: WhereFilters = {}, allowedFields: string[] = []) {
-  const conditions: string[] = [];
-  const params: any[] = [];
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (allowedFields.length > 0 && !allowedFields.includes(key)) continue;
-    if (value === undefined || value === null || value === '') continue;
-    conditions.push(`${key} = ?`);
-    params.push(value);
-  }
-
-  const clause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
-  return { clause, params };
+export interface Database {
+  MMT_WLT_MST: WalletTable;
+  MMT_CMM_CD_MST: CommonCodeTable;
 }
 
-export async function dbSelect(options: {
-  table: string;
-  columns?: string[];
-  filters?: WhereFilters;
-  allowedFilterFields?: string[];
-  orderBy?: string;
-  limit?: number;
-}): Promise<any[]> {
-  const { table, columns = ['*'], filters = {}, allowedFilterFields = [], orderBy, limit } = options;
-  const { clause, params } = buildWhereClause(filters, allowedFilterFields);
-  const cols = columns.join(', ');
-  const order = orderBy ? ` ORDER BY ${orderBy}` : '';
-  const lim = limit && limit > 0 ? ` LIMIT ${limit}` : '';
-  const sql = `SELECT ${cols} FROM ${table}${clause}${order}${lim}`;
-  return query<any>(sql, params);
+export interface WalletTable {
+  wlt_id: number;
+  usr_id: string;
+  wlt_type: string;
+  wlt_name: string;
+  bank_cd: string | null;
+  is_default: string;
+  use_yn: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export async function dbInsert(options: { table: string; data: Record<string, any> }) {
-  const { table, data } = options;
-  const keys = Object.keys(data);
-  const placeholders = keys.map(() => '?').join(', ');
-  const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-  const params = keys.map((k) => data[k]);
-  const rows: any = await query<any>(sql, params);
-  return rows;
+export interface CommonCodeTable {
+  grp_cd: string;
+  cd: string;
+  cd_nm: string;
+  cd_desc: string | null;
+  sort_order: number;
+  use_yn: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export async function dbUpdate(options: { table: string; data: Record<string, any>; filters: WhereFilters; allowedFilterFields?: string[] }) {
-  const { table, data, filters, allowedFilterFields = [] } = options;
-  const setKeys = Object.keys(data);
-  const setClause = setKeys.map((k) => `${k} = ?`).join(', ');
-  const setParams = setKeys.map((k) => data[k]);
-  const { clause, params } = buildWhereClause(filters, allowedFilterFields);
-  const sql = `UPDATE ${table} SET ${setClause}${clause}`;
-  const rows: any = await query<any>(sql, [...setParams, ...params]);
-  return rows;
+export interface Database {
+  MMT_WLT_MST: WalletTable;
+  MMT_CMM_CD_MST: CommonCodeTable;
 }
 
-export async function dbDelete(options: { table: string; filters: WhereFilters; allowedFilterFields?: string[] }) {
-  const { table, filters, allowedFilterFields = [] } = options;
-  const { clause, params } = buildWhereClause(filters, allowedFilterFields);
-  const sql = `DELETE FROM ${table}${clause}`;
-  const rows: any = await query<any>(sql, params);
-  return rows;
+export interface WalletTable {
+  wlt_id: number;
+  usr_id: string;
+  wlt_type: string;
+  wlt_name: string;
+  bank_cd: string | null;
+  is_default: string;
+  use_yn: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CommonCodeTable {
+  grp_cd: string;
+  cd: string;
+  cd_nm: string;
+  cd_desc: string | null;
+  sort_order: number;
+  use_yn: string;
+  created_at: Date;
+  updated_at: Date;
 }

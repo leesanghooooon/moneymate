@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbSelect, dbInsert, dbUpdate, dbDelete } from '../../../lib/db-common';
+import { dbSelect, dbInsert, dbUpdate, dbDelete } from '../../../lib/db-utils';
 
 // GET /api/common-codes?grp_cd=CATEGORY&use_yn=Y
 export async function GET(request: NextRequest) {

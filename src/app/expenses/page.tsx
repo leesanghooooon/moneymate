@@ -3,26 +3,28 @@
 import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState } from 'react';
-import { getCategories, getPayMethods, getBanks, CommonCode } from '../../lib/api/commonCodes';
+import { getCategories, getPayMethods, getBanks, getCards, getWallets, CommonCode, Wallet } from '../../lib/api/commonCodes';
+import { post, ApiError } from '../../lib/api/common';
 
 export default function ExpensesPage() {
   const [categories, setCategories] = useState<CommonCode[]>([]);
   const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
   const [banks, setBanks] = useState<CommonCode[]>([]);
+  const [cards, setCards] = useState<CommonCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedPayMethod, setSelectedPayMethod] = useState<string>('');
-  const [selectedBank, setSelectedBank] = useState<string>('');
+  const [selectedWallet, setSelectedWallet] = useState<string>('');
+  const [wallets, setWallets] = useState<Wallet[]>([]);
 
   const [openWalletModal, setOpenWalletModal] = useState(false);
   const [savingWallet, setSavingWallet] = useState(false);
   const [walletForm, setWalletForm] = useState({
-    usr_id: '', // TODO: 로그인 연동 시 채우기
+    usr_id: 'tester01', // 테스트용 사용자 ID (실제 DB에 존재하는 ID로 변경 필요)
     wlt_type: '',
     wlt_name: '',
     bank_cd: '',
-    card_number: '',
     is_default: 'N',
   });
 
@@ -31,20 +33,25 @@ export default function ExpensesPage() {
     return v === 'card' || v === '카드';
   })();
 
-  const isWalletCardSelected = (() => {
-    const v = (walletForm.wlt_type || '').toLowerCase();
-    return v === 'card' || v === '카드';
+  const getWalletCardType = (() => {
+    const v = walletForm.wlt_type;
+    if (v === 'CHECK_CARD') return 'check';
+    if (v === 'CREDIT_CARD') return 'credit';
+    return null;
   })();
+
+  const isWalletCardSelected = getWalletCardType !== null;
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    Promise.all([getCategories(), getPayMethods(), getBanks()])
-      .then(([cats, pays, bks]) => {
+    Promise.all([getCategories(), getPayMethods(), getBanks(), getCards()])
+      .then(([cats, pays, bks, crds]) => {
         if (!mounted) return;
         setCategories(cats);
         setPayMethods(pays);
         setBanks(bks);
+        setCards(crds);
         setLoading(false);
       })
       .catch((e) => {
@@ -55,11 +62,42 @@ export default function ExpensesPage() {
     return () => { mounted = false; };
   }, []);
 
+  // 지출수단 변경 시 해당하는 지갑 목록 조회
   useEffect(() => {
-    if (!isCardSelected && selectedBank) {
-      setSelectedBank('');
+    if (!selectedPayMethod) {
+      setWallets([]);
+      setSelectedWallet('');
+      return;
     }
-  }, [isCardSelected, selectedBank]);
+
+    let wlt_type: string | undefined;
+    switch (selectedPayMethod.toUpperCase()) {
+      case 'CASH':
+        wlt_type = 'CASH';
+        break;
+      case 'CHECK_CARD':
+        wlt_type = 'CHECK_CARD';
+        break;
+      case 'CREDIT_CARD':
+        wlt_type = 'CREDIT_CARD';
+        break;
+      default:
+        setWallets([]);
+        setSelectedWallet('');
+        return;
+    }
+
+    getWallets(walletForm.usr_id, wlt_type)
+      .then(walletList => {
+        setWallets(walletList);
+        setSelectedWallet('');
+      })
+      .catch(error => {
+        console.error('지갑 목록 조회 실패:', error);
+        setWallets([]);
+        setSelectedWallet('');
+      });
+  }, [selectedPayMethod, walletForm.usr_id]);
 
   useEffect(() => {
     if (!isWalletCardSelected && walletForm.bank_cd) {
@@ -70,24 +108,22 @@ export default function ExpensesPage() {
   async function submitWallet() {
     try {
       setSavingWallet(true);
-      const res = await fetch('/api/wallets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usr_id: walletForm.usr_id || 'demo-user',
-          wlt_type: walletForm.wlt_type,
-          wlt_name: walletForm.wlt_name,
-          bank_cd: walletForm.bank_cd || null,
-          card_number: walletForm.card_number || null,
-          is_default: walletForm.is_default || 'N',
-        }),
+      await post('/wallets', {
+        usr_id: walletForm.usr_id,
+        wlt_type: walletForm.wlt_type,
+        wlt_name: walletForm.wlt_name,
+        bank_cd: walletForm.bank_cd || null,
+        is_default: walletForm.is_default || 'N',
       });
-      if (!res.ok) throw new Error(await res.text());
       setOpenWalletModal(false);
-      setWalletForm({ usr_id: '', wlt_type: '', wlt_name: '', bank_cd: '', card_number: '', is_default: 'N' });
+      setWalletForm({ usr_id: 'USR_2024_0001', wlt_type: '', wlt_name: '', bank_cd: '', is_default: 'N' });
       alert('지갑이 등록되었습니다.');
-    } catch (e: any) {
-      alert(e?.message || '지갑 등록 실패');
+    } catch (error) {
+      if (error instanceof ApiError) {
+        alert(error.message);
+      } else {
+        alert('지갑 등록 실패');
+      }
     } finally {
       setSavingWallet(false);
     }
@@ -133,16 +169,16 @@ export default function ExpensesPage() {
                     </select>
                   </div>
                   <div className={styles.field}>
-                    <label className={styles.label}>카드사</label>
+                    <label className={styles.label}>지갑 선택</label>
                     <select
                       className={styles.select}
-                      value={selectedBank}
-                      disabled={loading || !isCardSelected}
-                      onChange={(e) => setSelectedBank(e.target.value)}
+                      value={selectedWallet}
+                      disabled={loading || !selectedPayMethod || wallets.length === 0}
+                      onChange={(e) => setSelectedWallet(e.target.value)}
                     >
                       <option value="" disabled>선택하세요</option>
-                      {banks.map((b) => (
-                        <option key={b.cd} value={b.cd}>{b.cd_nm}</option>
+                      {wallets.map((w) => (
+                        <option key={w.wlt_id} value={w.wlt_id}>{w.wlt_name}</option>
                       ))}
                     </select>
                   </div>
@@ -237,7 +273,11 @@ export default function ExpensesPage() {
                           </select>
                         </div>
                         <div className={styles.field}>
-                          <label className={styles.label}>은행(카드사) 코드</label>
+                          <label className={styles.label}>
+                            {getWalletCardType === 'check' ? '은행 코드' : 
+                             getWalletCardType === 'credit' ? '카드사 코드' : 
+                             '은행/카드사 코드'}
+                          </label>
                           <select
                             className={styles.select}
                             value={walletForm.bank_cd}
@@ -245,21 +285,13 @@ export default function ExpensesPage() {
                             onChange={(e) => setWalletForm({ ...walletForm, bank_cd: e.target.value })}
                           >
                             <option value="">선택 없음</option>
-                            {banks.map((b) => (
+                            {getWalletCardType === 'check' && banks.map((b) => (
                               <option key={b.cd} value={b.cd}>{b.cd_nm}</option>
                             ))}
+                            {getWalletCardType === 'credit' && cards.map((c) => (
+                              <option key={c.cd} value={c.cd}>{c.cd_nm}</option>
+                            ))}
                           </select>
-                        </div>
-                      </div>
-                      <div className={styles.modalRow}>
-                        <div className={styles.field}>
-                          <label className={styles.label}>카드번호</label>
-                          <input
-                            className={styles.input}
-                            value={walletForm.card_number}
-                            onChange={(e) => setWalletForm({ ...walletForm, card_number: e.target.value })}
-                            placeholder="선택적으로 입력"
-                          />
                         </div>
                         <div className={styles.field}>
                           <label className={styles.label}>기본 지갑</label>
@@ -268,9 +300,17 @@ export default function ExpensesPage() {
                             value={walletForm.is_default}
                             onChange={(e) => setWalletForm({ ...walletForm, is_default: e.target.value })}
                           >
-                            <option value="N">N</option>
-                            <option value="Y">Y</option>
+                            <option value="N">아니오</option>
+                            <option value="Y">예</option>
                           </select>
+                        </div>
+                      </div>
+                      <div className={styles.modalRow}>
+                        <div className={styles.field}>
+                          {/* 빈 공간을 위한 placeholder */}
+                        </div>
+                        <div className={styles.field}>
+                          {/* 빈 공간을 위한 placeholder */}
                         </div>
                         <div className={styles.field}>
                           {/* 빈 공간을 위한 placeholder */}
