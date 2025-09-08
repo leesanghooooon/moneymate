@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/css/Header.module.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const Header = () => {
+  const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('home');
   const router = useRouter();
 
@@ -14,6 +15,18 @@ const Header = () => {
     { id: 'income', label: 'Income' },
     { id: 'statistics', label: 'Statistics' },
   ];
+
+  // URL 경로에 따라 active 메뉴 설정
+  useEffect(() => {
+    const currentPath = pathname;
+    const currentMenuItem = menuItems.find(item => item.path === currentPath);
+    if (currentMenuItem) {
+      setActiveMenu(currentMenuItem.id);
+    } else {
+      // 기본값으로 home 설정
+      setActiveMenu('home');
+    }
+  }, [pathname]);
 
   const handleClick = (item: { id: string; path?: string }) => {
     setActiveMenu(item.id);

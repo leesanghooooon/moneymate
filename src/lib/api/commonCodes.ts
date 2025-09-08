@@ -33,6 +33,10 @@ export async function getBanks(): Promise<CommonCode[]> {
   return getCommonCodes('BANK');
 }
 
+export async function getIncome(): Promise<CommonCode[]> {
+  return getCommonCodes('INCOME');
+}
+
 export interface Wallet {
   wlt_id: string;
   wlt_name: string;

@@ -45,6 +45,11 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .form {
@@ -53,10 +58,16 @@
   gap: 12px;
 }
 
+/* 기본 row는 3개 컬럼 */
 .row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+/* 첫 번째 row만 4개 컬럼 */
+.row:first-of-type {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .field {
@@ -78,6 +89,7 @@
   border-radius: 8px;
   font-size: 14px;
   background: #ffffff;
+  transition: border-color 0.2s;
 }
 
 .input:focus {
@@ -171,20 +183,21 @@
 }
 
 .buttonGhost {
-  height: 36px;
-  padding: 0 16px;
   background: transparent;
   color: #6b7280;
-  font-weight: 500;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .buttonGhost:hover {
   background: #f9fafb;
   border-color: #9ca3af;
+  color: #374151;
 }
 
 .buttonSecondary {
@@ -204,6 +217,11 @@
 }
 
 .listSection {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -244,108 +262,92 @@
 }
 
 .ledgerDate {
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
+  font-weight: 500;
 }
 
 .ledgerMerchant {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ledgerWallet {
+  font-size: 11px;
+  color: #8b5cf6;
+  background: #faf5ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
 }
 
 .ledgerRight {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 4px;
+  align-items: flex-end;
 }
 
 .ledgerCategory {
-  font-size: 12px;
-  color: #4f46e5;
-  background: #eef2ff;
-  padding: 2px 8px;
-  border-radius: 9999px;
+  font-size: 11px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .ledgerAmount {
   font-size: 14px;
-  font-weight: 800;
-  color: #ef4444;
-  width: 100%;
-  text-align: right;
+  font-weight: 700;
+  color: #dc2626;
 }
 
-/* 섹션 간 하단 여백 */
-.expensesPage section {
-  margin-bottom: 16px;
+.ledgerInstallment {
+  font-size: 10px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 
-.expensesPage section:last-of-type {
-  margin-bottom: 0;
-}
-
-@media (max-width: 1280px) {
-  .ledgerList {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 960px) {
-  .row {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-  .actions {
-    justify-content: stretch;
-  }
-  .headerTop {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .ledgerList {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .ledgerList {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 모달 애니메이션 - 팝업 위치를 더 아래쪽으로 조정 */
+/* 모달 스타일 */
 .modalOverlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.2);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: flex-end;
   align-items: flex-start;
-  padding: 120px 24px 24px 24px; /* 80px에서 120px로 증가하여 더 아래쪽에 배치 */
+  justify-content: flex-end;
+  padding: 120px 20px 20px 20px;
   z-index: 1000;
   animation: fadeIn 0.2s ease-out;
 }
 
 .modalPanel {
-  width: 420px;
-  max-width: calc(100% - 24px);
   background: #ffffff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  padding: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
   animation: slideInFromRight 0.3s ease-out;
-  transform-origin: top right;
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modalTitle {
@@ -355,38 +357,48 @@
 }
 
 .modalClose {
-  background: transparent;
+  background: none;
   border: none;
-  cursor: pointer;
   font-size: 18px;
   color: #6b7280;
-  transition: color 0.2s ease;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
 .modalClose:hover {
+  background: #f3f4f6;
   color: #374151;
+}
+
+.modalBody {
+  padding: 20px;
 }
 
 .modalForm {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .modalRow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .modalActions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
 }
 
-/* 애니메이션 키프레임 */
+/* 애니메이션 */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -399,10 +411,54 @@
 @keyframes slideInFromRight {
   from {
     opacity: 0;
-    transform: translateX(100%) scale(0.95);
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .ledgerList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 960px) {
+  .row {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .row:first-of-type {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .actions {
+    justify-content: stretch;
+  }
+  .headerTop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .ledgerList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .modalRow {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .ledgerList {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  .modalOverlay {
+    padding: 100px 10px 10px 10px;
+  }
+  .modalPanel {
+    max-width: 100%;
   }
 }

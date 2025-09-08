@@ -8,6 +8,11 @@ import { post, ApiError } from '../../lib/api/common';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
 
+const TRX_TYPES = [
+  { code: 'EXPENSE', label: '지출' },
+  { code: 'INCOME', label: '수입' }
+];
+
 const PAYMENT_TYPES: Record<PaymentType, { code: PaymentType; label: string }> = {
   ONETIME: { code: 'ONETIME', label: '일시불' },
   INSTALLMENT: { code: 'INSTALLMENT', label: '할부' },
@@ -34,6 +39,7 @@ export default function ExpensesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedPayMethod, setSelectedPayMethod] = useState<string>('');
+  const [selectedTrxType, setSelectedTrxType] = useState<string>('EXPENSE');
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [wallets, setWallets] = useState<Wallet[]>([]);
 
@@ -157,7 +163,7 @@ export default function ExpensesPage() {
       const data = {
         usr_id: walletForm.usr_id, // 현재 테스트용 ID 사용
         wlt_id: selectedWallet,
-        trx_type: 'EXPENSE',
+        trx_type: selectedTrxType,
         trx_date: expenseForm.trx_date,
         amount: Number(expenseForm.amount),
         category_cd: expenseForm.category_cd,
@@ -192,6 +198,7 @@ export default function ExpensesPage() {
         is_fixed: 'N'
       });
       setSelectedPayMethod('');
+      setSelectedTrxType('EXPENSE');
       setSelectedWallet('');
       
     } catch (error) {
@@ -293,6 +300,19 @@ export default function ExpensesPage() {
                       value={expenseForm.trx_date}
                       onChange={(e) => setExpenseForm({ ...expenseForm, trx_date: e.target.value })}
                     />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>거래유형</label>
+                    <select
+                      className={styles.select}
+                      value={selectedTrxType}
+                      disabled={loading}
+                      onChange={(e) => setSelectedTrxType(e.target.value)}
+                    >
+                      {TRX_TYPES.map((type) => (
+                        <option key={type.code} value={type.code}>{type.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>결제수단</label>
@@ -536,13 +556,14 @@ export default function ExpensesPage() {
                       <div className={styles.ledgerLeft}>
                         <div className={styles.ledgerDate}>{formatDate(expense.trx_date)}</div>
                         <div className={styles.ledgerMerchant}>
-                          {expense.memo || expense.wlt_name}
+                          {expense.memo || '메모 없음'}
                           {expense.installment_info && (
-                            <span style={{ fontSize: '10px', color: '#6b7280', marginLeft: '4px' }}>
+                            <span className={styles.ledgerInstallment}>
                               ({expense.installment_info})
                             </span>
                           )}
                         </div>
+                        <div className={styles.ledgerWallet}>{expense.wlt_name}</div>
                       </div>
                       <div className={styles.ledgerRight}>
                         <span className={styles.ledgerCategory}>{expense.category_name}</span>
