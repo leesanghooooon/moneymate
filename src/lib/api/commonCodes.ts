@@ -34,7 +34,7 @@ export async function getBanks(): Promise<CommonCode[]> {
 }
 
 export interface Wallet {
-  wlt_id: number;
+  wlt_id: string;
   wlt_name: string;
   wlt_type: string;
   bank_cd: string | null;

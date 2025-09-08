@@ -15,6 +15,64 @@ export async function GET(request: NextRequest) {
       },
     ],
     paths: {
+      '/expenses': {
+        post: {
+          summary: '지출 등록',
+          description: '지출 내역을 등록합니다. 할부 결제의 경우 과거 회차도 자동으로 등록됩니다.',
+          tags: ['Expenses'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ExpenseCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '지출 등록 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: { 
+                        type: 'string',
+                        example: '지출이 등록되었습니다.'
+                      },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          registered_count: {
+                            type: 'integer',
+                            description: '등록된 지출 건수'
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/common-codes': {
         get: {
           summary: '공통 코드 조회',
@@ -171,10 +229,69 @@ export async function GET(request: NextRequest) {
     },
     components: {
       schemas: {
+        ExpenseCreateRequest: {
+          type: 'object',
+          required: ['usr_id', 'wlt_id', 'trx_type', 'trx_date', 'amount', 'category_cd'],
+          properties: {
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            wlt_id: {
+              type: 'string',
+              description: '지갑 ID'
+            },
+            trx_type: {
+              type: 'string',
+              enum: ['INCOME', 'EXPENSE'],
+              description: '거래 유형'
+            },
+            trx_date: {
+              type: 'string',
+              format: 'date',
+              description: '거래 일자 (YYYY-MM-DD)'
+            },
+            amount: {
+              type: 'number',
+              description: '거래 금액'
+            },
+            category_cd: {
+              type: 'string',
+              description: '카테고리 코드'
+            },
+            memo: {
+              type: 'string',
+              description: '메모 (선택사항)'
+            },
+            is_fixed: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              default: 'N',
+              description: '고정 지출 여부'
+            },
+            is_installment: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              default: 'N',
+              description: '할부 여부'
+            },
+            installment_months: {
+              type: 'integer',
+              minimum: 2,
+              maximum: 60,
+              description: '할부 개월 수 (할부인 경우 필수)'
+            },
+            installment_seq: {
+              type: 'integer',
+              minimum: 1,
+              description: '현재 할부 회차 (할부인 경우 필수)'
+            }
+          }
+        },
         Wallet: {
           type: 'object',
           properties: {
-            wlt_id: { type: 'integer', description: '지갑 ID' },
+            wlt_id: { type: 'string', description: '지갑 ID' },
             usr_id: { type: 'string', description: '사용자 ID' },
             wlt_type: {
               type: 'string',

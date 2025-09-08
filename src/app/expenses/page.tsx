@@ -6,6 +6,14 @@ import { useEffect, useState } from 'react';
 import { getCategories, getPayMethods, getBanks, getCards, getWallets, CommonCode, Wallet } from '../../lib/api/commonCodes';
 import { post, ApiError } from '../../lib/api/common';
 
+type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
+
+const PAYMENT_TYPES: Record<PaymentType, { code: PaymentType; label: string }> = {
+  ONETIME: { code: 'ONETIME', label: '일시불' },
+  INSTALLMENT: { code: 'INSTALLMENT', label: '할부' },
+  SUBSCRIPTION: { code: 'SUBSCRIPTION', label: '구독' }
+};
+
 export default function ExpensesPage() {
   const [categories, setCategories] = useState<CommonCode[]>([]);
   const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
@@ -17,6 +25,18 @@ export default function ExpensesPage() {
   const [selectedPayMethod, setSelectedPayMethod] = useState<string>('');
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [wallets, setWallets] = useState<Wallet[]>([]);
+
+  // 지출 등록 폼 state
+  const [expenseForm, setExpenseForm] = useState({
+    trx_date: new Date().toISOString().slice(0, 10),
+    amount: '',
+    category_cd: '',
+    memo: '',
+    payment_type: 'ONETIME' as PaymentType,
+    installment_months: '',
+    installment_seq: '',
+    is_fixed: 'N'
+  });
 
   const [openWalletModal, setOpenWalletModal] = useState(false);
   const [savingWallet, setSavingWallet] = useState(false);
@@ -105,6 +125,61 @@ export default function ExpensesPage() {
     }
   }, [isWalletCardSelected, walletForm.bank_cd]);
 
+  async function submitExpense(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (!selectedWallet || !expenseForm.category_cd || !expenseForm.amount) {
+      alert('필수 정보를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const data = {
+        usr_id: walletForm.usr_id, // 현재 테스트용 ID 사용
+        wlt_id: selectedWallet,
+        trx_type: 'EXPENSE',
+        trx_date: expenseForm.trx_date,
+        amount: Number(expenseForm.amount),
+        category_cd: expenseForm.category_cd,
+        memo: expenseForm.memo || null,
+        is_fixed: expenseForm.is_fixed,
+        is_installment: expenseForm.payment_type === PAYMENT_TYPES.INSTALLMENT.code ? 'Y' : 'N'
+      };
+
+      // 할부 정보 추가
+      if (expenseForm.payment_type === PAYMENT_TYPES.INSTALLMENT.code) {
+        Object.assign(data, {
+          installment_months: Number(expenseForm.installment_months),
+          installment_seq: Number(expenseForm.installment_seq)
+        });
+      }
+
+      const response = await post('/expenses', data);
+      alert('지출이 등록되었습니다.');
+      
+      // 폼 초기화
+      setExpenseForm({
+        trx_date: new Date().toISOString().slice(0, 10),
+        amount: '',
+        category_cd: '',
+        memo: '',
+        payment_type: 'ONETIME' as PaymentType,
+        installment_months: '',
+        installment_seq: '',
+        is_fixed: 'N'
+      });
+      setSelectedPayMethod('');
+      setSelectedWallet('');
+      
+    } catch (error) {
+      if (error instanceof ApiError) {
+        alert(error.message);
+      } else {
+        alert('지출 등록 중 오류가 발생했습니다.');
+      }
+    }
+  }
+
   async function submitWallet() {
     try {
       setSavingWallet(true);
@@ -116,7 +191,7 @@ export default function ExpensesPage() {
         is_default: walletForm.is_default || 'N',
       });
       setOpenWalletModal(false);
-      setWalletForm({ usr_id: 'USR_2024_0001', wlt_type: '', wlt_name: '', bank_cd: '', is_default: 'N' });
+      setWalletForm({ usr_id: 'tester01', wlt_type: '', wlt_name: '', bank_cd: '', is_default: 'N' });
       alert('지갑이 등록되었습니다.');
     } catch (error) {
       if (error instanceof ApiError) {
@@ -148,11 +223,16 @@ export default function ExpensesPage() {
 
             <section className={styles.formSection}>
               {error && <div style={{ color: '#ef4444', marginBottom: 8 }}>{error}</div>}
-              <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+              <form className={styles.form} onSubmit={submitExpense}>
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>날짜</label>
-                    <input type="date" className={styles.input} defaultValue={new Date().toISOString().slice(0, 10)} />
+                    <input 
+                      type="date" 
+                      className={styles.input} 
+                      value={expenseForm.trx_date}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, trx_date: e.target.value })}
+                    />
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>결제수단</label>
@@ -187,7 +267,12 @@ export default function ExpensesPage() {
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>카테고리</label>
-                    <select className={styles.select} defaultValue="" disabled={loading}>
+                    <select 
+                      className={styles.select} 
+                      value={expenseForm.category_cd} 
+                      disabled={loading}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, category_cd: e.target.value })}
+                    >
                       <option value="" disabled>선택하세요</option>
                       {categories.map((c) => (
                         <option key={c.cd} value={c.cd}>{c.cd_nm}</option>
@@ -196,11 +281,25 @@ export default function ExpensesPage() {
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>금액</label>
-                    <input type="number" className={styles.input} min={0} step={100} placeholder="0" />
+                    <input 
+                      type="number" 
+                      className={styles.input} 
+                      min={0} 
+                      step={100} 
+                      placeholder="0"
+                      value={expenseForm.amount}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                    />
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>가맹점/메모</label>
-                    <input type="text" className={styles.input} placeholder="예: 스타벅스, 점심" />
+                    <input 
+                      type="text" 
+                      className={styles.input} 
+                      placeholder="예: 스타벅스, 점심"
+                      value={expenseForm.memo}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, memo: e.target.value })}
+                    />
                   </div>
                 </div>
 
@@ -208,28 +307,60 @@ export default function ExpensesPage() {
                   <div className={styles.field}>
                     <label className={styles.label}>지출 형태</label>
                     <div className={styles.segmented}>
-                      <label className={styles.segmentedItem}>
-                        <input type="radio" name="spendingType" defaultChecked />
-                        <span>일시불</span>
-                      </label>
-                      <label className={styles.segmentedItem}>
-                        <input type="radio" name="spendingType" />
-                        <span>구독</span>
-                      </label>
-                      <label className={styles.segmentedItem}>
-                        <input type="radio" name="spendingType" />
-                        <span>할부</span>
-                      </label>
+                      {Object.values(PAYMENT_TYPES).map((type) => (
+                        <label key={type.code} className={styles.segmentedItem}>
+                          <input 
+                            type="radio" 
+                            name="paymentType"
+                            checked={expenseForm.payment_type === type.code}
+                            onChange={() => setExpenseForm({
+                              ...expenseForm,
+                              payment_type: type.code,
+                              // 할부가 아닐 때는 할부 관련 필드 초기화
+                              ...(type.code !== 'INSTALLMENT' && {
+                                installment_months: '',
+                                installment_seq: ''
+                              })
+                            })}
+                          />
+                          <span>{type.label}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>할부 개월수</label>
-                    <input type="number" className={styles.input} min={0} max={60} placeholder="0" />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>첨부</label>
-                    <input type="file" className={styles.input} />
-                  </div>
+                  {expenseForm.payment_type === 'INSTALLMENT' ? (
+                    <>
+                      <div className={styles.field}>
+                        <label className={styles.label}>할부 개월수</label>
+                        <input 
+                          type="number" 
+                          className={styles.input} 
+                          min={2} 
+                          max={60} 
+                          placeholder="0"
+                          value={expenseForm.installment_months}
+                          onChange={(e) => setExpenseForm({ ...expenseForm, installment_months: e.target.value })}
+                        />
+                      </div>
+                      <div className={styles.field}>
+                        <label className={styles.label}>할부 회차</label>
+                        <input 
+                          type="number" 
+                          className={styles.input} 
+                          min={1} 
+                          max={expenseForm.installment_months || 60}
+                          placeholder="0"
+                          value={expenseForm.installment_seq}
+                          onChange={(e) => setExpenseForm({ ...expenseForm, installment_seq: e.target.value })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={styles.field} />
+                      <div className={styles.field} />
+                    </>
+                  )}
                 </div>
 
                 <div className={styles.actions}>
