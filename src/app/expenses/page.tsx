@@ -3,7 +3,7 @@
 import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState } from 'react';
-import { getCategories, getPayMethods, getBanks, getCards, getWallets, CommonCode, Wallet } from '../../lib/api/commonCodes';
+import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
 import { post, ApiError } from '../../lib/api/common';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
@@ -140,6 +140,20 @@ export default function ExpensesPage() {
       });
   }, [selectedPayMethod, walletForm.usr_id]);
 
+  // 거래유형 변경 시 카테고리 다시 로드
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoryData = selectedTrxType === 'EXPENSE' ? await getCategories() : await getIncome();
+        setCategories(categoryData);
+        // 카테고리 변경 시 선택된 카테고리 초기화
+        setExpenseForm(prev => ({ ...prev, category_cd: '' }));
+      } catch (error) {
+        console.error('카테고리 조회 실패:', error);
+      }
+    };
+    loadCategories();
+  }, [selectedTrxType]);
   // 오늘의 지출 데이터 로드
   useEffect(() => {
     fetchTodayExpenses();
