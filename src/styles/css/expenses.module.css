@@ -218,18 +218,23 @@
 }
 
 .ledgerList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
 .ledgerItem {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 12px;
   background: #f9fafb;
   border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.ledgerItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .ledgerLeft {
@@ -251,8 +256,10 @@
 
 .ledgerRight {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .ledgerCategory {
@@ -267,6 +274,8 @@
   font-size: 14px;
   font-weight: 800;
   color: #ef4444;
+  width: 100%;
+  text-align: right;
 }
 
 /* 섹션 간 하단 여백 */
@@ -276,6 +285,12 @@
 
 .expensesPage section:last-of-type {
   margin-bottom: 0;
+}
+
+@media (max-width: 1280px) {
+  .ledgerList {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 960px) {
@@ -289,6 +304,15 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+  .ledgerList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ledgerList {
+    grid-template-columns: 1fr;
   }
 }
 

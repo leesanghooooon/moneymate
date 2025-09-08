@@ -1,8 +1,147 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbInsert } from '../../../lib/db-utils';
+import { query } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const usr_id = searchParams.get('usr_id');
+    const trx_type = searchParams.get('trx_type');
+    const start_date = searchParams.get('start_date');
+    const end_date = searchParams.get('end_date');
+
+    if (!usr_id) {
+      return NextResponse.json(
+        { message: '사용자 ID가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+
+    let sql = `
+      SELECT 
+        t1.trx_id
+        , t2.wlt_name
+        , t1.trx_date
+        , t1.amount
+        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = t1.category_cd) category_name
+        , t1.memo
+        , t1.is_installment
+        , CASE 
+            WHEN t1.is_installment = 'Y' 
+            THEN CONCAT(t1.installment_seq, '/', t1.installment_months)
+            ELSE NULL 
+          END installment_info
+      FROM MMT_TRX_TRN t1
+      JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
+      WHERE t1.usr_id = ?
+        AND t1.use_yn = 'Y'
+    `;
+    const params: any[] = [usr_id];
+
+    if (trx_type) {
+      sql += ' AND t1.trx_type = ?';
+      params.push(trx_type);
+    }
+
+    if (start_date) {
+      sql += ' AND t1.trx_date >= ?';
+      params.push(start_date);
+    }
+
+    if (end_date) {
+      sql += ' AND t1.trx_date <= ?';
+      params.push(end_date);
+    }
+
+    sql += ' ORDER BY t1.trx_date DESC, t1.trx_id DESC';
+
+    const rows = await query(sql, params);
+    return NextResponse.json({ data: rows });
+  } catch (error: any) {
+    console.error('지출 목록 조회 오류:', error);
+    return NextResponse.json(
+      { message: error?.message || '지출 목록 조회 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
 /**
+ * @swagger
+ * /api/expenses:
+ *   get:
+ *     summary: 지출 목록 조회
+ *     description: 사용자의 지출 목록을 조회합니다.
+ *     tags: [Expenses]
+ *     parameters:
+ *       - name: usr_id
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 사용자 ID
+ *       - name: trx_type
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [INCOME, EXPENSE]
+ *         description: 거래 유형 (수입/지출)
+ *       - name: start_date
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 시작일 (YYYY-MM-DD)
+ *       - name: end_date
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 조회 종료일 (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: 지출 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       trx_id:
+ *                         type: string
+ *                         description: 지출 ID
+ *                       wlt_name:
+ *                         type: string
+ *                         description: 지갑 이름
+ *                       trx_date:
+ *                         type: string
+ *                         format: date
+ *                         description: 거래 일자
+ *                       amount:
+ *                         type: number
+ *                         description: 거래 금액
+ *                       category_name:
+ *                         type: string
+ *                         description: 카테고리명
+ *                       memo:
+ *                         type: string
+ *                         description: 메모
+ *                       is_installment:
+ *                         type: string
+ *                         description: 할부 여부
+ *                       installment_info:
+ *                         type: string
+ *                         description: 할부 정보 (예: 3/12)
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ * 
  * @swagger
  * /api/expenses:
  *   post:

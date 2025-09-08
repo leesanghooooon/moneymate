@@ -1,108 +1,131 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// 임시 데이터 저장소 (실제로는 데이터베이스 사용)
-let expenses: any[] = [
-  {
-    id: '1',
-    amount: 5200,
-    category: '식비',
-    paymentType: '현금',
-    merchant: '스타벅스',
-    spendingType: '일시불',
-    date: '2024-09-01',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    amount: 125000,
-    category: '쇼핑',
-    paymentType: '카드',
-    cardBrand: '신한',
-    merchant: '온라인 쇼핑',
-    spendingType: '일시불',
-    date: '2024-09-01',
-    createdAt: new Date().toISOString(),
-  },
-];
-
+/**
+ * @swagger
+ * /api/expenses/{id}:
+ *   get:
+ *     summary: 지출 상세 조회
+ *     description: 지출 ID로 상세 정보를 조회합니다.
+ *     tags: [Expenses]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 지출 ID (trx_id)
+ *     responses:
+ *       200:
+ *         description: 지출 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     trx_id:
+ *                       type: string
+ *                       description: 지출 ID
+ *                     wlt_type:
+ *                       type: string
+ *                       description: 지갑 유형
+ *                     wlt_name:
+ *                       type: string
+ *                       description: 지갑 이름
+ *                     bank_cd:
+ *                       type: string
+ *                       description: 은행/카드사 코드
+ *                     usr_id:
+ *                       type: string
+ *                       description: 사용자 ID
+ *                     trx_type:
+ *                       type: string
+ *                       description: 거래 유형
+ *                     trx_type_name:
+ *                       type: string
+ *                       description: 거래 유형명
+ *                     trx_date:
+ *                       type: string
+ *                       format: date
+ *                       description: 거래 일자
+ *                     amount:
+ *                       type: number
+ *                       description: 거래 금액
+ *                     category_cd:
+ *                       type: string
+ *                       description: 카테고리 코드
+ *                     category_name:
+ *                       type: string
+ *                       description: 카테고리명
+ *                     memo:
+ *                       type: string
+ *                       description: 메모
+ *                     is_fixed:
+ *                       type: string
+ *                       description: 고정 지출 여부
+ *                     is_installment:
+ *                       type: string
+ *                       description: 할부 여부
+ *                     installment_months:
+ *                       type: integer
+ *                       description: 할부 개월 수
+ *                     installment_seq:
+ *                       type: integer
+ *                       description: 할부 회차
+ *                     installment_group_id:
+ *                       type: string
+ *                       description: 할부 그룹 ID
+ *       404:
+ *         description: 지출 정보를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const expense = expenses.find(exp => exp.id === params.id);
-    
-    if (!expense) {
+    const sql = `
+      SELECT 
+        t1.trx_id
+        , t2.wlt_type
+        , t2.wlt_name
+        , t2.bank_cd
+        , t1.usr_id
+        , t1.trx_type
+        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'TRX_TYPE' AND cd = t1.trx_type) trx_type_name
+        , t1.trx_date
+        , t1.amount
+        , t1.category_cd
+        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = t1.category_cd) category_name
+        , t1.memo
+        , t1.is_fixed
+        , t1.is_installment
+        , t1.installment_months
+        , t1.installment_seq
+        , t1.installment_group_id
+      FROM MMT_TRX_TRN t1
+      JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
+      WHERE t1.trx_id = ?
+    `;
+
+    const rows = await query(sql, [params.id]);
+
+    if (!rows || rows.length === 0) {
       return NextResponse.json(
-        { message: '지출을 찾을 수 없습니다.', code: 'EXPENSE_NOT_FOUND' },
+        { message: '지출 정보를 찾을 수 없습니다.' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(expense);
-  } catch (error) {
+    return NextResponse.json({ data: rows[0] });
+  } catch (error: any) {
+    console.error('지출 조회 오류:', error);
     return NextResponse.json(
-      { message: '지출 조회 중 오류가 발생했습니다.', code: 'GET_EXPENSE_ERROR' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await request.json();
-    const expenseIndex = expenses.findIndex(exp => exp.id === params.id);
-    
-    if (expenseIndex === -1) {
-      return NextResponse.json(
-        { message: '지출을 찾을 수 없습니다.', code: 'EXPENSE_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    expenses[expenseIndex] = {
-      ...expenses[expenseIndex],
-      ...body,
-      id: params.id, // ID는 변경하지 않음
-    };
-
-    return NextResponse.json({
-      message: '지출이 성공적으로 수정되었습니다.',
-      data: expenses[expenseIndex],
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { message: '지출 수정 중 오류가 발생했습니다.', code: 'UPDATE_EXPENSE_ERROR' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const expenseIndex = expenses.findIndex(exp => exp.id === params.id);
-    
-    if (expenseIndex === -1) {
-      return NextResponse.json(
-        { message: '지출을 찾을 수 없습니다.', code: 'EXPENSE_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    expenses.splice(expenseIndex, 1);
-
-    return NextResponse.json({
-      message: '지출이 성공적으로 삭제되었습니다.',
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { message: '지출 삭제 중 오류가 발생했습니다.', code: 'DELETE_EXPENSE_ERROR' },
+      { message: error?.message || '지출 조회 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

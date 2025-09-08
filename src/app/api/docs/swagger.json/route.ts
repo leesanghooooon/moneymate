@@ -15,7 +15,129 @@ export async function GET(request: NextRequest) {
       },
     ],
     paths: {
+      '/expenses/{id}': {
+        get: {
+          summary: '지출 상세 조회',
+          description: '지출 ID로 상세 정보를 조회합니다.',
+          tags: ['Expenses'],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: '지출 ID (trx_id)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '지출 상세 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: { $ref: '#/components/schemas/ExpenseDetail' }
+                    }
+                  }
+                }
+              }
+            },
+            '404': {
+              description: '지출 정보를 찾을 수 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/expenses': {
+        get: {
+          summary: '지출 목록 조회',
+          description: '사용자의 지출 목록을 조회합니다.',
+          tags: ['Expenses'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            },
+            {
+              in: 'query',
+              name: 'trx_type',
+              schema: {
+                type: 'string',
+                enum: ['INCOME', 'EXPENSE']
+              },
+              description: '거래 유형 (수입/지출)'
+            },
+            {
+              in: 'query',
+              name: 'start_date',
+              schema: {
+                type: 'string',
+                format: 'date'
+              },
+              description: '조회 시작일 (YYYY-MM-DD)'
+            },
+            {
+              in: 'query',
+              name: 'end_date',
+              schema: {
+                type: 'string',
+                format: 'date'
+              },
+              description: '조회 종료일 (YYYY-MM-DD)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '지출 목록 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/ExpenseListItem' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
         post: {
           summary: '지출 등록',
           description: '지출 내역을 등록합니다. 할부 결제의 경우 과거 회차도 자동으로 등록됩니다.',
@@ -229,6 +351,121 @@ export async function GET(request: NextRequest) {
     },
     components: {
       schemas: {
+        ExpenseDetail: {
+          type: 'object',
+          properties: {
+            trx_id: {
+              type: 'string',
+              description: '지출 ID'
+            },
+            wlt_type: {
+              type: 'string',
+              description: '지갑 유형'
+            },
+            wlt_name: {
+              type: 'string',
+              description: '지갑 이름'
+            },
+            bank_cd: {
+              type: 'string',
+              description: '은행/카드사 코드'
+            },
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            trx_type: {
+              type: 'string',
+              description: '거래 유형'
+            },
+            trx_type_name: {
+              type: 'string',
+              description: '거래 유형명'
+            },
+            trx_date: {
+              type: 'string',
+              format: 'date',
+              description: '거래 일자'
+            },
+            amount: {
+              type: 'number',
+              description: '거래 금액'
+            },
+            category_cd: {
+              type: 'string',
+              description: '카테고리 코드'
+            },
+            category_name: {
+              type: 'string',
+              description: '카테고리명'
+            },
+            memo: {
+              type: 'string',
+              description: '메모'
+            },
+            is_fixed: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '고정 지출 여부'
+            },
+            is_installment: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '할부 여부'
+            },
+            installment_months: {
+              type: 'integer',
+              description: '할부 개월 수'
+            },
+            installment_seq: {
+              type: 'integer',
+              description: '할부 회차'
+            },
+            installment_group_id: {
+              type: 'string',
+              description: '할부 그룹 ID'
+            }
+          }
+        },
+        ExpenseListItem: {
+          type: 'object',
+          properties: {
+            trx_id: {
+              type: 'string',
+              description: '지출 ID'
+            },
+            wlt_name: {
+              type: 'string',
+              description: '지갑 이름'
+            },
+            trx_date: {
+              type: 'string',
+              format: 'date',
+              description: '거래 일자'
+            },
+            amount: {
+              type: 'number',
+              description: '거래 금액'
+            },
+            category_name: {
+              type: 'string',
+              description: '카테고리명'
+            },
+            memo: {
+              type: 'string',
+              description: '메모'
+            },
+            is_installment: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '할부 여부'
+            },
+            installment_info: {
+              type: 'string',
+              description: '할부 정보 (예: 3/12)'
+            }
+          }
+        },
         ExpenseCreateRequest: {
           type: 'object',
           required: ['usr_id', 'wlt_id', 'trx_type', 'trx_date', 'amount', 'category_cd'],
