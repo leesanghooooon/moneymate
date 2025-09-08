@@ -14,6 +14,17 @@ const PAYMENT_TYPES: Record<PaymentType, { code: PaymentType; label: string }> =
   SUBSCRIPTION: { code: 'SUBSCRIPTION', label: '구독' }
 };
 
+interface ExpenseData {
+  trx_id: number;
+  wlt_name: string;
+  trx_date: string;
+  amount: number;
+  category_name: string;
+  memo: string;
+  is_installment: string;
+  installment_info: string | null;
+}
+
 export default function ExpensesPage() {
   const [categories, setCategories] = useState<CommonCode[]>([]);
   const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
@@ -48,6 +59,10 @@ export default function ExpensesPage() {
     is_default: 'N',
   });
 
+  // 오늘의 지출 데이터 관련 상태 추가
+  const [todayExpenses, setTodayExpenses] = useState<ExpenseData[]>([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
+  
   const isCardSelected = (() => {
     const v = (selectedPayMethod || '').toLowerCase();
     return v === 'card' || v === '카드';
@@ -119,6 +134,11 @@ export default function ExpensesPage() {
       });
   }, [selectedPayMethod, walletForm.usr_id]);
 
+  // 오늘의 지출 데이터 로드
+  useEffect(() => {
+    fetchTodayExpenses();
+  }, []);
+
   useEffect(() => {
     if (!isWalletCardSelected && walletForm.bank_cd) {
       setWalletForm({ ...walletForm, bank_cd: '' });
@@ -156,6 +176,9 @@ export default function ExpensesPage() {
 
       const response = await post('/expenses', data);
       alert('지출이 등록되었습니다.');
+      
+      // 오늘의 지출 내역 다시 조회
+      await fetchTodayExpenses();
       
       // 폼 초기화
       setExpenseForm({
@@ -203,6 +226,43 @@ export default function ExpensesPage() {
       setSavingWallet(false);
     }
   }
+
+  // 금액을 한국 원화 형식으로 포맷하는 함수
+  const formatKRW = (amount: number) => {
+    return new Intl.NumberFormat('ko-KR').format(amount);
+  };
+
+  // 날짜를 YYYY-MM-DD에서 MM-DD 형식으로 변환하는 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
+  const getTodayDate = () => {
+    return new Date().toISOString().slice(0, 10);
+  };
+
+  // 오늘의 지출 데이터를 가져오는 함수
+  const fetchTodayExpenses = async () => {
+    try {
+      setLoadingExpenses(true);
+      const today = getTodayDate();
+      const response = await fetch(`/api/expenses?usr_id=tester01&start_date=${today}&end_date=${today}`);
+      
+      if (!response.ok) {
+        throw new Error("지출 데이터 조회 실패");
+      }
+      
+      const result = await response.json();
+      setTodayExpenses(result.data || []);
+    } catch (error) {
+      console.error("오늘의 지출 조회 오류:", error);
+      setTodayExpenses([]);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
 
   return (
     <div className={layoutStyles.dashboard}>
@@ -462,18 +522,35 @@ export default function ExpensesPage() {
             <section className={styles.listSection}>
               <h2 className={styles.sectionTitle}>오늘의 지출</h2>
               <div className={styles.ledgerList}>
-                {[1,2,3].map((i) => (
-                  <div key={i} className={styles.ledgerItem}>
-                    <div className={styles.ledgerLeft}>
-                      <div className={styles.ledgerDate}>2024-09-0{i}</div>
-                      <div className={styles.ledgerMerchant}>스타벅스</div>
-                    </div>
-                    <div className={styles.ledgerRight}>
-                      <span className={styles.ledgerCategory}>식비</span>
-                      <span className={styles.ledgerAmount}>-5,200원</span>
-                    </div>
+                {loadingExpenses ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                    지출 데이터를 불러오는 중...
                   </div>
-                ))}
+                ) : todayExpenses.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                    오늘 등록된 지출이 없습니다.
+                  </div>
+                ) : (
+                  todayExpenses.map((expense) => (
+                    <div key={expense.trx_id} className={styles.ledgerItem}>
+                      <div className={styles.ledgerLeft}>
+                        <div className={styles.ledgerDate}>{formatDate(expense.trx_date)}</div>
+                        <div className={styles.ledgerMerchant}>
+                          {expense.memo || expense.wlt_name}
+                          {expense.installment_info && (
+                            <span style={{ fontSize: '10px', color: '#6b7280', marginLeft: '4px' }}>
+                              ({expense.installment_info})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.ledgerRight}>
+                        <span className={styles.ledgerCategory}>{expense.category_name}</span>
+                        <span className={styles.ledgerAmount}>-{formatKRW(expense.amount)}원</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
           </div>
