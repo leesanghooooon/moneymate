@@ -50,8 +50,7 @@ export default function ExpensesPage() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // ex) "Asia/Seoul"
 
     const today = new Date();
-    // 하루(24시간) 전으로 설정
-    today.setDate(today.getDate() - 1);
+    // today.setDate(today.getDate() - 1);
 
     return today.toLocaleDateString('en-CA', { timeZone: tz });
   };
@@ -277,7 +276,6 @@ export default function ExpensesPage() {
     try {
       setLoadingExpenses(true);
       const today = getTodayDate();
-      console.log(today)
       const response = await fetch(`/api/expenses?usr_id=tester01&start_date=${today}&end_date=${today}`);
       
       if (!response.ok) {
