@@ -24,7 +24,11 @@ export async function GET(request: NextRequest) {
         , t2.wlt_name
         , t1.trx_date
         , t1.amount
-        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = t1.category_cd) category_name
+        , (CASE
+            WHEN t1.trx_type = 'EXPENSE' THEN (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = t1.category_cd)
+            WHEN t1.trx_type = 'INCOME' THEN (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'INCOME' AND cd = t1.category_cd)
+            ELSE ''
+        END) AS category_name
         , t1.memo
         , t1.is_installment
         , CASE 
@@ -32,6 +36,8 @@ export async function GET(request: NextRequest) {
             THEN CONCAT(t1.installment_seq, '/', t1.installment_months)
             ELSE NULL 
           END installment_info
+        , t1.trx_type
+        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'TRX_TYPE' AND cd = t1.trx_type) trx_type_name
       FROM MMT_TRX_TRN t1
       JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
       WHERE t1.usr_id = ?

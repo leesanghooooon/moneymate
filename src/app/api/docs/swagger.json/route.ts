@@ -463,6 +463,14 @@ export async function GET(request: NextRequest) {
             installment_info: {
               type: 'string',
               description: '할부 정보 (예: 3/12)'
+            },
+            trx_type: {
+              type: 'string',
+              description: '거래 유형'
+            },
+            trx_type_name: {
+              type: 'string',
+              description: '거래 유형명'
             }
           }
         },

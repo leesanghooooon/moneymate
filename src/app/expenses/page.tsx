@@ -28,6 +28,8 @@ interface ExpenseData {
   memo: string;
   is_installment: string;
   installment_info: string | null;
+  trx_type: string;
+  trx_type_name: string;
 }
 
 export default function ExpensesPage() {
@@ -46,7 +48,12 @@ export default function ExpensesPage() {
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
   const getTodayDate = () => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // ex) "Asia/Seoul"
-    return new Date().toLocaleDateString('en-CA', { timeZone: tz });
+
+    const today = new Date();
+    // 하루(24시간) 전으로 설정
+    today.setDate(today.getDate() - 1);
+
+    return today.toLocaleDateString('en-CA', { timeZone: tz });
   };
 
   // 지출 등록 폼 state
@@ -287,6 +294,16 @@ export default function ExpensesPage() {
     }
   };
 
+  const renderAmount = (trx_type: string, amount: number) => {
+    const formatted = formatKRW(amount);
+    if (trx_type === 'EXPENSE') {
+      return <span className={`${styles.ledgerAmount} ${styles.expenseAmount}`}>-{formatted}원</span>;
+    } else if (trx_type === 'INCOME') {
+      return <span className={`${styles.ledgerAmount} ${styles.incomeAmount}`}>+{formatted}원</span>;
+    }
+    return <span className={styles.ledgerAmount}>{formatted}원</span>;
+  };
+
   return (
     <div className={layoutStyles.dashboard}>
       <main className={layoutStyles.dashboardBody}>
@@ -295,8 +312,8 @@ export default function ExpensesPage() {
             <header className={styles.header}>
               <div className={styles.headerTop}>
                 <div className={styles.headerLeft}>
-                  <h1 className={styles.title}>지출 등록</h1>
-                  <p className={styles.subtitle}>가계부 스타일로 지출을 빠르게 기록하세요.</p>
+                  <h1 className={styles.title}>거래 등록</h1>
+                  <p className={styles.subtitle}>수입과 지출을 빠르게 기록하세요.</p>
                 </div>
                 <div className={styles.headerRight}>
                   <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>+ 지갑 등록</button>
@@ -556,14 +573,14 @@ export default function ExpensesPage() {
             )}
 
             <section className={styles.listSection}>
-              <h2 className={styles.sectionTitle}>오늘의 지출</h2>
+              <h2 className={styles.sectionTitle}>오늘의 가계부</h2>
               <div className={styles.ledgerList}>
                 {loadingExpenses ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                  <div className={styles.ledgerMessage}>
                     지출 데이터를 불러오는 중...
                   </div>
                 ) : todayExpenses.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                  <div className={styles.ledgerMessage}>
                     오늘 등록된 지출이 없습니다.
                   </div>
                 ) : (
@@ -583,7 +600,8 @@ export default function ExpensesPage() {
                       </div>
                       <div className={styles.ledgerRight}>
                         <span className={styles.ledgerCategory}>{expense.category_name}</span>
-                        <span className={styles.ledgerAmount}>-{formatKRW(expense.amount)}원</span>
+                        {/*<span className={styles.ledgerAmount}>-{formatKRW(expense.amount)}원</span>*/}
+                        {renderAmount(expense.trx_type, expense.amount)}
                       </div>
                     </div>
                   ))
