@@ -43,9 +43,15 @@ export default function ExpensesPage() {
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [wallets, setWallets] = useState<Wallet[]>([]);
 
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
+  const getTodayDate = () => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // ex) "Asia/Seoul"
+    return new Date().toLocaleDateString('en-CA', { timeZone: tz });
+  };
+
   // 지출 등록 폼 state
   const [expenseForm, setExpenseForm] = useState({
-    trx_date: new Date().toISOString().slice(0, 10),
+    trx_date: getTodayDate(),
     amount: '',
     category_cd: '',
     memo: '',
@@ -259,16 +265,12 @@ export default function ExpensesPage() {
     return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
-  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
-  const getTodayDate = () => {
-    return new Date().toISOString().slice(0, 10);
-  };
-
   // 오늘의 지출 데이터를 가져오는 함수
   const fetchTodayExpenses = async () => {
     try {
       setLoadingExpenses(true);
       const today = getTodayDate();
+      console.log(today)
       const response = await fetch(`/api/expenses?usr_id=tester01&start_date=${today}&end_date=${today}`);
       
       if (!response.ok) {
