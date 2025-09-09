@@ -244,6 +244,70 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/calendar': {
+        get: {
+          summary: '캘린더 조회',
+          description: '월별 캘린더 데이터를 조회합니다. 각 날짜별 수입/지출 합계와 상세 내역을 포함합니다.',
+          tags: ['Calendar'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            },
+            {
+              in: 'query',
+              name: 'yyyy',
+              required: true,
+              schema: { type: 'string' },
+              description: '연도 (예: 2024)'
+            },
+            {
+              in: 'query',
+              name: 'mm',
+              required: true,
+              schema: { type: 'string' },
+              description: '월 (예: 03)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '캘린더 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/CalendarDay' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/wallets': {
         get: {
           summary: '지갑 목록 조회',
@@ -598,6 +662,78 @@ export async function GET(request: NextRequest) {
             use_yn: { type: 'string', enum: ['Y', 'N'], default: 'Y', description: '사용 여부' }
           },
           required: ['usr_id', 'wlt_type', 'wlt_name']
+        },
+        CalendarDay: {
+          type: 'object',
+          properties: {
+            cal_dt: {
+              type: 'string',
+              format: 'date',
+              description: '날짜'
+            },
+            dow: {
+              type: 'string',
+              description: '요일 (1: 일요일, 2: 월요일, ..., 7: 토요일)'
+            },
+            is_holiday: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '공휴일 여부'
+            },
+            holiday_name: {
+              type: 'string',
+              nullable: true,
+              description: '공휴일 이름'
+            },
+            income_sum: {
+              type: 'number',
+              description: '해당 일자의 수입 합계'
+            },
+            expense_sum: {
+              type: 'number',
+              description: '해당 일자의 지출 합계'
+            },
+            trx_list: {
+              type: 'array',
+              description: '해당 일자의 거래 내역 목록',
+              items: {
+                type: 'object',
+                properties: {
+                  trx_id: {
+                    type: 'string',
+                    description: '거래 ID'
+                  },
+                  trx_type: {
+                    type: 'string',
+                    enum: ['INCOME', 'EXPENSE'],
+                    description: '거래 유형'
+                  },
+                  amount: {
+                    type: 'number',
+                    description: '거래 금액'
+                  },
+                  category_cd: {
+                    type: 'string',
+                    description: '카테고리 코드'
+                  },
+                  memo: {
+                    type: 'string',
+                    nullable: true,
+                    description: '메모'
+                  },
+                  wlt_id: {
+                    type: 'string',
+                    description: '지갑 ID'
+                  },
+                  created_at: {
+                    type: 'string',
+                    format: 'date-time',
+                    description: '생성 시각'
+                  }
+                }
+              }
+            }
+          }
         },
         Error: {
           type: 'object',

@@ -12,7 +12,7 @@ const Header = () => {
   const menuItems = [
     { id: 'home', label: 'Home', path: '/' },
     { id: 'expenses', label: 'Expenses', path: '/expenses' },
-    { id: 'income', label: 'Income' },
+    { id: 'calendar', label: 'Calendar', path: '/calendar' },
     { id: 'statistics', label: 'Statistics' },
   ];
 
