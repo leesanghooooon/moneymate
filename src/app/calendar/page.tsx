@@ -7,6 +7,7 @@ import TransactionModal from './TransactionModal';
 import { Transaction, CalendarDay } from './types';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import LoginRequiredModal from '@/components/LoginRequiredModal';
 
 interface ModalState {
   isOpen: boolean;
@@ -18,12 +19,15 @@ export default function CalendarPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // 로그인 상태 확인
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+  // 비로그인 상태에서는 데이터 로딩하지 않음
+  if (status === 'unauthenticated') {
+    return <LoginRequiredModal />;
+  }
+
+  // 로딩 중에는 아무것도 표시하지 않음
+  if (status === 'loading') {
+    return null;
+  }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);

@@ -41,8 +41,10 @@ export default function LoginPage() {
         return;
       }
 
-      // 로그인 성공
-      router.push('/');
+      // 저장된 경로가 있으면 해당 경로로, 없으면 홈으로 이동
+      const returnPath = sessionStorage.getItem('returnPath') || '/';
+      sessionStorage.removeItem('returnPath'); // 사용 후 삭제
+      router.push(returnPath);
       router.refresh(); // 헤더 상태 업데이트를 위해 새로고침
 
     } catch (error: any) {
