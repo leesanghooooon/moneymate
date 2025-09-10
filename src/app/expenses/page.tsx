@@ -5,6 +5,8 @@ import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState } from 'react';
 import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
 import { post, ApiError } from '../../lib/api/common';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
 
@@ -33,6 +35,15 @@ interface ExpenseData {
 }
 
 export default function ExpensesPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
   const [categories, setCategories] = useState<CommonCode[]>([]);
   const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
   const [banks, setBanks] = useState<CommonCode[]>([]);
@@ -70,7 +81,7 @@ export default function ExpensesPage() {
   const [openWalletModal, setOpenWalletModal] = useState(false);
   const [savingWallet, setSavingWallet] = useState(false);
   const [walletForm, setWalletForm] = useState({
-    usr_id: 'tester01', // 테스트용 사용자 ID (실제 DB에 존재하는 ID로 변경 필요)
+    usr_id: session?.user?.id || '',
     wlt_type: '',
     wlt_name: '',
     bank_cd: '',
@@ -276,7 +287,7 @@ export default function ExpensesPage() {
     try {
       setLoadingExpenses(true);
       const today = getTodayDate();
-      const response = await fetch(`/api/expenses?usr_id=tester01&start_date=${today}&end_date=${today}`);
+      const response = await fetch(`/api/expenses?usr_id=${session?.user?.id}&start_date=${today}&end_date=${today}`);
       
       if (!response.ok) {
         throw new Error("지출 데이터 조회 실패");

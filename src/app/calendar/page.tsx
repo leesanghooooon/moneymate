@@ -5,6 +5,8 @@ import styles from '../../styles/css/calendar.module.css';
 import { useEffect, useState } from 'react';
 import TransactionModal from './TransactionModal';
 import { Transaction, CalendarDay } from './types';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface ModalState {
   isOpen: boolean;
@@ -13,6 +15,15 @@ interface ModalState {
 }
 
 export default function CalendarPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
@@ -61,7 +72,7 @@ export default function CalendarPage() {
         const mm = currentDate.month.toString().padStart(2, '0');
         
         const response = await fetch(
-          `/api/calendar?usr_id=tester01&yyyy=${yyyy}&mm=${mm}`
+          `/api/calendar?usr_id=${session?.user?.id}&yyyy=${yyyy}&mm=${mm}`
         );
 
         if (!response.ok) {

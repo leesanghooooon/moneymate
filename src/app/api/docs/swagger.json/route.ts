@@ -308,6 +308,178 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/users/{id}': {
+        get: {
+          summary: '회원 정보 조회',
+          description: '사용자 ID로 회원 정보를 조회합니다.',
+          tags: ['Users'],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '회원 정보 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: { $ref: '#/components/schemas/User' }
+                    }
+                  }
+                }
+              }
+            },
+            '404': {
+              description: '사용자를 찾을 수 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: '로그인 검증',
+          description: '사용자 ID와 비밀번호로 로그인을 검증합니다.',
+          tags: ['Users'],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/UserLoginRequest' }
+              }
+            }
+          },
+          responses: {
+            '200': {
+              description: '로그인 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: '로그인에 성공했습니다.'
+                      },
+                      data: { $ref: '#/components/schemas/User' }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '401': {
+              description: '인증 실패',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/users': {
+        post: {
+          summary: '회원가입',
+          description: '새로운 사용자를 등록합니다.',
+          tags: ['Users'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/UserCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '회원가입 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: '회원가입이 완료되었습니다.'
+                      },
+                      data: {
+                        $ref: '#/components/schemas/User'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '409': {
+              description: '중복된 이메일',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/wallets': {
         get: {
           summary: '지갑 목록 조회',
@@ -732,6 +904,97 @@ export async function GET(request: NextRequest) {
                   }
                 }
               }
+            }
+          }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: '사용자 ID (로그인 아이디)'
+            },
+            uuid: {
+              type: 'string',
+              format: 'uuid',
+              description: '앱 내에서 사용하는 고유 식별자'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: '사용자 이메일 주소'
+            },
+            nickname: {
+              type: 'string',
+              description: '사용자 닉네임'
+            },
+            profile_image_url: {
+              type: 'string',
+              nullable: true,
+              description: '사용자 프로필 이미지 URL'
+            },
+            status: {
+              type: 'string',
+              enum: ['ACTIVE', 'SUSPENDED', 'WITHDRAWN'],
+              description: '계정 상태'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '계정 생성 시각'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '계정 정보 최종 수정 시각'
+            },
+            last_login_at: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: '최근 로그인 시각'
+            }
+          }
+        },
+        UserCreateRequest: {
+          type: 'object',
+          required: ['id', 'email', 'nickname', 'password'],
+          properties: {
+            id: {
+              type: 'string',
+              pattern: '^[a-zA-Z0-9]{4,20}$',
+              description: '사용자 ID (영문, 숫자 4-20자)'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: '사용자 이메일 주소'
+            },
+            nickname: {
+              type: 'string',
+              minLength: 2,
+              maxLength: 50,
+              description: '사용자 닉네임 (2-50자)'
+            },
+            password: {
+              type: 'string',
+              minLength: 8,
+              description: '비밀번호 (8자 이상)'
+            },
+            profile_image_url: {
+              type: 'string',
+              nullable: true,
+              description: '사용자 프로필 이미지 URL'
+            }
+          }
+        },
+        UserLoginRequest: {
+          type: 'object',
+          required: ['password'],
+          properties: {
+            password: {
+              type: 'string',
+              description: '사용자 비밀번호'
             }
           }
         },

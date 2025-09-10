@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/css/Header.module.css';
 import { useRouter, usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 const Header = () => {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('home');
   const router = useRouter();
+  const { data: session } = useSession();
 
   const menuItems = [
     { id: 'home', label: 'Home', path: '/' },
@@ -33,6 +35,11 @@ const Header = () => {
     if (item.path) {
       router.push(item.path);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
   };
 
   return (
@@ -73,15 +80,38 @@ const Header = () => {
             </div>
           </div>
           
-          <div className={styles.userSection}>
-            <div className={styles.userProfile}>
-              <span className={styles.userIcon}>👤</span>
-              <span className={styles.userName}>User</span>
-              <span className={styles.dropdownIcon}>▼</span>
-            </div>
-            <div className={styles.notificationIcon}>
-              🔔
-            </div>
+          <div className={styles.authSection}>
+            {session?.user ? (
+              <>
+                <div className={styles.userInfo}>
+                  <span className={styles.userIcon}>👤</span>
+                  <span className={styles.userName}>
+                    {session.user.nickname || session.user.email}
+                  </span>
+                </div>
+                <button 
+                  className={styles.logoutButton}
+                  onClick={handleLogout}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  className={styles.loginButton}
+                  onClick={() => router.push('/login')}
+                >
+                  로그인
+                </button>
+                <button 
+                  className={styles.signupButton}
+                  onClick={() => router.push('/signup')}
+                >
+                  회원가입
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -89,4 +119,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;

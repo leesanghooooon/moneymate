@@ -140,24 +140,19 @@
   color: #9ca3af;
 }
 
-.userSection {
+.authSection {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.userProfile {
+.userInfo {
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  padding: 8px 10px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.userProfile:hover {
+  padding: 6px 12px;
   background: #f3f4f6;
+  border-radius: 6px;
 }
 
 .userIcon {
@@ -165,24 +160,49 @@
 }
 
 .userName {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #374151;
 }
 
-.dropdownIcon {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.notificationIcon {
-  font-size: 18px;
+.loginButton,
+.signupButton,
+.logoutButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.notificationIcon:hover {
+.loginButton {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.loginButton:hover {
   background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.signupButton {
+  background: #3b82f6;
+  border: none;
+  color: white;
+}
+
+.signupButton:hover {
+  background: #2563eb;
+}
+
+.logoutButton {
+  background: #ef4444;
+  border: none;
+  color: white;
+}
+
+.logoutButton:hover {
+  background: #dc2626;
 }
