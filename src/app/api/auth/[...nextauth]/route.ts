@@ -3,6 +3,9 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { query } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
+// 임시 시크릿 키 (실제 운영환경에서는 환경변수 사용 필요)
+const TEMP_SECRET = 'your-super-secret-key-moneymate-application-secret-key';
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -65,12 +68,12 @@ const handler = NextAuth({
       }
     })
   ],
+  pages: {
+    signIn: '/login',
+  },
   session: {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24시간
-  },
-  pages: {
-    signIn: '/login',
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -95,7 +98,14 @@ const handler = NextAuth({
       }
       return session;
     }
-  }
+  },
+  // JWT 설정 추가
+  jwt: {
+    secret: TEMP_SECRET,
+    maxAge: 24 * 60 * 60, // 24시간
+  },
+  // 추가 설정
+  secret: TEMP_SECRET,
 });
 
 export { handler as GET, handler as POST };
