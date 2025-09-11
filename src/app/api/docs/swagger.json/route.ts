@@ -758,6 +758,213 @@ export async function GET(request: NextRequest) {
             }
           }
         }
+      },
+      '/savings-goals': {
+        get: {
+          summary: '저축목표 목록 조회',
+          description: '사용자의 저축목표 목록을 조회합니다.',
+          tags: ['SavingsGoals'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '저축목표 목록 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/SavingsGoal' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: '저축목표 생성',
+          description: '새로운 저축목표를 생성합니다.',
+          tags: ['SavingsGoals'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SavingsGoalCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '저축목표 생성 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: { type: 'string', example: '저축목표가 생성되었습니다.' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          sav_goal_id: { type: 'string', description: '생성된 저축목표 ID' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/savings-contributions': {
+        get: {
+          summary: '저축 납입내역 조회',
+          description: '사용자의 저축 납입내역을 조회합니다.',
+          tags: ['SavingsContributions'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            },
+            {
+              in: 'query',
+              name: 'sav_goal_id',
+              required: false,
+              schema: { type: 'string' },
+              description: '저축목표 ID (특정 목표의 납입내역만 조회)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '납입내역 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/SavingsContribution' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: '저축 납입내역 등록',
+          description: '저축목표에 대한 납입내역을 등록합니다.',
+          tags: ['SavingsContributions'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SavingsContributionCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '납입내역 등록 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: { type: 'string', example: '납입내역이 등록되었습니다.' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          contrib_id: { type: 'string', description: '생성된 납입내역 ID' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
       }
     },
     components: {
@@ -1180,8 +1387,252 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-    }
-  };
+        },
+        SavingsGoal: {
+          type: 'object',
+          properties: {
+            sav_goal_id: {
+              type: 'string',
+              description: '저축목표 ID'
+            },
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            wlt_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 지갑/계좌 ID'
+            },
+            goal_name: {
+              type: 'string',
+              description: '목표명'
+            },
+            goal_type_cd: {
+              type: 'string',
+              description: '목표 유형'
+            },
+            purpose_cd: {
+              type: 'string',
+              nullable: true,
+              description: '목적 코드'
+            },
+            target_amount: {
+              type: 'number',
+              description: '목표 금액'
+            },
+            start_date: {
+              type: 'string',
+              format: 'date',
+              description: '시작일'
+            },
+            end_date: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: '목표 종료일'
+            },
+            deposit_cycle_cd: {
+              type: 'string',
+              nullable: true,
+              description: '납입 주기'
+            },
+            plan_amount: {
+              type: 'number',
+              nullable: true,
+              description: '회차별 계획 납입액'
+            },
+            alarm_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '알림 사용 여부'
+            },
+            alarm_day: {
+              type: 'integer',
+              nullable: true,
+              description: '알림 기준일'
+            },
+            is_paused: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '일시중지 여부'
+            },
+            is_completed: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '달성 여부'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            },
+            use_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '사용 여부'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '생성 시각'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '수정 시각'
+            },
+            wlt_name: {
+              type: 'string',
+              nullable: true,
+              description: '연결된 지갑 이름'
+            }
+          },
+          required: ['sav_goal_id', 'usr_id', 'goal_name', 'target_amount', 'start_date']
+        },
+        SavingsGoalCreateRequest: {
+          type: 'object',
+          required: ['usr_id', 'goal_name', 'target_amount', 'start_date'],
+          properties: {
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            wlt_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 지갑/계좌 ID'
+            },
+            goal_name: {
+              type: 'string',
+              description: '목표명'
+            },
+            goal_type_cd: {
+              type: 'string',
+              default: 'SAVINGS',
+              description: '목표 유형'
+            },
+            purpose_cd: {
+              type: 'string',
+              nullable: true,
+              description: '목적 코드'
+            },
+            target_amount: {
+              type: 'number',
+              description: '목표 금액'
+            },
+            start_date: {
+              type: 'string',
+              format: 'date',
+              description: '시작일'
+            },
+            end_date: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: '목표 종료일'
+            },
+            deposit_cycle_cd: {
+              type: 'string',
+              nullable: true,
+              description: '납입 주기 (DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY/IRREGULAR)'
+            },
+            plan_amount: {
+              type: 'number',
+              nullable: true,
+              description: '회차별 계획 납입액'
+            },
+            alarm_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              default: 'N',
+              description: '알림 사용 여부'
+            },
+            alarm_day: {
+              type: 'integer',
+              nullable: true,
+              description: '알림 기준일'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            }
+          }
+        },
+        SavingsContribution: {
+          type: 'object',
+          properties: {
+            contrib_id: {
+              type: 'string',
+              description: '납입내역 ID'
+            },
+            sav_goal_id: {
+              type: 'string',
+              description: '저축목표 ID'
+            },
+            trx_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 거래 ID'
+            },
+            contrib_date: {
+              type: 'string',
+              format: 'date',
+              description: '납입일'
+            },
+            amount: {
+              type: 'number',
+              description: '납입 금액'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '생성 시각'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '수정 시각'
+            }
+          },
+          required: ['contrib_id', 'sav_goal_id', 'contrib_date', 'amount']
+        },
+        SavingsContributionCreateRequest: {
+          type: 'object',
+          required: ['sav_goal_id', 'contrib_date', 'amount'],
+          properties: {
+            sav_goal_id: {
+              type: 'string',
+              description: '저축목표 ID'
+            },
+            trx_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 거래 ID'
+            },
+            contrib_date: {
+              type: 'string',
+              format: 'date',
+              description: '납입일'
+            },
+            amount: {
+              type: 'number',
+              description: '납입 금액'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            }
+          }
+        }
+      };
 
   return NextResponse.json(specs);
 }

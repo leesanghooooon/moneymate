@@ -27,10 +27,11 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
   const menuItems = [
+
     { id: 'home', label: 'Home', path: '/' },
     { id: 'expenses', label: 'Expenses', path: '/expenses' },
+    { id: 'savings', label: '저축목표', path: '/savings' },
     { id: 'calendar', label: 'Calendar', path: '/calendar' },
     { id: 'statistics', label: 'Statistics' },
   ];
