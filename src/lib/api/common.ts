@@ -8,11 +8,11 @@ interface ApiOptions {
   requiresAuth?: boolean;
 }
 
-interface ApiError {
-  message: string;
-  status?: number;
-  data?: any;
-}
+// interface ApiError {
+//   message: string;
+//   status?: number;
+//   data?: any;
+// }
 
 interface ApiResponse<T = any> {
   data: T;

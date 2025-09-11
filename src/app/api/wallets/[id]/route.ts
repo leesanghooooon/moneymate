@@ -84,10 +84,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // const session = await getServerSession(authOptions);
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
+    }
 
     const body = await request.json();
     const { usr_id, wlt_type, wlt_name, bank_cd, is_default } = body;
@@ -98,9 +98,9 @@ export async function PUT(
     }
 
     // 권한 검증
-    // if (session.user.id !== usr_id) {
-    //   return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
-    // }
+    if (session.user.id !== usr_id) {
+      return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
+    }
 
     // 지갑 존재 여부 확인
     const existingWallets = await dbSelect({
