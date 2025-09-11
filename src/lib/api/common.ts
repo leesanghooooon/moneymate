@@ -63,20 +63,16 @@ export async function fetchApi<T = any>(
     ...headers,
   };
 
-  // 인증 토큰 추가 (필요한 경우)
-  if (requiresAuth) {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-  }
+  // 인증이 필요한 경우 credentials 옵션 추가
+  const fetchOptions: RequestInit = {
+    method,
+    headers: defaultHeaders,
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: requiresAuth ? 'include' : 'same-origin'
+  };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}${queryString}`, {
-      method,
-      headers: defaultHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const response = await fetch(`${API_BASE_URL}${endpoint}${queryString}`, fetchOptions);
 
     let data;
     const contentType = response.headers.get('content-type');

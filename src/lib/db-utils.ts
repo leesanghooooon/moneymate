@@ -68,40 +68,52 @@ export async function dbInsert(options: InsertOptions) {
 interface UpdateOptions {
   table: string;
   data: Record<string, any>;
-  filters: Record<string, any>;
-  allowedFilterFields: string[];
+  filters?: Record<string, any>;
+  allowedFilterFields?: string[];
+  where?: string;
+  params?: any[];
 }
 
 export async function dbUpdate(options: UpdateOptions) {
-  const { table, data, filters, allowedFilterFields } = options;
+  const { table, data, filters, allowedFilterFields, where, params = [] } = options;
   const setColumns = Object.keys(data);
-  const values = Object.values(data);
+  const setValues = Object.values(data);
 
   let sql = `UPDATE ${table} SET ${setColumns.map(col => `${col} = ?`).join(', ')}`;
+  let whereValues: any[] = [];
   
   // WHERE 절 구성
-  const whereConditions: string[] = [];
-  const whereValues: any[] = [];
-  for (const field of allowedFilterFields) {
-    if (filters[field] !== undefined) {
-      whereConditions.push(`${field} = ?`);
-      whereValues.push(filters[field]);
+  if (where) {
+    // 직접 WHERE 절을 제공한 경우
+    sql += ` WHERE ${where}`;
+    whereValues = params;
+  } else if (filters && allowedFilterFields) {
+    // filters를 사용한 WHERE 절 구성
+    const whereConditions: string[] = [];
+    for (const field of allowedFilterFields) {
+      if (filters[field] !== undefined) {
+        whereConditions.push(`${field} = ?`);
+        whereValues.push(filters[field]);
+      }
     }
-  }
 
-  if (whereConditions.length === 0) {
-    throw new Error('업데이트 조건이 필요합니다.');
-  }
+    if (whereConditions.length === 0) {
+      throw new Error('업데이트 조건이 필요합니다.');
+    }
 
-  sql += ` WHERE ${whereConditions.join(' AND ')}`;
+    sql += ` WHERE ${whereConditions.join(' AND ')}`;
+
+  } else {
+    throw new Error('WHERE 절이 필요합니다. (where 또는 filters를 제공해주세요)');
+  }
 
   // 쿼리 로깅
   console.log('=== UPDATE Query ===');
   console.log('SQL:', sql);
-  console.log('Parameters:', [...values, ...whereValues]);
+  console.log('Parameters:', [...setValues, ...whereValues]);
   console.log('==================');
 
-  return query(sql, [...values, ...whereValues]);
+  return query(sql, [...setValues, ...whereValues]);
 }
 
 interface DeleteOptions {

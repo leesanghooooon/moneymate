@@ -1,15 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/css/Header.module.css';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
 
 const Header = () => {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('home');
   const router = useRouter();
   const { data: session } = useSession();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // 프로필 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const menuItems = [
     { id: 'home', label: 'Home', path: '/' },
@@ -69,33 +86,55 @@ const Header = () => {
         </div>
         
         <div className={styles.headerRight}>
-          <div className={styles.searchContainer}>
-            <div className={styles.searchBox}>
-              <span className={styles.searchIcon}>🔍</span>
-              <input
-                type="text"
-                placeholder="Search"
-                className={styles.searchInput}
-              />
-            </div>
-          </div>
-          
           <div className={styles.authSection}>
             {session?.user ? (
-              <>
-                <div className={styles.userInfo}>
-                  <span className={styles.userIcon}>👤</span>
-                  <span className={styles.userName}>
-                    {session.user.nickname || session.user.email}
-                  </span>
-                </div>
+              <div className={styles.profileContainer} ref={profileRef}>
                 <button 
-                  className={styles.logoutButton}
-                  onClick={handleLogout}
+                  className={styles.profileButton}
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
-                  로그아웃
+                  <div className={styles.profileImage}>
+                    {session.user.image ? (
+                      <Image
+                        src={session.user.image}
+                        alt="Profile"
+                        width={32}
+                        height={32}
+                      />
+                    ) : (
+                      <div className={styles.defaultProfile}>
+                        {(session.user.nickname || session.user.email || '').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <span className={`${styles.dropdownArrow} ${isProfileOpen ? styles.open : ''}`}>▼</span>
                 </button>
-              </>
+                
+                <div className={`${styles.dropdownMenu} ${isProfileOpen ? styles.show : ''}`}>
+                  <div className={styles.dropdownHeader}>
+                    <strong>{session.user.nickname || session.user.email}</strong>
+                    <span>{session.user.email}</span>
+                  </div>
+                  <div className={styles.dropdownDivider} />
+                  <button className={styles.dropdownItem} onClick={() => router.push('/profile')}>
+                    계정 관리
+                  </button>
+                  <button className={styles.dropdownItem}>
+                    비밀번호 변경
+                  </button>
+                  <button className={styles.dropdownItem}>
+                    활동 기록
+                  </button>
+                  <div className={styles.dropdownDivider} />
+                  <button className={styles.dropdownItem} onClick={() => router.push('/wallets')}>
+                    지갑 관리
+                  </button>
+                  <div className={styles.dropdownDivider} />
+                  <button className={styles.dropdownItem} onClick={handleLogout}>
+                    로그아웃
+                  </button>
+                </div>
+              </div>
             ) : (
               <>
                 <button 

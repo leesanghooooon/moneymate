@@ -480,6 +480,181 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/wallets/{id}': {
+        put: {
+          summary: '지갑 수정',
+          description: '지정된 ID의 지갑 정보를 수정합니다.',
+          tags: ['Wallets'],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: '수정할 지갑의 ID'
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['usr_id', 'wlt_type', 'wlt_name'],
+                  properties: {
+                    usr_id: {
+                      type: 'string',
+                      description: '사용자 ID'
+                    },
+                    wlt_type: {
+                      type: 'string',
+                      enum: ['CASH', 'CHECK_CARD', 'CREDIT_CARD'],
+                      description: '지갑 유형'
+                    },
+                    wlt_name: {
+                      type: 'string',
+                      description: '지갑 이름'
+                    },
+                    bank_cd: {
+                      type: 'string',
+                      nullable: true,
+                      description: '은행/카드사 코드'
+                    },
+                    is_default: {
+                      type: 'string',
+                      enum: ['Y', 'N'],
+                      default: 'N',
+                      description: '기본 지갑 여부'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            '200': {
+              description: '지갑 수정 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: '지갑이 수정되었습니다.'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '401': {
+              description: '인증되지 않은 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '403': {
+              description: '권한 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '404': {
+              description: '지갑을 찾을 수 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        delete: {
+          summary: '지갑 삭제',
+          description: '지정된 ID의 지갑을 삭제합니다.',
+          tags: ['Wallets'],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: '삭제할 지갑의 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '지갑 삭제 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: '지갑이 삭제되었습니다.'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '401': {
+              description: '인증되지 않은 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '403': {
+              description: '권한 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '404': {
+              description: '지갑을 찾을 수 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/wallets': {
         get: {
           summary: '지갑 목록 조회',

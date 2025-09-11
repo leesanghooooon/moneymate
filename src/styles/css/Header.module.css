@@ -102,67 +102,130 @@
   flex: 0 0 auto;
 }
 
-.searchContainer {
-  width: 280px;
-}
-
-.searchBox {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 12px;
-  color: #9ca3af;
-  font-size: 14px;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 10px 12px 10px 36px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 13px;
-  background: #f9fafb;
-  transition: all 0.2s ease;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: #8b5cf6;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08);
-}
-
-.searchInput::placeholder {
-  color: #9ca3af;
-}
-
 .authSection {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.userInfo {
+.profileContainer {
+  position: relative;
+}
+
+.profileButton {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.profileButton:hover {
   background: #f3f4f6;
-  border-radius: 6px;
 }
 
-.userIcon {
-  font-size: 18px;
+.profileImage {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.userName {
+.profileImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.defaultProfile {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #8b5cf6;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.dropdownArrow {
+  font-size: 12px;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.dropdownArrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 240px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+}
+
+.dropdownMenu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdownHeader {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdownHeader strong {
+  display: block;
   font-size: 14px;
-  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.dropdownHeader span {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
   color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .loginButton,
