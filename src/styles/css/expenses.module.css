@@ -524,3 +524,212 @@
     max-width: 100%;
   }
 }
+
+/* 다건 등록 모달 스타일 */
+.bulkCommonSettings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.bulkExpenseList {
+  margin-bottom: 20px;
+}
+
+.bulkListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bulkListHeader h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.bulkTable {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bulkTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 0.8fr;
+  gap: 8px;
+  background: #f3f4f6;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.bulkTableRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 0.8fr;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  align-items: center;
+}
+
+.bulkTableRow:last-child {
+  border-bottom: none;
+}
+
+.bulkTableRow .input,
+.bulkTableRow .select {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.bulkTableRow .buttonGhost {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* 지갑 바로가기 버튼 스타일 */
+
+/* 다건 등록 모달 스타일 */
+.bulkCommonSettings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.bulkExpenseList {
+  margin-bottom: 20px;
+}
+
+.bulkListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bulkListHeader h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.bulkTable {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bulkTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 0.8fr;
+  gap: 8px;
+  background: #f3f4f6;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.bulkTableRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 0.8fr;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  align-items: center;
+}
+
+.bulkTableRow:last-child {
+  border-bottom: none;
+}
+
+.bulkTableRow .input,
+.bulkTableRow .select {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.bulkTableRow .buttonGhost {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .bulkTableHeader,
+  .bulkTableRow {
+    grid-template-columns: 1fr 1fr 1.2fr 1.2fr 1fr 0.8fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .bulkCommonSettings {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .bulkTableHeader,
+  .bulkTableRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .bulkTableHeader > div,
+  .bulkTableRow > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .bulkTableHeader > div:first-child::before {
+    content: "날짜: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader > div:nth-child(2)::before {
+    content: "금액: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader > div:nth-child(3)::before {
+    content: "카테고리: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader > div:nth-child(4)::before {
+    content: "메모: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader > div:nth-child(5)::before {
+    content: "지출형태: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader > div:nth-child(6)::before {
+    content: "액션: ";
+    font-weight: 600;
+  }
+  
+  .bulkTableHeader {
+    display: none;
+  }
+}

@@ -4,6 +4,7 @@ import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState, useMemo } from 'react';
 import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
+import BulkExpenseModal from '../components/BulkExpenseModal';
 import { post, ApiError } from '../../lib/api/common';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -105,7 +106,7 @@ export default function ExpensesPage() {
   });
 
   const [openWalletModal, setOpenWalletModal] = useState(false);
-  const [savingWallet, setSavingWallet] = useState(false);
+  const [openBulkModal, setOpenBulkModal] = useState(false);  const [savingWallet, setSavingWallet] = useState(false);
   const [walletForm, setWalletForm] = useState({
     usr_id: session?.user?.id || '',
     wlt_type: '',
@@ -339,7 +340,8 @@ export default function ExpensesPage() {
                     <p className={styles.subtitle}>수입과 지출을 빠르게 기록하세요.</p>
                   </div>
                   <div className={styles.headerRight}>
-                    <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>+ 지갑 등록</button>
+                    <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
+                    <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
                   </div>
                 </div>
               </header>
@@ -621,6 +623,16 @@ export default function ExpensesPage() {
                   </div>
               )}
 
+              {openBulkModal && (
+                <BulkExpenseModal
+                  isOpen={openBulkModal}
+                  onClose={() => setOpenBulkModal(false)}
+                  onSuccess={() => {
+                    fetchTodayExpenses();
+                  }}
+                  userId={session?.user?.id || ''}
+                />
+              )}
               <section className={styles.listSection}>
                 <h2 className={styles.sectionTitle}>오늘의 가계부</h2>
                 <div className={styles.ledgerList}>
