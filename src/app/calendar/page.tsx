@@ -19,15 +19,6 @@ export default function CalendarPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // 비로그인 상태에서는 데이터 로딩하지 않음
-  if (status === 'unauthenticated') {
-    return <LoginRequiredModal />;
-  }
-
-  // 로딩 중에는 아무것도 표시하지 않음
-  if (status === 'loading') {
-    return null;
-  }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
@@ -98,6 +89,16 @@ export default function CalendarPage() {
     loadData();
     return () => { mounted = false; };
   }, [currentDate]);
+
+  // 비로그인 상태에서는 데이터 로딩하지 않음
+  if (status === 'unauthenticated') {
+    return <LoginRequiredModal />;
+  }
+
+  // 로딩 중에는 아무것도 표시하지 않음
+  if (status === 'loading') {
+    return null;
+  }
 
   // 달력 그리드 생성을 위한 계산
   const getCalendarDays = () => {
