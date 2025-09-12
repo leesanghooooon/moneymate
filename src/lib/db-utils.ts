@@ -1,17 +1,31 @@
 import { query } from './db';
 
+interface JoinOptions {
+  type: 'LEFT' | 'RIGHT' | 'INNER';
+  table: string;
+  on: string;
+}
+
 interface SelectOptions {
   table: string;
   columns: string[];
   filters?: Record<string, any>;
   allowedFilterFields?: string[];
   orderBy?: string;
+  joins?: JoinOptions[];
 }
 
 export async function dbSelect(options: SelectOptions) {
   const { table, columns, filters = {}, allowedFilterFields = [], orderBy } = options;
 
   let sql = `SELECT ${columns.join(', ')} FROM ${table}`;
+
+  // JOIN 절 추가
+  if (options.joins) {
+    for (const join of options.joins) {
+      sql += ` ${join.type} JOIN ${join.table} ON ${join.on}`;
+    }
+  }
   const params: any[] = [];
 
   // WHERE 절 구성

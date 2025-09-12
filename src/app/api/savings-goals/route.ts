@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbSelect } from '../../../lib/db-utils';
+import { dbSelect, dbInsert } from '../../../lib/db-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,17 +14,26 @@ export async function GET(request: NextRequest) {
     }
 
     // 저축목표 조회 (지갑 정보 포함)
-    const goalsQuery = `
-      SELECT 
-        sg.*,
-        w.wlt_name
-      FROM MMT_SAV_GOL_MST sg
-      LEFT JOIN MMT_WLT_MST w ON sg.wlt_id = w.wlt_id
-      WHERE sg.usr_id = ? AND sg.use_yn = 'Y'
-      ORDER BY sg.created_at DESC
-    `;
-
-    const goals = await dbSelect(goalsQuery, [usr_id]);
+    const goals = await dbSelect({
+      table: 'MMT_SAV_GOL_MST sg',
+      columns: [
+        'sg.*',
+        'w.wlt_name'
+      ],
+      filters: {
+        'sg.usr_id': usr_id,
+        'sg.use_yn': 'Y'
+      },
+      allowedFilterFields: ['sg.usr_id', 'sg.use_yn'],
+      orderBy: 'sg.created_at DESC',
+      joins: [
+        {
+          type: 'LEFT',
+          table: 'MMT_WLT_MST w',
+          on: 'sg.wlt_id = w.wlt_id'
+        }
+      ]
+    });
 
     return NextResponse.json({
       success: true,
@@ -70,19 +79,27 @@ export async function POST(request: NextRequest) {
     // UUID 생성
     const sav_goal_id = crypto.randomUUID();
 
-    const insertQuery = `
-      INSERT INTO MMT_SAV_GOL_MST (
-        sav_goal_id, usr_id, wlt_id, goal_name, goal_type_cd, purpose_cd,
-        target_amount, start_date, end_date, deposit_cycle_cd, plan_amount,
-        alarm_yn, alarm_day, memo, use_yn
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Y')
-    `;
-
-    const result = await dbSelect(insertQuery, [
-      sav_goal_id, usr_id, wlt_id, goal_name, goal_type_cd, purpose_cd,
-      target_amount, start_date, end_date, deposit_cycle_cd, plan_amount,
-      alarm_yn, alarm_day, memo
-    ]);
+    // 저축목표 등록
+    await dbInsert({
+      table: 'MMT_SAV_GOL_MST',
+      data: {
+        sav_goal_id,
+        usr_id,
+        wlt_id,
+        goal_name,
+        goal_type_cd,
+        purpose_cd,
+        target_amount,
+        start_date,
+        end_date,
+        deposit_cycle_cd,
+        plan_amount,
+        alarm_yn,
+        alarm_day,
+        memo,
+        use_yn: 'Y'
+      }
+    });
 
     return NextResponse.json({
       success: true,

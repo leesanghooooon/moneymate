@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbSelect } from '../../../lib/db-common';
+import { dbSelect, dbInsert } from '../../../lib/db-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,23 +14,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = `
-      SELECT c.*
-      FROM MMT_SAV_GOL_CONTRIB c
-      INNER JOIN MMT_SAV_GOL_MST sg ON c.sav_goal_id = sg.sav_goal_id
-      WHERE sg.usr_id = ?
-    `;
-    
-    const params = [usr_id];
+    // 납입내역 조회
+    const filters: Record<string, any> = {
+      'sg.usr_id': usr_id
+    };
 
     if (sav_goal_id) {
-      query += ' AND c.sav_goal_id = ?';
-      params.push(sav_goal_id);
+      filters['c.sav_goal_id'] = sav_goal_id;
     }
 
-    query += ' ORDER BY c.contrib_date DESC, c.created_at DESC';
-
-    const contributions = await dbSelect(query, params);
+    const contributions = await dbSelect({
+      table: 'MMT_SAV_GOL_CONTRIB c',
+      columns: ['c.*'],
+      filters,
+      allowedFilterFields: ['sg.usr_id', 'c.sav_goal_id'],
+      orderBy: 'c.contrib_date DESC, c.created_at DESC',
+      joins: [
+        {
+          type: 'INNER',
+          table: 'MMT_SAV_GOL_MST sg',
+          on: 'c.sav_goal_id = sg.sav_goal_id'
+        }
+      ]
+    });
 
     return NextResponse.json({
       success: true,
@@ -68,15 +74,18 @@ export async function POST(request: NextRequest) {
     // UUID 생성
     const contrib_id = crypto.randomUUID();
 
-    const insertQuery = `
-      INSERT INTO MMT_SAV_GOL_CONTRIB (
-        contrib_id, sav_goal_id, trx_id, contrib_date, amount, memo
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    const result = await dbSelect(insertQuery, [
-      contrib_id, sav_goal_id, trx_id, contrib_date, amount, memo
-    ]);
+    // 납입내역 등록
+    await dbInsert({
+      table: 'MMT_SAV_GOL_CONTRIB',
+      data: {
+        contrib_id,
+        sav_goal_id,
+        trx_id,
+        contrib_date,
+        amount,
+        memo
+      }
+    });
 
     return NextResponse.json({
       success: true,
