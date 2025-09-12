@@ -42,7 +42,10 @@ interface Contribution {
   updated_at: string;
 }
 
+import SavingsGoalModal from '@/components/SavingsGoalModal';
+
 export default function SavingsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: session, status } = useSession();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
@@ -154,7 +157,7 @@ export default function SavingsPage() {
                   <p className={styles.subtitle}>나의 저축목표와 진행상황을 확인하세요.</p>
                 </div>
                 <div className={styles.headerRight}>
-                  <button className={styles.buttonPrimary}>+ 저축목표 추가</button>
+                  <button className={styles.buttonPrimary} onClick={() => setIsModalOpen(true)}>+ 저축목표 추가</button>
                 </div>
               </div>
             </header>
@@ -174,7 +177,7 @@ export default function SavingsPage() {
                 <div className={styles.emptyIcon}>💰</div>
                 <h3>저축목표가 없습니다</h3>
                 <p>첫 번째 저축목표를 만들어보세요!</p>
-                <button className={styles.buttonPrimary}>저축목표 만들기</button>
+                <button className={styles.buttonPrimary} onClick={() => setIsModalOpen(true)}>저축목표 만들기</button>
               </div>
             ) : (
               <>
@@ -326,6 +329,14 @@ export default function SavingsPage() {
           </div>
         </div>
       </main>
+
+      {/* 저축목표 생성 모달 */}
+      <SavingsGoalModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchSavingsGoals}
+        userId={session?.user?.id || ''}
+      />
     </div>
   );
 }

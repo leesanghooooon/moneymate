@@ -60,4 +60,28 @@ export async function getWallets(usr_id: string, wlt_type?: string): Promise<Wal
  */
 export async function getCards(): Promise<CommonCode[]> {
   return getCommonCodes('CARD');
-} 
+}
+
+/**
+ * 지출 주기 코드 정보를 조회하는 API
+ * @returns Promise<CommonCode[]> 카드사 코드 목록
+ */
+export async function getSavCycle(): Promise<CommonCode[]> {
+  return getCommonCodes('SAV_CYCLE');
+}
+
+/**
+ * 저축 목표 코드 정보를 조회하는 API
+ * @returns Promise<CommonCode[]> 카드사 코드 목록
+ */
+export async function getGoalType(): Promise<CommonCode[]> {
+  return getCommonCodes('GOAL_TYPE');
+}
+
+/**
+ * 저축 목적 코드 정보를 조회하는 API
+ * @returns Promise<CommonCode[]> 카드사 코드 목록
+ */
+export async function getTrxType(): Promise<CommonCode[]> {
+  return getCommonCodes('TRX_TYPE');
+}
