@@ -126,7 +126,7 @@ export default function SavingsPage() {
   // 날짜를 YYYY-MM-DD에서 MM-DD 형식으로 변환하는 함수
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return `${String(date.getFullYear()).padStart(2, '0')}년 ${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일`;
   };
 
   // 진행률에 따른 색상 반환
@@ -148,7 +148,13 @@ export default function SavingsPage() {
   }
 
   const goalsWithProgress = calculateCurrentAmounts();
-
+    console.log('저축목표 데이터:', goalsWithProgress.map(goal => ({
+      goal_name: goal.goal_name,
+      is_completed: goal.is_completed,
+      progress_percentage: goal.progress_percentage,
+      current_amount: goal.current_amount,
+      target_amount: goal.target_amount
+    })));
   return (
     <div className={layoutStyles.dashboard}>
       <main className={layoutStyles.dashboardBody}>
@@ -211,10 +217,11 @@ export default function SavingsPage() {
                       <div className={styles.summaryContent}>
                         <div className={styles.summaryLabel}>전체 진행률</div>
                         <div className={styles.summaryValue}>
-                          {Math.round(
-                            (goalsWithProgress.reduce((sum, goal) => sum + Number(goal.current_amount || 0), 0) /
-                             goalsWithProgress.reduce((sum, goal) => sum + Number(goal.target_amount), 0)) * 100
-                          )}%
+                          {(() => {
+                            const totalTarget = goalsWithProgress.reduce((sum, goal) => sum + Number(goal.target_amount), 0);
+                            const totalCurrent = goalsWithProgress.reduce((sum, goal) => sum + Number(goal.current_amount || 0), 0);
+                            return totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+                          })()}%
                         </div>
                       </div>
                     </div>
@@ -223,7 +230,7 @@ export default function SavingsPage() {
                       <div className={styles.summaryContent}>
                         <div className={styles.summaryLabel}>완료된 목표</div>
                         <div className={styles.summaryValue}>
-                          {goalsWithProgress.filter(goal => goal.is_completed === 'Y').length}개
+                          {goalsWithProgress.filter(goal => goal.is_completed === 'Y' || (goal.progress_percentage || 0) >= 100).length}개
                         </div>
                       </div>
                     </div>
@@ -247,7 +254,7 @@ export default function SavingsPage() {
                             </div>
                           </div>
                           <div className={styles.goalStatus}>
-                            {goal.is_completed === 'Y' && (
+                            {(goal.is_completed === 'Y' || (goal.progress_percentage || 0) >= 100) && (
                               <span className={styles.completedBadge}>완료</span>
                             )}
                             {goal.is_paused === 'Y' && (
@@ -285,6 +292,7 @@ export default function SavingsPage() {
                           <div className={styles.goalDetail}>
                             <span className={styles.detailLabel}>시작일:</span>
                             <span className={styles.detailValue}>{formatDate(goal.start_date)}</span>
+
                           </div>
                           {goal.end_date && (
                             <div className={styles.goalDetail}>
