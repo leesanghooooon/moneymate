@@ -95,11 +95,11 @@ export default function SavingsContributionModal({
         memo: formData.memo || null
       });
 
-      if (response.success) {
+      if (response.status == 200) {
         onSuccess();
         handleClose();
       } else {
-        throw new Error(response.message || '납입 처리에 실패했습니다.');
+        throw new Error(response.data?.message || '납입 처리에 실패했습니다.');
       }
     } catch (error) {
       console.error('납입 처리 오류:', error);
@@ -211,12 +211,12 @@ export default function SavingsContributionModal({
                   id="amount"
                   name="amount"
                   value={formData.amount}
+                  onChange={handleInputChange}
                   className={`${styles.input} ${fieldErrors.amount ? styles.error : ''}`}
                   placeholder="납입할 금액을 입력하세요"
                   inputMode="numeric"
                 />
               {/*value={displayAmount}*/}
-              {/*onChange={handleInputChange}*/}
               {/*pattern="\d*"*/}
               {fieldErrors.amount && (
                 <div className={styles.fieldError}>{fieldErrors.amount}</div>

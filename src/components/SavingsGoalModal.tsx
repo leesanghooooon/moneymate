@@ -162,11 +162,11 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
           alarm_day: formData.alarm_day ? Number(formData.alarm_day) : null
         })
 
-      if (response.success) {
+      if (response.status == 200) {
         onSuccess();
         handleClose();
       } else {
-        throw new Error(response.message || '저축목표 생성에 실패했습니다.');
+        throw new Error(response.data?.message || '저축목표 생성에 실패했습니다.');
       }
     } catch (error) {
       console.error('저축목표 생성 오류:', error);

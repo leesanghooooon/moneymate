@@ -104,7 +104,7 @@ export default function SavingsPage() {
       if (!acc[contrib.sav_goal_id]) {
         acc[contrib.sav_goal_id] = 0;
       }
-      acc[contrib.sav_goal_id] += contrib.amount;
+      acc[contrib.sav_goal_id] += Number(contrib.amount);
       return acc;
     }, {} as Record<string, number>);
 
@@ -112,7 +112,7 @@ export default function SavingsPage() {
       ...goal,
       current_amount: goalContributions[goal.sav_goal_id] || 0,
       progress_percentage: Math.min(
-        ((goalContributions[goal.sav_goal_id] || 0) / goal.target_amount) * 100,
+        ((goalContributions[goal.sav_goal_id] || 0) / Number(goal.target_amount)) * 100,
         100
       )
     }));
@@ -193,7 +193,7 @@ export default function SavingsPage() {
                       <div className={styles.summaryContent}>
                         <div className={styles.summaryLabel}>총 목표 금액</div>
                         <div className={styles.summaryValue}>
-                          {formatKRW(goalsWithProgress.reduce((sum, goal) => sum + goal.target_amount, 0))}원
+                          {formatKRW(goalsWithProgress.reduce((sum, goal) => sum + Number(goal.target_amount), 0))}원
                         </div>
                       </div>
                     </div>
@@ -202,7 +202,7 @@ export default function SavingsPage() {
                       <div className={styles.summaryContent}>
                         <div className={styles.summaryLabel}>현재 저축액</div>
                         <div className={styles.summaryValue}>
-                          {formatKRW(goalsWithProgress.reduce((sum, goal) => sum + (goal.current_amount || 0), 0))}원
+                          {formatKRW(goalsWithProgress.reduce((sum, goal) => sum + Number(goal.current_amount || 0), 0))}원
                         </div>
                       </div>
                     </div>
@@ -212,8 +212,8 @@ export default function SavingsPage() {
                         <div className={styles.summaryLabel}>전체 진행률</div>
                         <div className={styles.summaryValue}>
                           {Math.round(
-                            (goalsWithProgress.reduce((sum, goal) => sum + (goal.current_amount || 0), 0) /
-                             goalsWithProgress.reduce((sum, goal) => sum + goal.target_amount, 0)) * 100
+                            (goalsWithProgress.reduce((sum, goal) => sum + Number(goal.current_amount || 0), 0) /
+                             goalsWithProgress.reduce((sum, goal) => sum + Number(goal.target_amount), 0)) * 100
                           )}%
                         </div>
                       </div>
