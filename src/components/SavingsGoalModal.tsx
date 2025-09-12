@@ -21,6 +21,7 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
   const [depositCycles, setDepositCycles] = useState<CommonCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // 폼 데이터 상태
   const [formData, setFormData] = useState({
@@ -65,9 +66,89 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
     }
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    // 목표 이름 검증 (varchar(100))
+    if (!formData.goal_name.trim()) {
+      errors.goal_name = '목표 이름을 입력해주세요.';
+    } else if (formData.goal_name.length > 100) {
+      errors.goal_name = '목표 이름은 100자를 초과할 수 없습니다.';
+    }
+
+    // 목표 유형 검증 (varchar(50))
+    if (!formData.goal_type_cd) {
+      errors.goal_type_cd = '목표 유형을 선택해주세요.';
+    }
+
+    // 목적 코드 검증 (varchar(50))
+    if (formData.purpose_cd && formData.purpose_cd.length > 50) {
+      errors.purpose_cd = '목적 코드가 유효하지 않습니다.';
+    }
+
+    // 목표 금액 검증 (decimal(14,2))
+    if (!formData.target_amount || Number(formData.target_amount) <= 0) {
+      errors.target_amount = '유효한 목표 금액을 입력해주세요.';
+    } else if (Number(formData.target_amount) > 999999999999.99) {
+      errors.target_amount = '목표 금액이 너무 큽니다. (최대 999,999,999,999.99)';
+    }
+
+    // 시작일 검증
+    if (!formData.start_date) {
+      errors.start_date = '시작일을 선택해주세요.';
+    }
+
+    // 목표일 검증
+    if (formData.end_date) {
+      if (formData.end_date <= formData.start_date) {
+        errors.end_date = '목표일은 시작일 이후여야 합니다.';
+      }
+    }
+
+    // 납입 주기 검증 (varchar(20))
+    if (formData.deposit_cycle_cd) {
+      if (formData.deposit_cycle_cd.length > 20) {
+        errors.deposit_cycle_cd = '납입 주기가 유효하지 않습니다.';
+      }
+      // 납입 주기가 선택된 경우 계획 금액 필수
+      if (!formData.plan_amount) {
+        errors.plan_amount = '납입 주기 선택 시 계획 금액을 입력해주세요.';
+      }
+    }
+
+    // 계획 금액 검증 (decimal(14,2))
+    if (formData.plan_amount) {
+      if (Number(formData.plan_amount) <= 0) {
+        errors.plan_amount = '유효한 계획 금액을 입력해주세요.';
+      } else if (Number(formData.plan_amount) > 999999999999.99) {
+        errors.plan_amount = '계획 금액이 너무 큽니다. (최대 999,999,999,999.99)';
+      }
+    }
+
+    // 알림 설정 검증
+    if (formData.alarm_yn === 'Y') {
+      if (!formData.alarm_day || Number(formData.alarm_day) < 1 || Number(formData.alarm_day) > 31) {
+        errors.alarm_day = '알림일은 1-31 사이의 숫자여야 합니다.';
+      }
+    }
+
+    // 메모 검증 (varchar(255))
+    if (formData.memo && formData.memo.length > 255) {
+      errors.memo = '메모는 255자를 초과할 수 없습니다.';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
+
+    if (!validateForm()) {
+      setError('필수 정보를 모두 입력해주세요.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -101,6 +182,8 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
   };
 
   const handleClose = () => {
+    setFieldErrors({});
+    setError(null);
     setFormData({
       goal_name: '',
       goal_type_cd: 'SAVINGS',
@@ -140,29 +223,33 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
             <h3 className={styles.sectionTitle}>기본 정보</h3>
             
             <div className={styles.formGroup}>
-              <label htmlFor="goal_name" className={styles.label}>목표 이름 *</label>
+              <label htmlFor="goal_name" className={`${styles.label} ${styles.required}`}>목표 이름</label>
               <input
                 type="text"
                 id="goal_name"
                 name="goal_name"
                 value={formData.goal_name}
                 onChange={handleInputChange}
-                required
-                className={styles.input}
+                className={`${styles.input} ${fieldErrors.goal_name ? styles.error : ''}`}
                 placeholder="예: 결혼자금, 주택청약, 여행자금"
               />
+              {fieldErrors.goal_name && (
+                <div className={styles.fieldError}>{fieldErrors.goal_name}</div>
+              )}
             </div>
 
             <div className={styles.formGroup}>
-              <label htmlFor="goal_type_cd" className={styles.label}>목표 유형 *</label>
-              <select
+              <label htmlFor="goal_type_cd" className={`${styles.label} ${styles.required}`}>목표 유형</label>
+                <select
                 id="goal_type_cd"
                 name="goal_type_cd"
-                value={formData.goal_type_cd}
-                onChange={handleInputChange}
-                required
-                className={styles.select}
+                value="SAVINGS"
+                disabled
+                className={`${styles.select} ${styles.disabled}`}
               >
+              {fieldErrors.goal_type_cd && (
+                <div className={styles.fieldError}>{fieldErrors.goal_type_cd}</div>
+              )}
                 {goalTypes.map(type => (
                   <option key={type.cd} value={type.cd}>
                     {type.cd_nm}
@@ -212,32 +299,36 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
             <h3 className={styles.sectionTitle}>목표 설정</h3>
 
             <div className={styles.formGroup}>
-              <label htmlFor="target_amount" className={styles.label}>목표 금액 *</label>
+              <label htmlFor="target_amount" className={`${styles.label} ${styles.required}`}>목표 금액</label>
               <input
                 type="number"
                 id="target_amount"
                 name="target_amount"
                 value={formData.target_amount}
                 onChange={handleInputChange}
-                required
                 min="0"
-                className={styles.input}
+                className={`${styles.input} ${fieldErrors.target_amount ? styles.error : ''}`}
                 placeholder="목표 금액을 입력하세요"
               />
+              {fieldErrors.target_amount && (
+                <div className={styles.fieldError}>{fieldErrors.target_amount}</div>
+              )}
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label htmlFor="start_date" className={styles.label}>시작일 *</label>
+                <label htmlFor="start_date" className={`${styles.label} ${styles.required}`}>시작일</label>
                 <input
                   type="date"
                   id="start_date"
                   name="start_date"
                   value={formData.start_date}
                   onChange={handleInputChange}
-                  required
-                  className={styles.input}
+                  className={`${styles.input} ${fieldErrors.start_date ? styles.error : ''}`}
                 />
+                {fieldErrors.start_date && (
+                  <div className={styles.fieldError}>{fieldErrors.start_date}</div>
+                )}
               </div>
 
               <div className={styles.formGroup}>
