@@ -44,8 +44,12 @@ interface Contribution {
 
 import SavingsGoalModal from '@/components/SavingsGoalModal';
 
+import SavingsContributionModal from '@/components/SavingsContributionModal';
+
 export default function SavingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isContribModalOpen, setIsContribModalOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const { data: session, status } = useSession();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
@@ -316,7 +320,15 @@ export default function SavingsPage() {
                         )}
 
                         <div className={styles.goalActions}>
-                          <button className={styles.buttonSecondary}>납입하기</button>
+                          <button
+                            className={styles.buttonSecondary}
+                            onClick={() => {
+                              setSelectedGoal(goal);
+                              setIsContribModalOpen(true);
+                            }}
+                          >
+                            납입하기
+                          </button>
                           <button className={styles.buttonGhost}>수정</button>
                           <button className={styles.buttonGhost}>삭제</button>
                         </div>
@@ -337,6 +349,21 @@ export default function SavingsPage() {
         onSuccess={fetchSavingsGoals}
         userId={session?.user?.id || ''}
       />
+
+      {/* 저축 납입 모달 */}
+      {selectedGoal && (
+        <SavingsContributionModal
+          isOpen={isContribModalOpen}
+          onClose={() => {
+            setIsContribModalOpen(false);
+            setSelectedGoal(null);
+          }}
+          onSuccess={() => {
+            Promise.all([fetchSavingsGoals(), fetchContributions()]);
+          }}
+          savingsGoal={selectedGoal}
+        />
+      )}
     </div>
   );
 }
