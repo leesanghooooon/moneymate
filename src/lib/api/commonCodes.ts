@@ -85,3 +85,18 @@ export async function getGoalType(): Promise<CommonCode[]> {
 export async function getTrxType(): Promise<CommonCode[]> {
   return getCommonCodes('TRX_TYPE');
 }
+/**
+ * 저축 목표 타입 코드의 한글명을 조회하는 API
+ * @param code 저축 목표 타입 코드 (예: 'SAVINGS', 'INVESTMENT' 등)
+ * @returns Promise<string> 해당 코드의 한글명, 찾지 못하면 코드 자체를 반환
+ */
+export async function getGoalTypeName(code: string): Promise<string> {
+  try {
+    const goalTypes = await getGoalType();
+    const foundType = goalTypes.find(type => type.cd === code);
+    return foundType ? foundType.cd_nm : code;
+  } catch (error) {
+    console.error('목표 타입명 조회 오류:', error);
+    return code; // 오류 발생 시 코드 자체를 반환
+  }
+}

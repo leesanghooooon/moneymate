@@ -18,7 +18,19 @@ export async function GET(request: NextRequest) {
       table: 'MMT_SAV_GOL_MST sg',
       columns: [
         'sg.*',
-        'w.wlt_name'
+        'w.wlt_name',
+        {
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'GOAL_TYPE\' AND cd = sg.goal_type_cd)',
+          alias: 'goal_type_cd_nm'
+        },
+        {
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'GOAL_TYPE\' AND cd = sg.purpose_cd)',
+          alias: 'purpose_cd_nm'
+        },
+        {
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'SAV_CYCLE\' AND cd = sg.deposit_cycle_cd)',
+          alias: 'deposit_cycle_cd_nm'
+        }
       ],
       filters: {
         'sg.usr_id': usr_id,

@@ -6,9 +6,14 @@ interface JoinOptions {
   on: string;
 }
 
+interface ColumnOptions {
+  name: string;
+  alias: string;
+}
+
 interface SelectOptions {
   table: string;
-  columns: string[];
+  columns: (string | ColumnOptions)[];
   filters?: Record<string, any>;
   allowedFilterFields?: string[];
   orderBy?: string;
@@ -18,7 +23,16 @@ interface SelectOptions {
 export async function dbSelect(options: SelectOptions) {
   const { table, columns, filters = {}, allowedFilterFields = [], orderBy } = options;
 
-  let sql = `SELECT ${columns.join(', ')} FROM ${table}`;
+  // 컬럼 처리 - 문자열과 객체 모두 지원
+  const columnStrings = columns.map(col => {
+    if (typeof col === 'string') {
+      return col;
+    } else {
+      return `${col.name} AS ${col.alias}`;
+    }
+  });
+
+  let sql = `SELECT ${columnStrings.join(', ')} FROM ${table}`;
 
   // JOIN 절 추가
   if (options.joins) {

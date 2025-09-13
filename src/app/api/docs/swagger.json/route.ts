@@ -1486,6 +1486,21 @@ export async function GET(request: NextRequest) {
               type: 'string',
               nullable: true,
               description: '연결된 지갑 이름'
+            },
+            goal_type_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '목표 유형명'
+            },
+            purpose_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '목적 코드명'
+            },
+            deposit_cycle_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '납입 주기명'
             }
           },
           required: ['sav_goal_id', 'usr_id', 'goal_name', 'target_amount', 'start_date']

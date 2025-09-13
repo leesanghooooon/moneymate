@@ -29,6 +29,9 @@ interface SavingsGoal {
   wlt_name?: string;
   current_amount?: number;
   progress_percentage?: number;
+  goal_type_cd_nm?: string; // API에서 받아오는 한글명
+  purpose_cd_nm?: string; // API에서 받아오는 한글명
+  deposit_cycle_cd_nm?: string; // API에서 받아오는 한글명
 }
 
 interface Contribution {
@@ -247,9 +250,9 @@ export default function SavingsPage() {
                           <div className={styles.goalInfo}>
                             <h3 className={styles.goalName}>{goal.goal_name}</h3>
                             <div className={styles.goalMeta}>
-                              <span className={styles.goalType}>{goal.goal_type_cd}</span>
-                              {goal.purpose_cd && (
-                                <span className={styles.goalPurpose}>{goal.purpose_cd}</span>
+                              <span className={styles.goalType}>{goal.goal_type_cd_nm || goal.goal_type_cd}</span>
+                              {goal.purpose_cd_nm && (
+                                <span className={styles.goalPurpose}>{goal.purpose_cd_nm}</span>
                               )}
                             </div>
                           </div>
@@ -300,10 +303,10 @@ export default function SavingsPage() {
                               <span className={styles.detailValue}>{formatDate(goal.end_date)}</span>
                             </div>
                           )}
-                          {goal.deposit_cycle_cd && (
+                          {goal.deposit_cycle_cd_nm && (
                             <div className={styles.goalDetail}>
                               <span className={styles.detailLabel}>납입주기:</span>
-                              <span className={styles.detailValue}>{goal.deposit_cycle_cd}</span>
+                              <span className={styles.detailValue}>{goal.deposit_cycle_cd_nm}</span>
                             </div>
                           )}
                           {goal.plan_amount && (
