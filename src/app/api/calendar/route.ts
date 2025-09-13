@@ -13,6 +13,7 @@ interface CalendarData {
     trx_type: string;
     amount: number;
     category_cd: string;
+    category_cd_nm: string;
     memo: string | null;
     wlt_id: string;
     created_at: string;
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
                     'trx_type',    t.trx_type,
                     'amount',      t.amount,
                     'category_cd', t.category_cd,
+                    'category_cd_nm', (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = 'FOOD'),
                     'memo',        t.memo,
                     'wlt_id',      t.wlt_id,
                     'created_at',  DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s')

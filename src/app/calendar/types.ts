@@ -3,6 +3,7 @@ export interface Transaction {
   trx_type: 'INCOME' | 'EXPENSE';
   amount: number;
   category_cd: string;
+  category_cd_nm: string;
   memo: string | null;
   wlt_id: string;
   created_at: string;

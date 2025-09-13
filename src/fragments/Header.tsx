@@ -10,7 +10,7 @@ const Header = () => {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState('home');
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // status 추가
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -27,11 +27,11 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+  
   const menuItems = [
-
     { id: 'home', label: 'Home', path: '/' },
     { id: 'expenses', label: 'Expenses', path: '/expenses' },
-    { id: 'savings', label: '저축목표', path: '/savings' },
+    { id: 'savings', label: 'Goal', path: '/savings' },
     { id: 'calendar', label: 'Calendar', path: '/calendar' },
     { id: 'statistics', label: 'Statistics' },
   ];
@@ -88,7 +88,10 @@ const Header = () => {
         
         <div className={styles.headerRight}>
           <div className={styles.authSection}>
-            {session?.user ? (
+            {/* 세션 로딩 중일 때는 아무것도 표시하지 않음 */}
+            {status === 'loading' ? (
+              <div style={{ width: '120px', height: '40px' }}></div>
+            ) : session?.user ? (
               <div className={styles.profileContainer} ref={profileRef}>
                 <button 
                   className={styles.profileButton}

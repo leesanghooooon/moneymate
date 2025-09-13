@@ -58,6 +58,12 @@ export default function CalendarPage() {
   };
 
   useEffect(() => {
+    // 세션이 로딩 중이거나 사용자 ID가 없으면 API 호출하지 않음
+    if (status === 'loading' || !session?.user?.id) {
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
     setLoading(true);
 
@@ -67,7 +73,7 @@ export default function CalendarPage() {
         const mm = currentDate.month.toString().padStart(2, '0');
         
         const response = await fetch(
-          `/api/calendar?usr_id=${session?.user?.id}&yyyy=${yyyy}&mm=${mm}`
+          `/api/calendar?usr_id=${session.user.id}&yyyy=${yyyy}&mm=${mm}`
         );
 
         if (!response.ok) {
@@ -88,7 +94,7 @@ export default function CalendarPage() {
 
     loadData();
     return () => { mounted = false; };
-  }, [currentDate]);
+  }, [currentDate, session?.user?.id, status]);
 
   // 비로그인 상태에서는 데이터 로딩하지 않음
   if (status === 'unauthenticated') {
@@ -212,7 +218,7 @@ export default function CalendarPage() {
                                       {formatAmount(trx.amount, trx.trx_type)}
                                     </span>
                                     <span className={styles.category}>
-                                      {trx.memo || trx.category_cd}
+                                      {trx.memo || trx.category_cd_nm}
                                     </span>
                                   </div>
                                 ))}
