@@ -392,6 +392,112 @@
   color: #374151;
 }
 
+/* 월별 필요 저축액 영역 */
+.monthlyRequirement {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.completedMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.completedIcon {
+  font-size: 20px;
+}
+
+.completedText {
+  font-size: 16px;
+}
+
+.overdueMessage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ef4444;
+}
+
+.overdueIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.overdueContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.overdueText {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.overdueAmount {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.requirementInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.requirementHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.requirementIcon {
+  font-size: 16px;
+}
+
+.requirementTitle {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.requirementDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirementItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.requirementLabel {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.requirementValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.monthlyAmount {
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 14px;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 960px) {
   .headerTop {

@@ -140,6 +140,51 @@ export default function SavingsPage() {
     return '#ef4444'; // 50% 미만 - 빨강
   };
 
+  // 목표 달성을 위한 월별 필요 저축액 계산
+  const calculateMonthlyRequirement = (goal: SavingsGoal & { current_amount?: number }) => {
+    if (!goal.end_date) {
+      return null; // 목표일이 없으면 계산 불가
+    }
+
+    const today = new Date();
+    const endDate = new Date(goal.end_date);
+    const remainingAmount = Number(goal.target_amount) - (goal.current_amount || 0);
+    
+    // 이미 목표를 달성했거나 초과한 경우
+    if (remainingAmount <= 0) {
+      return {
+        isCompleted: true,
+        remainingAmount: 0,
+        monthsRemaining: 0,
+        monthlyRequirement: 0
+      };
+    }
+
+    // 남은 개월 수 계산 (현재 월부터 목표 월까지)
+    const monthsRemaining = (endDate.getFullYear() - today.getFullYear()) * 12 + 
+                           (endDate.getMonth() - today.getMonth()) + 1;
+
+    // 목표일이 이미 지났거나 이번 달까지인 경우
+    if (monthsRemaining <= 0) {
+      return {
+        isOverdue: true,
+        remainingAmount,
+        monthsRemaining: 0,
+        monthlyRequirement: remainingAmount
+      };
+    }
+
+    const monthlyRequirement = Math.ceil(remainingAmount / monthsRemaining);
+
+    return {
+      isCompleted: false,
+      isOverdue: false,
+      remainingAmount,
+      monthsRemaining,
+      monthlyRequirement
+    };
+  };
+
   // 비로그인 상태에서는 데이터 로딩하지 않음
   if (status === 'unauthenticated') {
     return <LoginRequiredModal />;
@@ -322,6 +367,60 @@ export default function SavingsPage() {
                             </div>
                           )}
                         </div>
+
+                        {/* 월별 필요 저축액 계산 영역 */}
+                        {(() => {
+                          const monthlyReq = calculateMonthlyRequirement(goal);
+                          if (!monthlyReq) return null;
+
+                          return (
+                              <div className={styles.monthlyRequirement}>
+                                {monthlyReq.isCompleted ? (
+                                    <div className={styles.completedMessage}>
+                                      <span className={styles.completedIcon}>🎉</span>
+                                      <span className={styles.completedText}>목표 달성 완료!</span>
+                                    </div>
+                                ) : monthlyReq.isOverdue ? (
+                                    <div className={styles.overdueMessage}>
+                                      <span className={styles.overdueIcon}>⚠️</span>
+                                      <div className={styles.overdueContent}>
+                                        <span className={styles.overdueText}>목표 기간이 지났습니다</span>
+                                        <span className={styles.overdueAmount}>
+                                      부족 금액: {formatKRW(monthlyReq.remainingAmount)}원
+                                    </span>
+                                      </div>
+                                    </div>
+                                ) : (
+                                    <div className={styles.requirementInfo}>
+                                      <div className={styles.requirementHeader}>
+                                        {/*<span className={styles.requirementIcon}>📅</span>*/}
+                                        <span className={styles.requirementTitle}>목표 달성 계획</span>
+                                      </div>
+                                      <div className={styles.requirementDetails}>
+                                        <div className={styles.requirementItem}>
+                                          <span className={styles.requirementLabel}>남은 기간:</span>
+                                          <span className={styles.requirementValue}>
+                                        {monthlyReq.monthsRemaining}개월
+                                      </span>
+                                        </div>
+                                        <div className={styles.requirementItem}>
+                                          <span className={styles.requirementLabel}>남은 금액:</span>
+                                          <span className={styles.requirementValue}>
+                                        {formatKRW(monthlyReq.remainingAmount)}원
+                                      </span>
+                                        </div>
+                                        <div className={styles.requirementItem}>
+                                          <span className={styles.requirementLabel}>월별 필요 납부 금액:</span>
+                                          <span className={`${styles.requirementValue} ${styles.monthlyAmount}`}>
+                                        {formatKRW(monthlyReq.monthlyRequirement)}원/월
+                                      </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                )}
+                              </div>
+                          );
+                        })()}
 
                         {goal.memo && (
                           <div className={styles.goalMemo}>
