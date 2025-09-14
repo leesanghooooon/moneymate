@@ -6,6 +6,9 @@ export interface Transaction {
   category_cd_nm: string;
   memo: string | null;
   wlt_id: string;
+  wlt_name: string;
+  usr_id: string;
+  is_shared: boolean;
   created_at: string;
 }
 

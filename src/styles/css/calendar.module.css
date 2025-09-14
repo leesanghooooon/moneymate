@@ -221,6 +221,33 @@
   color: #6b7280;
 }
 
+.sharedWallet {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* 공유 거래 스타일 */
+.transaction.shared {
+  border-left: 3px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.transaction.shared .category {
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+.transaction.shared .sharedWallet {
+  color: #8b5cf6;
+}
+
+.calendarPage {
+  padding: 24px 0;
+  min-height: calc(100vh - 72px);
+}
+
 @media (max-width: 960px) {
   .headerTop {
     flex-direction: column;

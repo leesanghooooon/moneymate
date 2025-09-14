@@ -57,6 +57,12 @@ export default function CalendarPage() {
     return type === 'INCOME' ? `+${formatted}원` : `-${formatted}원`;
   };
 
+  // 공유 거래 아이콘 표시 함수
+  const getSharedIcon = (isShared: boolean | number) => {
+    // is_shared가 1 또는 true이면 👥 아이콘 표시
+    return (isShared === 1 || isShared === true) ? '👥 ' : '';
+  };
+
   useEffect(() => {
     // 세션이 로딩 중이거나 사용자 ID가 없으면 API 호출하지 않음
     if (status === 'loading' || !session?.user?.id) {
@@ -212,13 +218,17 @@ export default function CalendarPage() {
                                     key={trx.trx_id}
                                     className={`${styles.transaction} ${
                                       trx.trx_type === 'INCOME' ? styles.income : styles.expense
-                                    }`}
+                                    } ${trx.is_shared ? styles.shared : ''}`}
                                   >
                                     <span className={styles.amount}>
                                       {formatAmount(trx.amount, trx.trx_type)}
                                     </span>
                                     <span className={styles.category}>
+                                      {getSharedIcon(trx.is_shared)}
                                       {trx.memo || trx.category_cd_nm}
+                                    </span>
+                                    <span className={styles.sharedWallet}>
+                                      ({trx.wlt_name})
                                     </span>
                                   </div>
                                 ))}

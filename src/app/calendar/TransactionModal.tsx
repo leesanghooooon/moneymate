@@ -21,11 +21,19 @@ export default function TransactionModal({ date, transactions, onClose }: Transa
   };
 
   // 시간 포맷팅
-  const formatTime = (dateTimeStr: string) => {
-    const date = new Date(dateTimeStr);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ko-KR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  // 공유 거래 아이콘 표시 함수
+  const getSharedIcon = (isShared: boolean | number) => {
+    // is_shared가 1 또는 true이면 👥 아이콘 표시
+    return (isShared === 1 || isShared === true) ? '👥 ' : '';
   };
 
   // 수입/지출 합계 계산
@@ -75,8 +83,10 @@ export default function TransactionModal({ date, transactions, onClose }: Transa
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .map((trx) => (
               <div 
-                key={trx.trx_id} 
-                className={`${styles.transactionItem} ${trx.trx_type === 'INCOME' ? styles.income : styles.expense}`}
+                key={trx.trx_id}
+                className={`${styles.transactionItem} ${
+                  trx.trx_type === 'INCOME' ? styles.income : styles.expense
+                } ${trx.is_shared ? styles.shared : ''}`}
               >
                 <div className={styles.transactionHeader}>
                   <span className={styles.transactionTime}>
@@ -88,6 +98,7 @@ export default function TransactionModal({ date, transactions, onClose }: Transa
                 </div>
                 <div className={styles.transactionDetails}>
                   <span className={styles.transactionCategory}>
+                    {getSharedIcon(trx.is_shared)}
                     {trx.category_cd}
                   </span>
                   {trx.memo && (
@@ -95,6 +106,9 @@ export default function TransactionModal({ date, transactions, onClose }: Transa
                       {trx.memo}
                     </span>
                   )}
+                  <span className={styles.sharedInfo}>
+                    지갑: {trx.wlt_name}
+                  </span>
                 </div>
               </div>
             ))}

@@ -192,3 +192,24 @@
   font-size: 14px;
   color: #6b7280;
 }
+
+.sharedInfo {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.transactionItem.shared {
+  border-left: 3px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.transactionItem.shared .transactionCategory {
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+.transactionItem.shared .sharedInfo {
+  color: #8b5cf6;
+}
