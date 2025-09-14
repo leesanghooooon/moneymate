@@ -49,6 +49,11 @@ import { ApiError } from '@/lib/api/common';
  *                 enum: [Y, N]
  *                 default: N
  *                 description: 기본 지갑 여부
+ *               share_yn:
+ *                 type: string
+ *                 enum: [Y, N]
+ *                 default: N
+ *                 description: 지갑 공유 여부
  *     responses:
  *       200:
  *         description: 지갑 정보가 성공적으로 수정됨
@@ -90,7 +95,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { usr_id, wlt_type, wlt_name, bank_cd, is_default } = body;
+    const { usr_id, wlt_type, wlt_name, bank_cd, is_default, share_yn } = body;
 
     // 필수 필드 검증
     if (!usr_id || !wlt_type || !wlt_name) {
@@ -110,7 +115,8 @@ export async function PUT(
         wlt_id: params.id,
         usr_id: usr_id,
         use_yn: 'Y'
-      }
+      },
+      allowedFilterFields: ['wlt_id', 'usr_id', 'use_yn']
     });
 
     if (!existingWallets.length) {
@@ -135,6 +141,7 @@ export async function PUT(
             wlt_name,
             bank_cd: bank_cd || null,
             is_default: is_default || 'N',
+            share_yn: share_yn || 'N',
             updated_at: new Date()
         },
         where: 'wlt_id = ? AND usr_id = ?',
@@ -146,7 +153,7 @@ export async function PUT(
   } catch (error) {
     console.error('지갑 수정 중 오류 발생:', error);
     if (error instanceof ApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
     return NextResponse.json({ error: '지갑 수정 중 오류가 발생했습니다.' }, { status: 500 });
   }
@@ -205,7 +212,8 @@ export async function DELETE(
       filters: {
         wlt_id: params.id,
         use_yn: 'Y'
-      }
+      },
+      allowedFilterFields: ['wlt_id', 'use_yn']
     });
 
     if (!wallets.length) {
@@ -221,7 +229,7 @@ export async function DELETE(
       table: 'MMT_WLT_MST',
       data: {
         use_yn: 'N',
-        upd_dt: new Date()
+        updated_at: new Date()
       },
       where: 'wlt_id = ?',
       params: [params.id]
@@ -232,7 +240,7 @@ export async function DELETE(
   } catch (error) {
     console.error('지갑 삭제 중 오류 발생:', error);
     if (error instanceof ApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
     return NextResponse.json({ error: '지갑 삭제 중 오류가 발생했습니다.' }, { status: 500 });
   }

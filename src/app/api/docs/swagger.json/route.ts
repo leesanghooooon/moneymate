@@ -965,6 +965,269 @@ export async function GET(request: NextRequest) {
             }
           }
         }
+      },
+      '/share-groups': {
+        get: {
+          summary: '공유 그룹 목록 조회',
+          description: '사용자가 속한 가계부 공유 그룹 목록을 조회합니다.',
+          tags: ['ShareGroups'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '공유 그룹 목록 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/ShareGroup' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: '공유 그룹 생성',
+          description: '새로운 가계부 공유 그룹을 생성합니다.',
+          tags: ['ShareGroups'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ShareGroupCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '공유 그룹 생성 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      message: { type: 'string', example: '공유 그룹이 생성되었습니다.' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          grp_id: { type: 'string', description: '생성된 그룹 ID' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/share-groups/invite': {
+        post: {
+          summary: '공유 그룹 초대',
+          description: '사용자를 가계부 공유 그룹에 초대합니다.',
+          tags: ['ShareGroups'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ShareGroupInviteRequest' }
+              }
+            }
+          },
+          responses: {
+            '200': {
+              description: '초대 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      message: { type: 'string', example: '초대가 완료되었습니다.' }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '403': {
+              description: '권한 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/share-groups/invite/respond': {
+        post: {
+          summary: '공유 그룹 초대 응답',
+          description: '가계부 공유 그룹 초대에 대한 응답(수락/거절/철회)을 처리합니다.',
+          tags: ['ShareGroups'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ShareGroupInviteResponseRequest' }
+              }
+            }
+          },
+          responses: {
+            '200': {
+              description: '응답 처리 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      message: { type: 'string', example: '초대를 수락했습니다.' }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '404': {
+              description: '초대를 찾을 수 없음',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
+      '/share-groups/invitations': {
+        get: {
+          summary: '공유 그룹 초대 목록 조회',
+          description: '사용자가 받은 공유 그룹 초대 목록을 조회합니다.',
+          tags: ['ShareGroups'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '초대 목록 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/ShareGroupInvitation' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
       }
     },
     components: {
@@ -1646,6 +1909,152 @@ export async function GET(request: NextRequest) {
               description: '메모'
             }
           }
+        },
+        ShareGroup: {
+          type: 'object',
+          properties: {
+            grp_id: {
+              type: 'string',
+              description: '공유 그룹 ID'
+            },
+            grp_name: {
+              type: 'string',
+              description: '그룹명'
+            },
+            owner_usr_id: {
+              type: 'string',
+              description: '그룹 생성자 사용자 ID'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '생성 시각'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '수정 시각'
+            },
+            member_count: {
+              type: 'integer',
+              description: '그룹 멤버 수'
+            },
+            user_role: {
+              type: 'string',
+              enum: ['OWNER', 'PARTNER'],
+              description: '현재 사용자의 그룹 내 역할'
+            }
+          },
+          required: ['grp_id', 'grp_name', 'owner_usr_id', 'user_role']
+        },
+        ShareGroupCreateRequest: {
+          type: 'object',
+          required: ['grp_name', 'owner_usr_id'],
+          properties: {
+            grp_name: {
+              type: 'string',
+              description: '그룹명',
+              example: '우리 가족 가계부'
+            },
+            owner_usr_id: {
+              type: 'string',
+              description: '그룹 생성자 사용자 ID'
+            }
+          }
+        },
+        ShareGroupInviteRequest: {
+          type: 'object',
+          required: ['grp_id', 'invited_usr_id', 'inviter_usr_id'],
+          properties: {
+            grp_id: {
+              type: 'string',
+              description: '공유 그룹 ID'
+            },
+            invited_usr_id: {
+              type: 'string',
+              description: '초대받을 사용자 ID'
+            },
+            inviter_usr_id: {
+              type: 'string',
+              description: '초대하는 사용자 ID'
+            },
+            role: {
+              type: 'string',
+              enum: ['OWNER', 'PARTNER'],
+              default: 'PARTNER',
+              description: '그룹 내 역할'
+            }
+          }
+        },
+        ShareGroupInviteResponseRequest: {
+          type: 'object',
+          required: ['grp_id', 'usr_id', 'response'],
+          properties: {
+            grp_id: {
+              type: 'string',
+              description: '공유 그룹 ID'
+            },
+            usr_id: {
+              type: 'string',
+              description: '응답하는 사용자 ID'
+            },
+            response: {
+              type: 'string',
+              enum: ['ACCEPTED', 'REJECTED', 'WITHDRAWN'],
+              description: '초대 응답 (수락/거절/철회)'
+            }
+          }
+        },
+        ShareGroupInvitation: {
+          type: 'object',
+          properties: {
+            grp_id: {
+              type: 'string',
+              description: '공유 그룹 ID'
+            },
+            usr_id: {
+              type: 'string',
+              description: '초대받은 사용자 ID'
+            },
+            role: {
+              type: 'string',
+              enum: ['OWNER', 'PARTNER'],
+              description: '그룹 내 역할'
+            },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'WITHDRAWN'],
+              description: '초대 상태'
+            },
+            invited_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '초대 시각'
+            },
+            accepted_at: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: '수락 시각'
+            },
+            grp_name: {
+              type: 'string',
+              description: '그룹명'
+            },
+            owner_usr_id: {
+              type: 'string',
+              description: '그룹 소유자 ID'
+            },
+            owner_usr_nickname: {
+              type: 'string',
+              description: '그룹 소유자 닉네임'
+            },
+            member_count: {
+              type: 'integer',
+              description: '그룹 멤버 수'
+            }
+          },
+          required: ['grp_id', 'usr_id', 'role', 'status', 'invited_at', 'grp_name', 'owner_usr_id', 'member_count']
         }
       };
 

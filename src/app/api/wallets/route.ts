@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         wlt_name: body.wlt_name,
         bank_cd: body.bank_cd || null,
         is_default: body.is_default || 'N',
+        share_yn: body.share_yn || 'N',
         use_yn: 'Y'
       }
     });
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
 
     const rows = await dbSelect({
       table: 'MMT_WLT_MST',
-      columns: ['wlt_id', 'wlt_name', 'wlt_type', 'bank_cd', 'is_default'],
+      columns: ['wlt_id', 'wlt_name', 'wlt_type', 'bank_cd', 'is_default', 'share_yn'],
       filters,
       allowedFilterFields: ['usr_id', 'wlt_type', 'use_yn'],
       orderBy: 'wlt_id'

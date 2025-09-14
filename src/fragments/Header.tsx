@@ -133,6 +133,9 @@ const Header = () => {
                   <button className={styles.dropdownItem} onClick={() => router.push('/wallets')}>
                     지갑 관리
                   </button>
+                  <button className={styles.dropdownItem} onClick={() => router.push('/share-groups')}>
+                    가계부 공유
+                  </button>
                   <div className={styles.dropdownDivider} />
                   <button className={styles.dropdownItem} onClick={handleLogout}>
                     로그아웃
