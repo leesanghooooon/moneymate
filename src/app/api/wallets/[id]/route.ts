@@ -86,7 +86,7 @@ import { ApiError } from '@/lib/api/common';
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -94,6 +94,7 @@ export async function PUT(
       return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { usr_id, wlt_type, wlt_name, bank_cd, is_default, share_yn } = body;
 
@@ -112,7 +113,7 @@ export async function PUT(
       table: 'MMT_WLT_MST',
       columns: ['wlt_id'],
       filters: {
-        wlt_id: params.id,
+        wlt_id: id,
         usr_id: usr_id,
         use_yn: 'Y'
       },
@@ -129,7 +130,7 @@ export async function PUT(
         table: 'MMT_WLT_MST',
         data: { is_default: 'N' },
         where: 'usr_id = ? AND wlt_id != ? AND use_yn = ?',
-        params: [usr_id, params.id, 'Y']
+        params: [usr_id, id, 'Y']
       });
     }
 
@@ -145,7 +146,7 @@ export async function PUT(
             updated_at: new Date()
         },
         where: 'wlt_id = ? AND usr_id = ?',
-        params: [params.id, usr_id]
+        params: [id, usr_id]
     });
 
     return NextResponse.json({ message: '지갑이 수정되었습니다.' });
@@ -197,7 +198,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -205,12 +206,14 @@ export async function DELETE(
       return NextResponse.json({ error: '인증되지 않은 요청입니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
+
     // 지갑 존재 여부 및 소유권 확인
     const wallets = await dbSelect({
       table: 'MMT_WLT_MST',
       columns: ['usr_id'],
       filters: {
-        wlt_id: params.id,
+        wlt_id: id,
         use_yn: 'Y'
       },
       allowedFilterFields: ['wlt_id', 'use_yn']
@@ -232,7 +235,7 @@ export async function DELETE(
         updated_at: new Date()
       },
       where: 'wlt_id = ?',
-      params: [params.id]
+      params: [id]
     });
 
     return NextResponse.json({ message: '지갑이 삭제되었습니다.' });
