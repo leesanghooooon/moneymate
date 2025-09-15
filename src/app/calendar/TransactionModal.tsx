@@ -40,9 +40,9 @@ export default function TransactionModal({ date, transactions, onClose }: Transa
   const totals = transactions.reduce(
     (acc, trx) => {
       if (trx.trx_type === 'INCOME') {
-        acc.income += trx.amount;
+        acc.income += Number(trx.amount);
       } else {
-        acc.expense += trx.amount;
+        acc.expense += Number(trx.amount);
       }
       return acc;
     },
