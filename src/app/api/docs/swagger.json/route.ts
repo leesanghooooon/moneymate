@@ -1178,6 +1178,76 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/stats/monthly-expenses': {
+        get: {
+          summary: '월간 지출 통계 조회',
+          description: '월별 카테고리별 지출 통계를 조회합니다.',
+          tags: ['Stats'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            },
+            {
+              in: 'query',
+              name: 'year',
+              required: false,
+              schema: { type: 'string' },
+              description: '조회 연도 (기본값: 현재 연도)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '월간 지출 통계 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            month: {
+                              type: 'string',
+                              description: '월 (예: "1월")'
+                            },
+                            additionalProperties: {
+                              type: 'number',
+                              description: '카테고리별 지출 금액'
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/share-groups/invitations': {
         get: {
           summary: '공유 그룹 초대 목록 조회',

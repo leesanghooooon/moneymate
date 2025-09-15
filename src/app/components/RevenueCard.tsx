@@ -1,169 +1,260 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/RevenueCard.module.css';
-import { Tooltip } from 'react-tooltip';
-import 'react-tooltip/dist/react-tooltip.css';
+import { get } from '@/lib/api/common';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+// API 응답 데이터 타입 정의
+interface CategoryData {
+  amount: number;
+  name: string;
+}
+
+interface ApiMonthlyData {
+  month: string;
+  [key: string]: CategoryData | string;
+}
+
+// 샘플 데이터 (테스트용)
+const sampleData = {
+  labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+  datasets: [
+    {
+      label: '식비',
+      data: [300000, 250000, 280000, 320000, 280000, 300000, 290000, 310000, 285000, 295000, 280000, 320000],
+      backgroundColor: '#8b5cf6',
+    },
+    {
+      label: '교통',
+      data: [150000, 140000, 145000, 155000, 148000, 152000, 147000, 153000, 149000, 151000, 146000, 154000],
+      backgroundColor: '#a855f7',
+    },
+    {
+      label: '쇼핑',
+      data: [200000, 180000, 220000, 190000, 210000, 195000, 205000, 215000, 198000, 208000, 192000, 218000],
+      backgroundColor: '#ec4899',
+    },
+    {
+      label: '의료',
+      data: [100000, 90000, 95000, 105000, 98000, 102000, 97000, 103000, 99000, 101000, 96000, 104000],
+      backgroundColor: '#f97316',
+    }
+  ]
+};
+
+// 차트 데이터 변환 함수
+const transformApiDataToChartData = (apiDatas: ApiMonthlyData[]) => {
+  const apiData = apiDatas.data;
+
+  if (!apiData.length) return null;
+
+  // 첫 번째 데이터에서 카테고리 목록 추출 (month 키 제외)
+  const firstMonth = apiData[0];
+  const categories = Object.entries(firstMonth)
+    .filter(([key]) => key !== 'month')
+    .map(([code, value]) => ({
+      code,
+      name: (value as CategoryData).name
+    }));
+
+  // 카테고리별 색상 매핑
+  const categoryColors = [
+    '#8b5cf6', '#a855f7', '#ec4899', '#f97316', '#fbbf24',
+    '#84cc16', '#22c55e', '#14b8a6', '#0ea5e9', '#6366f1'
+  ];
+
+  // Chart.js 데이터 포맷으로 변환
+  return {
+    labels: apiData.map((data: { month: string; }) => data.month.replace('월', '')),
+    datasets: categories.map((category, index) => ({
+      label: category.name,
+      data: apiData.map((monthData: { [x: string]: CategoryData; }) => {
+        const categoryData = monthData[category.code] as CategoryData;
+        return categoryData?.amount || 0;
+      }),
+      backgroundColor: categoryColors[index % categoryColors.length],
+    }))
+  };
+};
 
 const RevenueCard = () => {
-  // 12개월 데이터 (카테고리별 지출 금액) - 다양한 비율로 구성
-  const monthlyData = [
-    { month: '1월', food: 250000, transport: 80000, shopping: 120000, entertainment: 60000, others: 30000 },
-    { month: '2월', food: 180000, transport: 150000, shopping: 200000, entertainment: 40000, others: 50000 },
-    { month: '3월', food: 300000, transport: 60000, shopping: 80000, entertainment: 120000, others: 25000 },
-    { month: '4월', food: 220000, transport: 120000, shopping: 150000, entertainment: 80000, others: 40000 },
-    { month: '5월', food: 160000, transport: 200000, shopping: 180000, entertainment: 50000, others: 60000 },
-    { month: '6월', food: 280000, transport: 90000, shopping: 100000, entertainment: 150000, others: 35000 },
-    { month: '7월', food: 140000, transport: 220000, shopping: 250000, entertainment: 30000, others: 70000 },
-    { month: '8월', food: 320000, transport: 70000, shopping: 70000, entertainment: 180000, others: 20000 },
-    { month: '9월', food: 200000, transport: 180000, shopping: 220000, entertainment: 70000, others: 45000 },
-    { month: '10월', food: 240000, transport: 110000, shopping: 130000, entertainment: 100000, others: 38000 },
-    { month: '11월', food: 170000, transport: 190000, shopping: 125000, entertainment: 60000, others: 55000 },
-    { month: '12월', food: 260000, transport: 100000, shopping: 160000, entertainment: 140000, others: 42000 },
-  ];
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<any>(null);
+  
+  // 테스트 모드 설정 (true: 샘플 데이터 사용, false: API 데이터 사용)
+  const useTestData = false;
 
-  const categories = [
-    { name: 'Food', color: '#8b5cf6' },
-    { name: 'Transport', color: '#a855f7' },
-    { name: 'Shopping', color: '#ec4899' },
-    { name: 'Entertainment', color: '#f97316' },
-    { name: 'Others', color: '#fbbf24' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      if (useTestData) {
+        setChartData(sampleData);
+        setLoading(false);
+        return;
+      }
 
-  // Y축 눈금 값들 (0원 ~ 최대값)
-  const maxValue = Math.max(...monthlyData.map(data => 
-    data.food + data.transport + data.shopping + data.entertainment + data.others
-  ));
-  const yAxisTicks = [0, Math.round(maxValue * 0.25), Math.round(maxValue * 0.5), Math.round(maxValue * 0.75), maxValue];
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
 
-  // 금액을 원화로 포맷팅
-  const formatCurrency = (amount: number) => {
-    return `${amount.toLocaleString()}원`;
+      try {
+        setLoading(true);
+        const response = await get('/stats/monthly-expenses', {
+          params: {
+            usr_id: session.user.id,
+            year: new Date().getFullYear().toString()
+          }
+        });
+
+        console.log(response)
+        console.log(transformApiDataToChartData(response.data))
+        if (response.data.success && response.data) {
+          const transformedData = transformApiDataToChartData(response.data);
+          if (transformedData) {
+            setChartData(transformedData);
+          }
+        }
+      } catch (err) {
+        console.error('월간 지출 통계 조회 오류:', err);
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [session?.user?.id, useTestData]);
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: true,
+        grid: {
+          display: false,
+        },
+        border: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12
+          }
+        }
+      },
+      y: {
+        stacked: true,
+        grid: {
+          color: '#f0f0f0',
+        },
+        border: {
+          display: false,
+        },
+        ticks: {
+          callback: (value: number) => {
+            if (value >= 1000000) {
+              return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+              return (value / 1000).toFixed(0) + 'K';
+            }
+            return value;
+          },
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const value = context.raw;
+            return `${context.dataset.label}: ${new Intl.NumberFormat('ko-KR').format(value)}원`;
+          }
+        }
+      },
+      legend: {
+        display: false
+      }
+    }
   };
 
-  // 툴팁 HTML 생성
-  const createTooltipHtml = (labelKo: string, amount: number, total: number) => {
-    const percentage = ((amount / total) * 100).toFixed(1);
-    return `<div class=\"mm-tooltip\"><div class=\"mm-tooltip-title\">${labelKo}</div><div class=\"mm-tooltip-price\">${formatCurrency(amount)}</div><div class=\"mm-tooltip-percent\">${percentage}%</div></div>`;
-  };
+  // 총 지출액 계산
+  const totalExpense = chartData?.datasets.reduce((total: number, dataset: any) => {
+    return total + dataset.data.reduce((sum: number, value: number) => sum + value, 0);
+  }, 0) || 0;
+
+  if (loading) {
+    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+      <div className={styles.loading}>Loading...</div>
+    </DashboardCard>;
+  }
+
+  if (error) {
+    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+      <div className={styles.error}>{error}</div>
+    </DashboardCard>;
+  }
+
+  if (!chartData) {
+    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+      <div className={styles.error}>No data available</div>
+    </DashboardCard>;
+  }
 
   return (
     <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
       <div className={styles.revenueInfo}>
-        <div className={styles.amount}>Total: 2,450,000원</div>
-        <div className={styles.change}>
-          <span className={styles.changeIcon}>↑</span>
-          <span className={styles.changeText}>8.5% vs last year</span>
+        <div className={styles.amount}>
+          Total: {new Intl.NumberFormat('ko-KR').format(totalExpense)}원
         </div>
-        <div className={styles.period}>Expenses from Jan-Dec, 2024</div>
+        <div className={styles.period}>
+          Expenses from Jan-Dec, {new Date().getFullYear()}
+        </div>
       </div>
       
-      <div className={styles.chart}>
-        <div className={styles.chartContainer}>
-          {/* Y축 */}
-          <div className={styles.yAxis}>
-            {yAxisTicks.map((tick) => (
-              <div key={tick} className={styles.yAxisTick}>
-                <span className={styles.yAxisLabel}>{formatCurrency(tick)}</span>
-                <div className={styles.yAxisLine}></div>
-              </div>
-            ))}
-          </div>
-          
-          {/* 차트 영역 */}
-          <div className={styles.chartArea}>
-            <div className={styles.chartBars}>
-              {monthlyData.map((data, index) => {
-                const total = data.food + data.transport + data.shopping + data.entertainment + data.others;
-                return (
-                  <div key={index} className={styles.barGroup}>
-                    <div className={styles.barStack}>
-                      <div 
-                        className={styles.barSegment}
-                        style={{ 
-                          height: `${(data.food / maxValue) * 100}%`,
-                          backgroundColor: categories[0].color
-                        }}
-                        data-tooltip-id="mm-tooltip"
-                        data-tooltip-place="bottom"
-                        data-tooltip-html={createTooltipHtml('음식', data.food, total)}
-                      />
-                      <div 
-                        className={styles.barSegment}
-                        style={{ 
-                          height: `${(data.transport / maxValue) * 100}%`,
-                          backgroundColor: categories[1].color
-                        }}
-                        data-tooltip-id="mm-tooltip"
-                        data-tooltip-place="bottom"
-                        data-tooltip-html={createTooltipHtml('교통', data.transport, total)}
-                      />
-                      <div 
-                        className={styles.barSegment}
-                        style={{ 
-                          height: `${(data.shopping / maxValue) * 100}%`,
-                          backgroundColor: categories[2].color
-                        }}
-                        data-tooltip-id="mm-tooltip"
-                        data-tooltip-place="bottom"
-                        data-tooltip-html={createTooltipHtml('쇼핑', data.shopping, total)}
-                      />
-                      <div 
-                        className={styles.barSegment}
-                        style={{ 
-                          height: `${(data.entertainment / maxValue) * 100}%`,
-                          backgroundColor: categories[3].color
-                        }}
-                        data-tooltip-id="mm-tooltip"
-                        data-tooltip-place="bottom"
-                        data-tooltip-html={createTooltipHtml('엔터테인먼트', data.entertainment, total)}
-                      />
-                      <div 
-                        className={styles.barSegment}
-                        style={{ 
-                          height: `${(data.others / maxValue) * 100}%`,
-                          backgroundColor: categories[4].color
-                        }}
-                        data-tooltip-id="mm-tooltip"
-                        data-tooltip-place="bottom"
-                        data-tooltip-html={createTooltipHtml('기타', data.others, total)}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* X축 */}
-            <div className={styles.xAxis}>
-              {monthlyData.map((data, index) => (
-                <div key={index} className={styles.xAxisTick}>
-                  <span className={styles.xAxisLabel}>{data.month}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        <div className={styles.legend}>
-          {categories.map((category, index) => (
-            <div key={index} className={styles.legendItem}>
-              <div className={styles.legendColor} style={{ backgroundColor: category.color }}></div>
-              <span>{category.name}</span>
-            </div>
-          ))}
-        </div>
+      <div className={styles.chartContainer}>
+        <Bar data={chartData} options={options} height={300} />
       </div>
 
-      <Tooltip
-        id="mm-tooltip"
-        className="mm-tooltip-container"
-        opacity={1}
-        float
-        offset={8}
-      />
+      <div className={styles.legend}>
+        {chartData.datasets.map((dataset: any, index: number) => (
+          <div key={index} className={styles.legendItem}>
+            <span 
+              className={styles.legendColor} 
+              style={{ backgroundColor: dataset.backgroundColor }}
+            />
+            <span className={styles.legendLabel}>{dataset.label}</span>
+          </div>
+        ))}
+      </div>
     </DashboardCard>
   );
 };
 
-export default RevenueCard; 
+export default RevenueCard;
