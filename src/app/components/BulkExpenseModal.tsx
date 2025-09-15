@@ -75,6 +75,16 @@ export default function BulkExpenseModal({ isOpen, onClose, onSuccess, userId }:
     return today.toLocaleDateString('en-CA', { timeZone: tz });
   };
 
+  // 금액 포맷팅 함수 (천 단위 쉼표 추가)
+  const formatAmountInput = (value: string) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^0-9]/g, '');
+    // 빈 문자열이면 그대로 반환
+    if (!numbers) return '';
+    // 천 단위 쉼표 추가
+    return new Intl.NumberFormat('ko-KR').format(Number(numbers));
+  };
+
   // 공통 코드 조회
   useEffect(() => {
     if (!userId) return;
@@ -187,13 +197,14 @@ export default function BulkExpenseModal({ isOpen, onClose, onSuccess, userId }:
       return;
     }
 
-    // 유효성 검사
-    const validItems = expenseItems.filter(item => 
-      item.amount && item.category_cd
-    );
+    // 유효성 검사 - 금액과 카테고리가 있고, 금액이 0보다 큰 항목들만 필터링
+    const validItems = expenseItems.filter(item => {
+      const numericAmount = Number(item.amount.replace(/,/g, ''));
+      return item.amount && item.category_cd && numericAmount > 0;
+    });
 
     if (validItems.length === 0) {
-      alert('최소 하나의 유효한 거래를 입력해주세요.');
+      alert('최소 하나의 유효한 거래를 입력해주세요. (금액은 0보다 커야 합니다)');
       return;
     }
 
@@ -202,12 +213,14 @@ export default function BulkExpenseModal({ isOpen, onClose, onSuccess, userId }:
       
       // 각 아이템을 순차적으로 등록
       for (const item of validItems) {
+        const numericAmount = Number(item.amount.replace(/,/g, ''));
+        
         const data = {
           usr_id: userId,
           wlt_id: selectedWallet,
           trx_type: item.trx_type,
           trx_date: item.trx_date,
-          amount: Number(item.amount),
+          amount: numericAmount,
           category_cd: item.category_cd,
           memo: item.memo || null,
           is_fixed: item.is_fixed,
@@ -356,13 +369,11 @@ export default function BulkExpenseModal({ isOpen, onClose, onSuccess, userId }:
                     </div>
                     <div>
                       <input
-                        type="number"
+                        type="text"
                         className={styles.input}
-                        min={0}
-                        step={100}
                         placeholder="0"
                         value={item.amount}
-                        onChange={(e) => updateItem(item.id, 'amount', e.target.value)}
+                        onChange={(e) => updateItem(item.id, 'amount', formatAmountInput(e.target.value))}
                       />
                     </div>
                     <div>

@@ -155,7 +155,7 @@ export default function ExpensesPage() {
         setPayMethods(pays);
         setBanks(bks);
         setCards(crds);
-      } catch (e) {
+      } catch (e: any) {
         if (!mounted) return;
         setError(e?.message || '공통코드 조회 실패');
       } finally {
@@ -227,8 +227,11 @@ export default function ExpensesPage() {
   async function submitExpense(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!selectedWallet || !expenseForm.category_cd || !expenseForm.amount) {
-      alert('필수 정보를 모두 입력해주세요.');
+    // 금액에서 쉼표 제거하고 숫자로 변환
+    const numericAmount = Number(expenseForm.amount.replace(/,/g, ''));
+
+    if (!selectedWallet || !expenseForm.category_cd || !expenseForm.amount || numericAmount <= 0) {
+      alert('필수 정보를 모두 입력해주세요. 금액은 0보다 커야 합니다.');
       return;
     }
 
@@ -238,7 +241,7 @@ export default function ExpensesPage() {
         wlt_id: selectedWallet,
         trx_type: selectedTrxType,
         trx_date: expenseForm.trx_date,
-        amount: Number(expenseForm.amount),
+        amount: numericAmount,
         category_cd: expenseForm.category_cd,
         memo: expenseForm.memo || null,
         is_fixed: expenseForm.is_fixed,
@@ -326,6 +329,16 @@ export default function ExpensesPage() {
       return <span className={`${styles.ledgerAmount} ${styles.incomeAmount}`}>+{formatted}원</span>;
     }
     return <span className={styles.ledgerAmount}>{formatted}원</span>;
+  };
+
+  // 금액 포맷팅 함수 (천 단위 쉼표 추가)
+  const formatAmountInput = (value: string) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^0-9]/g, '');
+    // 빈 문자열이면 그대로 반환
+    if (!numbers) return '';
+    // 천 단위 쉼표 추가
+    return new Intl.NumberFormat('ko-KR').format(Number(numbers));
   };
 
   return (
@@ -446,13 +459,14 @@ export default function ExpensesPage() {
                     <div className={styles.field}>
                       <label className={styles.label}>금액</label>
                       <input
-                          type="number"
+                          type="text"
                           className={styles.input}
-                          min={0}
-                          step={100}
                           placeholder="0"
                           value={expenseForm.amount}
-                          onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                          onChange={(e) => {
+                            const formattedValue = formatAmountInput(e.target.value);
+                            setExpenseForm({ ...expenseForm, amount: formattedValue });
+                          }}
                       />
                     </div>
                     <div className={styles.field}>

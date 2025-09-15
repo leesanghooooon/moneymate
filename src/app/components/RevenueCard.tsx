@@ -86,7 +86,7 @@ const transformApiDataToChartData = (apiDatas: ApiMonthlyData[]) => {
 
   // Chart.js 데이터 포맷으로 변환
   return {
-    labels: apiData.map((data: { month: string; }) => data.month.replace('월', '')),
+    labels: apiData.map((data: { month: string; }) => data.month),
     datasets: categories.map((category, index) => ({
       label: category.name,
       data: apiData.map((monthData: { [x: string]: CategoryData; }) => {

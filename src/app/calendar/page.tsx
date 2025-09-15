@@ -225,11 +225,11 @@ export default function CalendarPage() {
                                     </span>
                                     <span className={styles.category}>
                                       {getSharedIcon(trx.is_shared)}
-                                      {trx.memo || trx.category_cd_nm}
+                                      {trx.memo || trx.category_cd_nm} ({trx.wlt_name})
                                     </span>
-                                    <span className={styles.sharedWallet}>
-                                      ({trx.wlt_name})
-                                    </span>
+                                    {/*<span className={styles.sharedWallet}>*/}
+                                    {/*  ({trx.wlt_name})*/}
+                                    {/*</span>*/}
                                   </div>
                                 ))}
                                 {day.data.trx_list.length > 2 && (
