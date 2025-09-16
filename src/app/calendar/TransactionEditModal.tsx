@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Transaction } from './types';
 import { getCategories, getIncome, getWallets, CommonCode, Wallet } from '@/lib/api/commonCodes';
-import { put } from '@/lib/api/common';
+import { put, del } from '@/lib/api/common';
 import styles from '../../styles/css/TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
@@ -26,6 +26,7 @@ export default function TransactionEditModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     trx_date: '',
@@ -121,6 +122,33 @@ export default function TransactionEditModal({
     }
   };
 
+  const handleDelete = async () => {
+    if (!transaction) return;
+
+    const confirmMessage = transaction.is_installment === 'Y' 
+      ? '할부 거래를 삭제하면 모든 회차가 삭제됩니다. 정말 삭제하시겠습니까?'
+      : '정말로 이 거래를 삭제하시겠습니까?';
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await del(`/expenses/${transaction.trx_id}`);
+      alert('거래가 삭제되었습니다.');
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error('거래 삭제 오류:', error);
+      setError(error.message || '거래 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleClose = () => {
     setFormData({
       trx_date: '',
@@ -170,6 +198,14 @@ export default function TransactionEditModal({
                 {formatDate(transaction.trx_date)}
               </span>
             </div>
+            {transaction.is_installment === 'Y' && (
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>할부 정보:</span>
+                <span className={styles.infoValue}>
+                  {transaction.installment_info}
+                </span>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -243,20 +279,32 @@ export default function TransactionEditModal({
             </div>
 
             <div className={styles.modalActions}>
-              <button
-                type="button"
-                onClick={handleClose}
-                className={styles.buttonSecondary}
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={saving || loading}
-                className={styles.buttonPrimary}
-              >
-                {saving ? '수정 중...' : '수정'}
-              </button>
+              <div className={styles.leftActions}>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting || loading}
+                  className={styles.buttonDanger}
+                >
+                  {deleting ? '삭제 중...' : '삭제'}
+                </button>
+              </div>
+              <div className={styles.rightActions}>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className={styles.buttonSecondary}
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || loading}
+                  className={styles.buttonPrimary}
+                >
+                  {saving ? '수정 중...' : '수정'}
+                </button>
+              </div>
             </div>
           </form>
         </div>

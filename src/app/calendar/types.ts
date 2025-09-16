@@ -11,6 +11,8 @@ export interface Transaction {
   is_shared: boolean;
   created_at: string;
   trx_date: string;
+  is_installment?: 'Y' | 'N';
+  installment_info?: string;
 }
 
 export interface CalendarDay {
