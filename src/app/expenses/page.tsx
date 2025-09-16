@@ -214,6 +214,13 @@ export default function ExpensesPage() {
     }
   }, [isWalletCardSelected, walletForm.bank_cd]);
 
+  // 세션의 사용자 ID가 변경될 때 지갑 폼 업데이트
+  useEffect(() => {
+    if (session?.user?.id) {
+      setWalletForm(prev => ({ ...prev, usr_id: session.user.id }));
+    }
+  }, [session?.user?.id]);
+
   // 비로그인 상태에서는 데이터 로딩하지 않음
   if (status === 'unauthenticated') {
     return <LoginRequiredModal />;
@@ -237,7 +244,7 @@ export default function ExpensesPage() {
 
     try {
       const data = {
-        usr_id: walletForm.usr_id, // 현재 테스트용 ID 사용
+        usr_id: session?.user?.id,
         wlt_id: selectedWallet,
         trx_type: selectedTrxType,
         trx_date: expenseForm.trx_date,
@@ -290,14 +297,14 @@ export default function ExpensesPage() {
     try {
       setSavingWallet(true);
       await post('/wallets', {
-        usr_id: walletForm.usr_id,
+        usr_id: session?.user?.id,
         wlt_type: walletForm.wlt_type,
         wlt_name: walletForm.wlt_name,
         bank_cd: walletForm.bank_cd || null,
         is_default: walletForm.is_default || 'N',
       });
       setOpenWalletModal(false);
-      setWalletForm({ usr_id: 'tester01', wlt_type: '', wlt_name: '', bank_cd: '', is_default: 'N' });
+      setWalletForm({ usr_id: session?.user?.id || '', wlt_type: '', wlt_name: '', bank_cd: '', is_default: 'N' });
       alert('지갑이 등록되었습니다.');
     } catch (error) {
       if (error instanceof ApiError) {

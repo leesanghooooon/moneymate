@@ -1178,6 +1178,95 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/stats/weekly-expenses': {
+        get: {
+          summary: '주간 지출 비교 통계',
+          description: '이번 주와 지난 주의 일별 지출을 비교합니다.',
+          tags: ['Stats'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '주간 지출 비교 통계 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          daily: {
+                            type: 'array',
+                            items: {
+                              type: 'object',
+                              properties: {
+                                date: {
+                                  type: 'string',
+                                  description: '날짜 (예: "12월 15일")'
+                                },
+                                current_amount: {
+                                  type: 'number',
+                                  description: '이번 주 지출액'
+                                },
+                                previous_amount: {
+                                  type: 'number',
+                                  description: '지난 주 지출액'
+                                }
+                              }
+                            }
+                          },
+                          summary: {
+                            type: 'object',
+                            properties: {
+                              thisWeekTotal: {
+                                type: 'number',
+                                description: '이번 주 총 지출액'
+                              },
+                              lastWeekTotal: {
+                                type: 'number',
+                                description: '지난 주 총 지출액'
+                              },
+                              changeRate: {
+                                type: 'number',
+                                description: '전주 대비 증감률 (%)'
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/stats/monthly-expenses': {
         get: {
           summary: '월간 지출 통계 조회',
