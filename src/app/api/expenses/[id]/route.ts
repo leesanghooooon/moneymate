@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbUpdate, dbSelect } from '../../../../lib/db-utils';
 
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -14,16 +14,16 @@ export async function PUT(
     const missingFields = requiredFields.filter(field => !body[field]);
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { message: `필수 정보가 누락되었습니다: ${missingFields.join(', ')}` },
-        { status: 400 }
+          { message: `필수 정보가 누락되었습니다: ${missingFields.join(', ')}` },
+          { status: 400 }
       );
     }
 
     // 금액 검증
     if (body.amount <= 0) {
       return NextResponse.json(
-        { message: '금액은 0보다 커야 합니다.' },
-        { status: 400 }
+          { message: '금액은 0보다 커야 합니다.' },
+          { status: 400 }
       );
     }
 
@@ -31,16 +31,17 @@ export async function PUT(
     const existingTransaction = await dbSelect({
       table: 'MMT_TRX_TRN',
       columns: ['trx_id', 'usr_id', 'trx_type', 'is_installment', 'installment_group_id'],
-      where: {
+      filters: {
         trx_id: id,
         use_yn: 'Y'
-      }
+      },
+      allowedFilterFields: ['trx_id', 'use_yn']
     });
 
     if (!existingTransaction || existingTransaction.length === 0) {
       return NextResponse.json(
-        { message: '수정할 거래 내역을 찾을 수 없습니다.' },
-        { status: 404 }
+          { message: '수정할 거래 내역을 찾을 수 없습니다.' },
+          { status: 404 }
       );
     }
 
@@ -52,10 +53,11 @@ export async function PUT(
       const installmentGroup = await dbSelect({
         table: 'MMT_TRX_TRN',
         columns: ['trx_id', 'installment_seq', 'amount'],
-        where: {
+        filters: {
           installment_group_id: transaction.installment_group_id,
           use_yn: 'Y'
         },
+        allowedFilterFields: ['installment_group_id', 'use_yn'],
         orderBy: 'installment_seq ASC'
       });
 
@@ -76,14 +78,16 @@ export async function PUT(
               wlt_id: body.wlt_id,
               updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
             },
-            where: 'trx_id = ?',
-            params: [installmentItem.trx_id]
+            filters: {
+              trx_id: installmentItem.trx_id
+            },
+            allowedFilterFields: ['trx_id']
           });
         }
 
         return NextResponse.json({
           message: '할부 거래가 수정되었습니다.',
-          data: { 
+          data: {
             updated_count: installmentGroup.length,
             is_installment: true
           }
@@ -102,13 +106,15 @@ export async function PUT(
         wlt_id: body.wlt_id,
         updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
       },
-      where: 'trx_id = ?',
-      params: [id]
+      filters: {
+        trx_id: id
+      },
+      allowedFilterFields: ['trx_id']
     });
 
     return NextResponse.json({
       message: '거래가 수정되었습니다.',
-      data: { 
+      data: {
         updated_count: 1,
         is_installment: false
       }
@@ -117,15 +123,15 @@ export async function PUT(
   } catch (error: any) {
     console.error('거래 수정 오류:', error);
     return NextResponse.json(
-      { message: error?.message || '거래 수정 중 오류가 발생했습니다.' },
-      { status: 500 }
+        { message: error?.message || '거래 수정 중 오류가 발생했습니다.' },
+        { status: 500 }
     );
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -134,16 +140,17 @@ export async function DELETE(
     const existingTransaction = await dbSelect({
       table: 'MMT_TRX_TRN',
       columns: ['trx_id', 'usr_id', 'is_installment', 'installment_group_id'],
-      where: {
+      filters: {
         trx_id: id,
         use_yn: 'Y'
-      }
+      },
+      allowedFilterFields: ['trx_id', 'use_yn']
     });
 
     if (!existingTransaction || existingTransaction.length === 0) {
       return NextResponse.json(
-        { message: '삭제할 거래 내역을 찾을 수 없습니다.' },
-        { status: 400 }
+          { message: '삭제할 거래 내역을 찾을 수 없습니다.' },
+          { status: 400 }
       );
     }
 
@@ -155,10 +162,11 @@ export async function DELETE(
       const installmentGroup = await dbSelect({
         table: 'MMT_TRX_TRN',
         columns: ['trx_id'],
-        where: {
+        filters: {
           installment_group_id: transaction.installment_group_id,
           use_yn: 'Y'
-        }
+        },
+        allowedFilterFields: ['installment_group_id', 'use_yn']
       });
 
       if (installmentGroup && installmentGroup.length > 0) {
@@ -170,14 +178,16 @@ export async function DELETE(
               use_yn: 'N',
               updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
             },
-            where: 'trx_id = ?',
-            params: [installmentItem.trx_id]
+            filters: {
+              trx_id: installmentItem.trx_id
+            },
+            allowedFilterFields: ['trx_id']
           });
         }
 
         return NextResponse.json({
           message: '할부 거래가 삭제되었습니다.',
-          data: { 
+          data: {
             deleted_count: installmentGroup.length,
             is_installment: true
           }
@@ -192,13 +202,15 @@ export async function DELETE(
         use_yn: 'N',
         updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
       },
-      where: 'trx_id = ?',
-      params: [id]
+      filters: {
+        trx_id: id
+      },
+      allowedFilterFields: ['trx_id']
     });
 
     return NextResponse.json({
       message: '거래가 삭제되었습니다.',
-      data: { 
+      data: {
         deleted_count: 1,
         is_installment: false
       }
@@ -207,8 +219,8 @@ export async function DELETE(
   } catch (error: any) {
     console.error('거래 삭제 오류:', error);
     return NextResponse.json(
-      { message: error?.message || '거래 삭제 중 오류가 발생했습니다.' },
-      { status: 500 }
+        { message: error?.message || '거래 삭제 중 오류가 발생했습니다.' },
+        { status: 500 }
     );
   }
 }

@@ -24,10 +24,10 @@ const pool = mysql.createPool({
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   try {
 
-    console.log('================= Query =================');
-    console.log('SQL:', sql);
-    console.log('Parameters:', params);
-    console.log('==========================================');
+    // console.log('================= Query =================');
+    // console.log('SQL:', sql);
+    // console.log('Parameters:', params);
+    // console.log('==========================================');
 
     const [rows] = await pool.query(sql, params);
     return rows as T[];

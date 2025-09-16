@@ -75,12 +75,6 @@ export async function GET(request: NextRequest) {
 
     sql += ' ORDER BY t1.trx_date DESC, t1.trx_id DESC';
 
-    // 쿼리 로깅
-    console.log('=== INSERT Query ===');
-    console.log('SQL:', sql);
-    console.log('Parameters:', params);
-    console.log('==================');
-
     const rows = await query(sql, params);
     return NextResponse.json({ data: rows });
   } catch (error: any) {
