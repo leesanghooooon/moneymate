@@ -1,43 +1,161 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/RatingCard.module.css';
+import { get } from '@/lib/api/common';
+
+interface WalletSummary {
+  wlt_id: string;
+  wlt_name: string;
+  amount: number;
+  percentage: number;
+}
+
+interface PaymentSummary {
+  type: '현금성' | '카드성';
+  amount: number;
+  percentage: number;
+  wallets: WalletSummary[];
+}
 
 const RatingCard = () => {
-  // 더미 지출 데이터 (실제에선 API/상태로 대체)
-  const transactions = [
-    { id: 't1', amount: 52000, paymentType: '현금' as const },
-    { id: 't2', amount: 125000, paymentType: '카드' as const, cardBrand: '신한' },
-    { id: 't3', amount: 48000, paymentType: '카드' as const, cardBrand: '현대' },
-    { id: 't4', amount: 87000, paymentType: '카드' as const, cardBrand: '국민' },
-    { id: 't5', amount: 34000, paymentType: '현금' as const },
-    { id: 't6', amount: 191000, paymentType: '카드' as const, cardBrand: '신한' },
-    { id: 't7', amount: 76000, paymentType: '카드' as const, cardBrand: '현대' },
-    { id: 't8', amount: 42000, paymentType: '카드' as const, cardBrand: '롯데' },
-  ];
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [summaryData, setSummaryData] = useState<PaymentSummary[]>([]);
 
-  const formatKRW = (v: number) => `${v.toLocaleString('ko-KR')}원`;
+  useEffect(() => {
+    const fetchPaymentSummary = async () => {
+      if (!session?.user?.id) return;
 
-  // 결제수단별 합계
-  const totalCash = transactions
-    .filter((t) => t.paymentType === '현금')
-    .reduce((sum, t) => sum + t.amount, 0);
+      try {
+        setLoading(true);
+        // 현재 달의 시작일과 마지막 일을 계산
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString().split('T')[0];
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          .toISOString().split('T')[0];
 
-  const totalCard = transactions
-    .filter((t) => t.paymentType === '카드')
-    .reduce((sum, t) => sum + t.amount, 0);
+        // 현금성 지출 조회 (CASH, CHECK_CARD)
+        const cashResponse = await get('/expenses', {
+          params: {
+            usr_id: session.user.id,
+            trx_type: 'EXPENSE',
+            start_date: startDate,
+            end_date: endDate,
+            wlt_type: 'CASH'
+          }
+        });
 
-  // 카드사별 합계 (카드만 집계)
-  const cardBrandTotals = transactions
-    .filter((t) => t.paymentType === '카드' && t.cardBrand)
-    .reduce<Record<string, number>>((acc, t) => {
-      const brand = t.cardBrand as string;
-      acc[brand] = (acc[brand] || 0) + t.amount;
-      return acc;
-    }, {});
+        // 카드성 지출 조회 (CREDIT_CARD)
+        const cardResponse = await get('/expenses', {
+          params: {
+            usr_id: session.user.id,
+            trx_type: 'EXPENSE',
+            start_date: startDate,
+            end_date: endDate,
+            wlt_type: 'CREDIT_CARD'
+          }
+        });
 
-  const sortedCardBrands = Object.entries(cardBrandTotals)
-    .sort((a, b) => b[1] - a[1]);
+        // 지갑별 금액 집계 함수
+        const aggregateWallets = (data: any[]) => {
+          const walletMap = new Map<string, { wlt_id: string; wlt_name: string; amount: number }>();
+          
+          data.forEach(item => {
+            const amount = Number(item.amount);
+            if (walletMap.has(item.wlt_id)) {
+              const wallet = walletMap.get(item.wlt_id)!;
+              wallet.amount += amount;
+            } else {
+              walletMap.set(item.wlt_id, {
+                wlt_id: item.wlt_id,
+                wlt_name: item.wlt_name,
+                amount: amount
+              });
+            }
+          });
+
+          return Array.from(walletMap.values());
+        };
+
+        // 현금성 지출 집계
+        const cashWallets = aggregateWallets(cashResponse.data.data);
+        const cashAmount = cashWallets.reduce((sum, wallet) => sum + wallet.amount, 0);
+
+        // 카드성 지출 집계
+        const cardWallets = aggregateWallets(cardResponse.data.data);
+        const cardAmount = cardWallets.reduce((sum, wallet) => sum + wallet.amount, 0);
+
+        // 전체 금액
+        const totalAmount = cashAmount + cardAmount;
+
+        // 지갑별 비율 계산
+        const calculateWalletPercentages = (wallets: any[], totalAmount: number) => {
+          return wallets.map(wallet => ({
+            ...wallet,
+            percentage: totalAmount ? Math.round((wallet.amount / totalAmount) * 100) : 0
+          }))
+          .sort((a, b) => b.amount - a.amount); // 금액 기준 내림차순 정렬
+        };
+
+        // 최종 데이터 구성
+        const summary = [
+          {
+            type: '현금성' as const,
+            amount: cashAmount,
+            percentage: totalAmount ? Math.round((cashAmount / totalAmount) * 100) : 0,
+            wallets: calculateWalletPercentages(cashWallets, cashAmount)
+          },
+          {
+            type: '카드성' as const,
+            amount: cardAmount,
+            percentage: totalAmount ? Math.round((cardAmount / totalAmount) * 100) : 0,
+            wallets: calculateWalletPercentages(cardWallets, cardAmount)
+          }
+        ];
+
+        setSummaryData(summary);
+      } catch (err) {
+        console.error('결제수단별 지출 요약 조회 오류:', err);
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPaymentSummary();
+  }, [session?.user?.id]);
+
+  // KRW 포맷 함수 (3자리 콤마 + '원')
+  const formatKRW = (value: number) => {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'decimal',
+      maximumFractionDigits: 0
+    }).format(value) + '원';
+  };
+
+  if (loading) {
+    return (
+      <DashboardCard title="결제수단별 지출 요약" cardSize="card-4">
+        <div className={styles.loading}>Loading...</div>
+      </DashboardCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardCard title="결제수단별 지출 요약" cardSize="card-4">
+        <div className={styles.error}>{error}</div>
+      </DashboardCard>
+    );
+  }
+
+  const cardWallets = summaryData[1]?.wallets || [];
+  const hasMoreWallets = cardWallets.length > 3;
 
   return (
     <DashboardCard title="결제수단별 지출 요약" cardSize="card-4">
@@ -45,32 +163,42 @@ const RatingCard = () => {
         결제수단별 합계와 카드사별 상세 합계를 확인할 수 있어요.
       </div>
 
-      <div className={styles.summaryContainer}>
-        <div className={styles.summaryItem}>
+      {/* 현금/카드 요약 */}
+      <div className={styles.summaryGrid}>
+        <div className={styles.summaryBox}>
           <div className={styles.summaryLabel}>현금</div>
-          <div className={styles.summaryAmount}>{formatKRW(totalCash)}</div>
+          <div className={styles.summaryValue}>
+            {formatKRW(summaryData[0]?.amount || 0)}
+          </div>
         </div>
-        <div className={styles.summaryItem}>
+        <div className={styles.summaryBox}>
           <div className={styles.summaryLabel}>카드</div>
-          <div className={styles.summaryAmount}>{formatKRW(totalCard)}</div>
+          <div className={styles.summaryValue}>
+            {formatKRW(summaryData[1]?.amount || 0)}
+          </div>
         </div>
       </div>
 
-      {sortedCardBrands.length > 0 && (
-        <div className={styles.brandSection}>
-          <div className={styles.brandSectionTitle}>카드사별 지출 합계</div>
-          <div className={styles.brandList}>
-            {sortedCardBrands.map(([brand, amount]) => (
-              <div key={brand} className={styles.brandItem}>
-                <div className={styles.brandBadge}>{brand}</div>
-                <div className={styles.brandAmount}>{formatKRW(amount)}</div>
-              </div>
-            ))}
+      {/* 카드사별 지출 합계 */}
+      <div className={styles.sectionTitle}>카드사별 지출 합계</div>
+      <div className={styles.walletList}>
+        {cardWallets.slice(0, 3).map((wallet) => (
+          <div key={wallet.wlt_id} className={styles.walletItem}>
+            <div className={styles.walletName}>{wallet.wlt_name}</div>
+            <div className={styles.walletAmount}>{formatKRW(wallet.amount)}</div>
           </div>
-        </div>
-      )}
+        ))}
+        
+        {hasMoreWallets && (
+          <button className={styles.moreButton}>
+            <span>더 보기</span>
+            <span className={styles.remainCount}>+{cardWallets.length - 3}</span>
+            <span className={styles.arrowIcon}>→</span>
+          </button>
+        )}
+      </div>
     </DashboardCard>
   );
 };
 
-export default RatingCard; 
+export default RatingCard;

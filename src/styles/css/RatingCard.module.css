@@ -1,118 +1,120 @@
 .description {
-  color: #6b7280;
+  color: #6B7280;
   font-size: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding: 0 16px;
 }
 
-.ratingsContainer {
-  display: flex;
-  justify-content: space-around;
-  gap: 16px;
-}
-
-.ratingItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.circleProgress {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.progressSvg {
-  width: 100%;
-  height: 100%;
-}
-
-.percentageText {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.ratingLabel {
-  font-size: 12px;
-  color: #6b7280;
-  text-align: center;
-  font-weight: 500;
-}
-
-/* New styles for payment summary */
-.summaryContainer {
+.summaryGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 16px;
+  margin-bottom: 32px;
 }
 
-.summaryItem {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.summaryBox {
+  background-color: #F3F4F6;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .summaryLabel {
-  color: #6b7280;
-  font-size: 13px;
+  color: #6B7280;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
-.summaryAmount {
+.summaryValue {
   color: #111827;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
 }
 
-.brandSection {
-  margin-top: 8px;
-}
-
-.brandSectionTitle {
-  font-size: 13px;
+.sectionTitle {
+  color: #111827;
+  font-size: 16px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  padding: 0 16px;
 }
 
-.brandList {
+.walletList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.brandItem {
+.walletItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #ffffff;
+  padding: 16px;
+  border-bottom: 1px solid #E5E7EB;
 }
 
-.brandBadge {
-  padding: 4px 10px;
-  background: #eef2ff;
-  color: #4f46e5;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 9999px;
+.walletItem:last-child {
+  border-bottom: none;
 }
 
-.brandAmount {
-  font-size: 15px;
-  font-weight: 700;
+.walletName {
   color: #111827;
-} 
+  font-weight: 500;
+}
+
+.walletAmount {
+  color: #111827;
+  font-weight: 600;
+}
+
+.moreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background-color: #F9FAFB;
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  color: #4F46E5;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.moreButton:hover {
+  background-color: #F3F4F6;
+}
+
+.remainCount {
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.arrowIcon {
+  font-size: 18px;
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+
+.moreButton:hover .arrowIcon {
+  transform: translateX(4px);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6B7280;
+}
+
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #EF4444;
+  text-align: center;
+  padding: 0 20px;
+}
