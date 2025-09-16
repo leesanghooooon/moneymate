@@ -48,10 +48,12 @@ interface Contribution {
 import SavingsGoalModal from '@/components/SavingsGoalModal';
 
 import SavingsContributionModal from '@/components/SavingsContributionModal';
+import SavingsContributionListModal from '@/components/SavingsContributionListModal';
 
 export default function SavingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isContribModalOpen, setIsContribModalOpen] = useState(false);
+  const [isContribListModalOpen, setIsContribListModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const { data: session, status } = useSession();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
@@ -61,7 +63,7 @@ export default function SavingsPage() {
 
   // 저축목표 목록 조회
   const fetchSavingsGoals = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || status !== 'authenticated') return;
 
     try {
       const response = await fetch(`/api/savings-goals?usr_id=${session.user.id}`);
@@ -78,7 +80,7 @@ export default function SavingsPage() {
 
   // 저축 납입내역 조회
   const fetchContributions = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || status !== 'authenticated') return;
 
     try {
       const response = await fetch(`/api/savings-contributions?usr_id=${session.user.id}`);
@@ -92,14 +94,14 @@ export default function SavingsPage() {
     }
   };
 
-  // 데이터 로드
+  // 데이터 로드 - 세션이 완전히 로드된 후에만 호출
   useEffect(() => {
-    if (session?.user?.id) {
+    if (status === 'authenticated' && session?.user?.id) {
       setLoading(true);
       Promise.all([fetchSavingsGoals(), fetchContributions()])
         .finally(() => setLoading(false));
     }
-  }, [session?.user?.id]);
+  }, [status, session?.user?.id]);
 
   // 저축목표별 현재 금액 계산
   const calculateCurrentAmounts = () => {
@@ -196,13 +198,13 @@ export default function SavingsPage() {
   }
 
   const goalsWithProgress = calculateCurrentAmounts();
-    console.log('저축목표 데이터:', goalsWithProgress.map(goal => ({
-      goal_name: goal.goal_name,
-      is_completed: goal.is_completed,
-      progress_percentage: goal.progress_percentage,
-      current_amount: goal.current_amount,
-      target_amount: goal.target_amount
-    })));
+    // console.log('저축목표 데이터:', goalsWithProgress.map(goal => ({
+    //   goal_name: goal.goal_name,
+    //   is_completed: goal.is_completed,
+    //   progress_percentage: goal.progress_percentage,
+    //   current_amount: goal.current_amount,
+    //   target_amount: goal.target_amount
+    // })));
   return (
     <div className={layoutStyles.dashboard}>
       <main className={layoutStyles.dashboardBody}>
@@ -439,6 +441,15 @@ export default function SavingsPage() {
                           >
                             납입하기
                           </button>
+                          <button
+                            className={styles.buttonSecondary}
+                            onClick={() => {
+                              setSelectedGoal(goal);
+                              setIsContribListModalOpen(true);
+                            }}
+                          >
+                            납입목록
+                          </button>
                           <button className={styles.buttonGhost}>수정</button>
                           <button className={styles.buttonGhost}>삭제</button>
                         </div>
@@ -470,6 +481,18 @@ export default function SavingsPage() {
           }}
           onSuccess={() => {
             Promise.all([fetchSavingsGoals(), fetchContributions()]);
+          }}
+          savingsGoal={selectedGoal}
+        />
+      )}
+
+      {/* 저축 납입목록 모달 */}
+      {selectedGoal && (
+        <SavingsContributionListModal
+          isOpen={isContribListModalOpen}
+          onClose={() => {
+            setIsContribListModalOpen(false);
+            setSelectedGoal(null);
           }}
           savingsGoal={selectedGoal}
         />

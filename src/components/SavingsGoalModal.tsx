@@ -23,6 +23,60 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // 금액 포맷팅 함수 (천 단위 쉼표 추가)
+  const formatAmountInput = (value: string) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^0-9]/g, '');
+    // 빈 문자열이면 그대로 반환
+    if (!numbers) return '';
+    // 천 단위 쉼표 추가
+    return new Intl.NumberFormat('ko-KR').format(Number(numbers));
+  };
+
+  // 계획 금액 자동 계산 함수
+  const calculatePlanAmount = () => {
+    if (!formData.target_amount || !formData.start_date || !formData.end_date || !formData.deposit_cycle_cd) {
+      return 0;
+    }
+
+    const targetAmount = Number(formData.target_amount.replace(/,/g, ''));
+    const startDate = new Date(formData.start_date);
+    const endDate = new Date(formData.end_date);
+    
+    if (targetAmount <= 0 || startDate >= endDate) {
+      return 0;
+    }
+
+    let periodsCount = 0;
+    
+    // 납입 주기에 따른 기간 수 계산
+    switch (formData.deposit_cycle_cd) {
+      case 'DAILY':
+        periodsCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        break;
+      case 'WEEKLY':
+        periodsCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7));
+        break;
+      case 'MONTHLY':
+        periodsCount = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                      (endDate.getMonth() - startDate.getMonth()) + 1;
+        break;
+      case 'QUARTERLY':
+        periodsCount = Math.ceil(((endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                                 (endDate.getMonth() - startDate.getMonth()) + 1) / 3);
+        break;
+      case 'YEARLY':
+        periodsCount = endDate.getFullYear() - startDate.getFullYear() + 1;
+        break;
+      default:
+        return 0;
+    }
+
+    if (periodsCount <= 0) return 0;
+    
+    return Math.ceil(targetAmount / periodsCount);
+  };
+
   // 폼 데이터 상태
   const [formData, setFormData] = useState({
     goal_name: '',
@@ -87,9 +141,9 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
     }
 
     // 목표 금액 검증 (decimal(14,2))
-    if (!formData.target_amount || Number(formData.target_amount) <= 0) {
+    if (!formData.target_amount || Number(formData.target_amount.replace(/,/g, '')) <= 0) {
       errors.target_amount = '유효한 목표 금액을 입력해주세요.';
-    } else if (Number(formData.target_amount) > 999999999999.99) {
+    } else if (Number(formData.target_amount.replace(/,/g, '')) > 999999999999.99) {
       errors.target_amount = '목표 금액이 너무 큽니다. (최대 999,999,999,999.99)';
     }
 
@@ -118,9 +172,10 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
 
     // 계획 금액 검증 (decimal(14,2))
     if (formData.plan_amount) {
-      if (Number(formData.plan_amount) <= 0) {
+      const planAmountValue = Number(formData.plan_amount.replace(/,/g, ''));
+      if (planAmountValue <= 0) {
         errors.plan_amount = '유효한 계획 금액을 입력해주세요.';
-      } else if (Number(formData.plan_amount) > 999999999999.99) {
+      } else if (planAmountValue > 999999999999.99) {
         errors.plan_amount = '계획 금액이 너무 큽니다. (최대 999,999,999,999.99)';
       }
     }
@@ -157,8 +212,8 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
       const response = await post('/savings-goals', {
           ...formData,
           usr_id: userId,
-          target_amount: Number(formData.target_amount),
-          plan_amount: formData.plan_amount ? Number(formData.plan_amount) : null,
+          target_amount: Number(formData.target_amount.replace(/,/g, '')),
+          plan_amount: formData.plan_amount ? Number(formData.plan_amount.replace(/,/g, '')) : null,
           alarm_day: formData.alarm_day ? Number(formData.alarm_day) : null
         })
 
@@ -301,11 +356,11 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
             <div className={styles.formGroup}>
               <label htmlFor="target_amount" className={`${styles.label} ${styles.required}`}>목표 금액</label>
               <input
-                type="number"
+                type="text"
                 id="target_amount"
                 name="target_amount"
                 value={formData.target_amount}
-                onChange={handleInputChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, target_amount: formatAmountInput(e.target.value) }))}
                 min="0"
                 className={`${styles.input} ${fieldErrors.target_amount ? styles.error : ''}`}
                 placeholder="목표 금액을 입력하세요"
@@ -365,12 +420,31 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
 
               <div className={styles.formGroup}>
                 <label htmlFor="plan_amount" className={styles.label}>계획 금액</label>
+                {/* 자동 계산된 금액 표시 */}
+                {(() => {
+                  const calculatedAmount = calculatePlanAmount();
+                  return calculatedAmount > 0 && (
+                    <div className={styles.calculatedAmount}>
+                      권장 금액: {formatAmountInput(calculatedAmount.toString())}원
+                      <button
+                        type="button"
+                        className={styles.applyButton}
+                        onClick={() => setFormData(prev => ({ 
+                          ...prev, 
+                          plan_amount: formatAmountInput(calculatedAmount.toString()) 
+                        }))}
+                      >
+                        적용
+                      </button>
+                    </div>
+                  );
+                })()}
                 <input
-                  type="number"
+                  type="text"
                   id="plan_amount"
                   name="plan_amount"
                   value={formData.plan_amount}
-                  onChange={handleInputChange}
+                  onChange={(e) => setFormData(prev => ({ ...prev, plan_amount: formatAmountInput(e.target.value) }))}
                   min="0"
                   className={styles.input}
                   placeholder="주기별 납입 계획 금액"
