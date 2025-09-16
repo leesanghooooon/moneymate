@@ -225,11 +225,17 @@ export default function CalendarPage() {
                                 {/*)}*/}
                                 {(() => {
                                   const handleTransactionClick = (trx: Transaction) => {
+                                    // 공유가계부인 경우 수정 모달을 열지 않음
+                                    if (trx.is_shared === 1 || trx.is_shared === true) {
+                                      return;
+                                    }
+                                    
                                     setEditModal({
                                       isOpen: true,
                                       transaction: trx
                                     });
                                   };
+                                  
                                   return day.data.trx_list.slice(0, 2).map((trx) => (
                                   <div 
                                     key={trx.trx_id}
@@ -237,7 +243,9 @@ export default function CalendarPage() {
                                       trx.trx_type === 'INCOME' ? styles.income : styles.expense
                                     } ${trx.is_shared ? styles.shared : ''}`}
                                     onClick={() => handleTransactionClick(trx)}
-                                    style={{ cursor: 'pointer' }}
+                                    style={{ 
+                                      cursor: (trx.is_shared === 1 || trx.is_shared === true) ? 'default' : 'pointer' 
+                                    }}
                                   >
                                     <span className={styles.amount}>
                                       {formatAmount(trx.amount, trx.trx_type)}
