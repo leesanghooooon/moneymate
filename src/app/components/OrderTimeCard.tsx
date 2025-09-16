@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/MostOrderedCard.module.css';
 import { get } from '@/lib/api/common';
+import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
 
 interface Expenditure {
   trx_id: string;
@@ -27,12 +28,9 @@ const OrderTimeCard = () => {
 
       try {
         setLoading(true);
-        // 현재 달의 시작일과 마지막 일을 계산
-        const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString().split('T')[0];
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-          .toISOString().split('T')[0];
+
+        const startDate = getFirstDayOfMonth();
+        const endDate = getLastDayOfMonth();
 
         const response = await get('/expenses', {
           params: {

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/RatingCard.module.css';
 import { get } from '@/lib/api/common';
+import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
 
 interface WalletSummary {
   wlt_id: string;
@@ -32,12 +33,12 @@ const RatingCard = () => {
 
       try {
         setLoading(true);
-        // 현재 달의 시작일과 마지막 일을 계산
-        const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString().split('T')[0];
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-          .toISOString().split('T')[0];
+
+        const startDate = getFirstDayOfMonth();
+        const endDate = getLastDayOfMonth();
+
+        console.log('startDate:',startDate)
+        console.log('endDate:',endDate)
 
         // 현금성 지출 조회 (CASH, CHECK_CARD)
         const cashResponse = await get('/expenses', {

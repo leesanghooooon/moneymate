@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getWeekDateRanges } from '@/lib/date-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,17 +19,18 @@ export async function GET(request: NextRequest) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     // 이번 주의 시작일 (일요일)
-    const thisWeekStart = new Date(today);
-    thisWeekStart.setDate(today.getDate() - today.getDay());
-    
+    const specificDate = new Date(today);
+    const specificWeekRanges = getWeekDateRanges(specificDate);
+
+    console.log('specificWeekRanges:',specificWeekRanges)
+
     // 이번 주의 종료일 (오늘)
-    const thisWeekEnd = today;
-    
+    const thisWeekStart = specificWeekRanges.thisWeekStart;
+    const thisWeekEnd = specificWeekRanges.thisWeekEnd;
+
     // 지난 주의 시작일과 종료일
-    const lastWeekStart = new Date(thisWeekStart);
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-    const lastWeekEnd = new Date(thisWeekStart);
-    lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
+    const lastWeekStart = specificWeekRanges.lastWeekStart
+    const lastWeekEnd = specificWeekRanges.lastWeekEnd
 
     // SQL 쿼리 작성
     const sql = `
@@ -72,12 +74,12 @@ export async function GET(request: NextRequest) {
     `;
 
     const params = [
-      thisWeekStart.toISOString().split('T')[0],
-      thisWeekEnd.toISOString().split('T')[0],
+      thisWeekStart,
+      thisWeekEnd,
       usr_id,
       usr_id,
-      lastWeekStart.toISOString().split('T')[0],
-      lastWeekEnd.toISOString().split('T')[0]
+      lastWeekStart,
+      lastWeekEnd
     ];
 
     const rows = await query(sql, params);
