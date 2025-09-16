@@ -142,8 +142,8 @@ export default function ExpensesPage() {
 
     const loadCommonCodes = async () => {
       try {
-        const [cats, pays, bks, crds] = await Promise.all([
-          getCategories(),
+        // 카테고리는 거래 유형에 따라 별도로 로드하므로 여기서는 제외
+        const [pays, bks, crds] = await Promise.all([
           getPayMethods(),
           getBanks(),
           getCards()
@@ -151,7 +151,6 @@ export default function ExpensesPage() {
 
         if (!mounted) return;
         
-        setCategories(cats);
         setPayMethods(pays);
         setBanks(bks);
         setCards(crds);
@@ -191,6 +190,8 @@ export default function ExpensesPage() {
 
   // 거래유형 변경 시 카테고리 다시 로드
   useEffect(() => {
+    if (!session?.user?.id) return;
+    
     const loadCategories = async () => {
       try {
         const categoryData = selectedTrxType === 'EXPENSE' ? await getCategories() : await getIncome();
@@ -201,12 +202,10 @@ export default function ExpensesPage() {
         console.error('카테고리 조회 실패:', error);
       }
     };
+    
     loadCategories();
-  }, [selectedTrxType]);
-  // 오늘의 지출 데이터 로드
-  useEffect(() => {
-    fetchTodayExpenses();
-  }, []);
+  }, [selectedTrxType, session?.user?.id]);
+  // 오늘의 지출 데이터 로드는 session?.user?.id useEffect에서 처리하므로 제거
 
   useEffect(() => {
     if (!isWalletCardSelected && walletForm.bank_cd) {
