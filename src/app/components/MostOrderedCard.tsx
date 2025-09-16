@@ -90,11 +90,22 @@ const MostOrderedCard = () => {
   return (
     <DashboardCard title="저축목표 현황" cardSize="card-4">
       <div className={styles.description}>
-        현재 진행 중인 저축목표의 달성 현황을 확인할 수 있어요.
+        {goals.length > 0 
+          ? "현재 진행 중인 저축목표의 달성 현황을 확인할 수 있어요."
+          : "아직 등록된 저축목표가 없어요. 새로운 저축목표를 등록해보세요!"
+        }
       </div>
 
       <div className={styles.goalList}>
-        {goals.slice(0, 2).map((goal) => (
+        {goals.length === 0 ? (
+          <a href="/savings" className={styles.emptyStateButton}>
+            <div className={styles.emptyStateContent}>
+              <span className={styles.plusIcon}>+</span>
+              <span>새로운 저축목표 등록하기</span>
+            </div>
+          </a>
+        ) : (
+          goals.slice(0, 2).map((goal) => (
           <div key={goal.sav_goal_id} className={styles.goalItem}>
             {/*<div className={styles.rankBadge}>{goals.indexOf(goal) + 1}</div>*/}
             <div className={styles.goalContent}>
@@ -130,7 +141,7 @@ const MostOrderedCard = () => {
               </div>
             </div>
           </div>
-        ))}
+        )))}
 
         {goals.length > 2 && (
           <button className={styles.moreButton}>
