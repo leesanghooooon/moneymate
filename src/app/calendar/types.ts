@@ -10,6 +10,7 @@ export interface Transaction {
   usr_id: string;
   is_shared: boolean;
   created_at: string;
+  trx_date: string;
 }
 
 export interface CalendarDay {

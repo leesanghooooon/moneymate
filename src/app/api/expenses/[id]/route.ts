@@ -1,131 +1,213 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { dbUpdate, dbSelect } from '../../../../lib/db-utils';
 
-/**
- * @swagger
- * /api/expenses/{id}:
- *   get:
- *     summary: 지출 상세 조회
- *     description: 지출 ID로 상세 정보를 조회합니다.
- *     tags: [Expenses]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: 지출 ID (trx_id)
- *     responses:
- *       200:
- *         description: 지출 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: object
- *                   properties:
- *                     trx_id:
- *                       type: string
- *                       description: 지출 ID
- *                     wlt_type:
- *                       type: string
- *                       description: 지갑 유형
- *                     wlt_name:
- *                       type: string
- *                       description: 지갑 이름
- *                     bank_cd:
- *                       type: string
- *                       description: 은행/카드사 코드
- *                     usr_id:
- *                       type: string
- *                       description: 사용자 ID
- *                     trx_type:
- *                       type: string
- *                       description: 거래 유형
- *                     trx_type_name:
- *                       type: string
- *                       description: 거래 유형명
- *                     trx_date:
- *                       type: string
- *                       format: date
- *                       description: 거래 일자
- *                     amount:
- *                       type: number
- *                       description: 거래 금액
- *                     category_cd:
- *                       type: string
- *                       description: 카테고리 코드
- *                     category_name:
- *                       type: string
- *                       description: 카테고리명
- *                     memo:
- *                       type: string
- *                       description: 메모
- *                     is_fixed:
- *                       type: string
- *                       description: 고정 지출 여부
- *                     is_installment:
- *                       type: string
- *                       description: 할부 여부
- *                     installment_months:
- *                       type: integer
- *                       description: 할부 개월 수
- *                     installment_seq:
- *                       type: integer
- *                       description: 할부 회차
- *                     installment_group_id:
- *                       type: string
- *                       description: 할부 그룹 ID
- *       404:
- *         description: 지출 정보를 찾을 수 없음
- *       500:
- *         description: 서버 오류
- */
-export async function GET(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sql = `
-      SELECT 
-        t1.trx_id
-        , t2.wlt_type
-        , t2.wlt_name
-        , t2.bank_cd
-        , t1.usr_id
-        , t1.trx_type
-        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'TRX_TYPE' AND cd = t1.trx_type) trx_type_name
-        , t1.trx_date
-        , t1.amount
-        , t1.category_cd
-        , (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'CATEGORY' AND cd = t1.category_cd) category_name
-        , t1.memo
-        , t1.is_fixed
-        , t1.is_installment
-        , t1.installment_months
-        , t1.installment_seq
-        , t1.installment_group_id
-      FROM MMT_TRX_TRN t1
-      JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
-      WHERE t1.trx_id = ?
-    `;
+    const { id } = await params;
+    const body = await request.json();
 
-    const rows = await query(sql, [params.id]);
-
-    if (!rows || rows.length === 0) {
+    // 필수 필드 검증
+    const requiredFields = ['trx_date', 'amount', 'category_cd', 'wlt_id'];
+    const missingFields = requiredFields.filter(field => !body[field]);
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { message: '지출 정보를 찾을 수 없습니다.' },
+        { message: `필수 정보가 누락되었습니다: ${missingFields.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // 금액 검증
+    if (body.amount <= 0) {
+      return NextResponse.json(
+        { message: '금액은 0보다 커야 합니다.' },
+        { status: 400 }
+      );
+    }
+
+    // 거래 내역 존재 여부 확인
+    const existingTransaction = await dbSelect({
+      table: 'MMT_TRX_TRN',
+      columns: ['trx_id', 'usr_id', 'trx_type', 'is_installment', 'installment_group_id'],
+      where: {
+        trx_id: id,
+        use_yn: 'Y'
+      }
+    });
+
+    if (!existingTransaction || existingTransaction.length === 0) {
+      return NextResponse.json(
+        { message: '수정할 거래 내역을 찾을 수 없습니다.' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ data: rows[0] });
+    const transaction = existingTransaction[0];
+
+    // 할부 거래인 경우 할부 그룹 전체 수정 여부 확인
+    if (transaction.is_installment === 'Y' && transaction.installment_group_id) {
+      // 할부 그룹의 모든 거래 내역 조회
+      const installmentGroup = await dbSelect({
+        table: 'MMT_TRX_TRN',
+        columns: ['trx_id', 'installment_seq', 'amount'],
+        where: {
+          installment_group_id: transaction.installment_group_id,
+          use_yn: 'Y'
+        },
+        orderBy: 'installment_seq ASC'
+      });
+
+      if (installmentGroup && installmentGroup.length > 0) {
+        // 할부 그룹의 총 금액 계산
+        const totalAmount = installmentGroup.reduce((sum, item) => sum + Number(item.amount), 0);
+        const monthlyAmount = Math.floor(Number(body.amount) / installmentGroup.length);
+
+        // 할부 그룹의 모든 거래 내역 수정
+        for (const installmentItem of installmentGroup) {
+          await dbUpdate({
+            table: 'MMT_TRX_TRN',
+            data: {
+              trx_date: body.trx_date,
+              amount: monthlyAmount,
+              category_cd: body.category_cd,
+              memo: body.memo || null,
+              wlt_id: body.wlt_id,
+              updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
+            },
+            where: 'trx_id = ?',
+            params: [installmentItem.trx_id]
+          });
+        }
+
+        return NextResponse.json({
+          message: '할부 거래가 수정되었습니다.',
+          data: { 
+            updated_count: installmentGroup.length,
+            is_installment: true
+          }
+        });
+      }
+    }
+
+    // 일반 거래 또는 할부가 아닌 경우 단일 거래 수정
+    await dbUpdate({
+      table: 'MMT_TRX_TRN',
+      data: {
+        trx_date: body.trx_date,
+        amount: body.amount,
+        category_cd: body.category_cd,
+        memo: body.memo || null,
+        wlt_id: body.wlt_id,
+        updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
+      },
+      where: 'trx_id = ?',
+      params: [id]
+    });
+
+    return NextResponse.json({
+      message: '거래가 수정되었습니다.',
+      data: { 
+        updated_count: 1,
+        is_installment: false
+      }
+    });
+
   } catch (error: any) {
-    console.error('지출 조회 오류:', error);
+    console.error('거래 수정 오류:', error);
     return NextResponse.json(
-      { message: error?.message || '지출 조회 중 오류가 발생했습니다.' },
+      { message: error?.message || '거래 수정 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // 거래 내역 존재 여부 확인
+    const existingTransaction = await dbSelect({
+      table: 'MMT_TRX_TRN',
+      columns: ['trx_id', 'usr_id', 'is_installment', 'installment_group_id'],
+      where: {
+        trx_id: id,
+        use_yn: 'Y'
+      }
+    });
+
+    if (!existingTransaction || existingTransaction.length === 0) {
+      return NextResponse.json(
+        { message: '삭제할 거래 내역을 찾을 수 없습니다.' },
+        { status: 400 }
+      );
+    }
+
+    const transaction = existingTransaction[0];
+
+    // 할부 거래인 경우 할부 그룹 전체 삭제 여부 확인
+    if (transaction.is_installment === 'Y' && transaction.installment_group_id) {
+      // 할부 그룹의 모든 거래 내역 조회
+      const installmentGroup = await dbSelect({
+        table: 'MMT_TRX_TRN',
+        columns: ['trx_id'],
+        where: {
+          installment_group_id: transaction.installment_group_id,
+          use_yn: 'Y'
+        }
+      });
+
+      if (installmentGroup && installmentGroup.length > 0) {
+        // 할부 그룹의 모든 거래 내역 삭제 (use_yn = 'N'으로 변경)
+        for (const installmentItem of installmentGroup) {
+          await dbUpdate({
+            table: 'MMT_TRX_TRN',
+            data: {
+              use_yn: 'N',
+              updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
+            },
+            where: 'trx_id = ?',
+            params: [installmentItem.trx_id]
+          });
+        }
+
+        return NextResponse.json({
+          message: '할부 거래가 삭제되었습니다.',
+          data: { 
+            deleted_count: installmentGroup.length,
+            is_installment: true
+          }
+        });
+      }
+    }
+
+    // 일반 거래 또는 할부가 아닌 경우 단일 거래 삭제
+    await dbUpdate({
+      table: 'MMT_TRX_TRN',
+      data: {
+        use_yn: 'N',
+        updated_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0]
+      },
+      where: 'trx_id = ?',
+      params: [id]
+    });
+
+    return NextResponse.json({
+      message: '거래가 삭제되었습니다.',
+      data: { 
+        deleted_count: 1,
+        is_installment: false
+      }
+    });
+
+  } catch (error: any) {
+    console.error('거래 삭제 오류:', error);
+    return NextResponse.json(
+      { message: error?.message || '거래 삭제 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

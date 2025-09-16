@@ -4,16 +4,10 @@ import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/calendar.module.css';
 import { useEffect, useState } from 'react';
 import TransactionModal from './TransactionModal';
-import TransactionEditModal from './TransactionEditModal';
 import { Transaction, CalendarDay } from './types';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
-
-interface EditModalState {
-  isOpen: boolean;
-  transaction: Transaction | null;
-}
 
 interface ModalState {
   isOpen: boolean;
@@ -28,10 +22,6 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
-  const [editModal, setEditModal] = useState<EditModalState>({
-    isOpen: false,
-    transaction: null
-  });
   const [modal, setModal] = useState<ModalState>({
     isOpen: false,
     date: '',
@@ -223,21 +213,12 @@ export default function CalendarPage() {
                                 {/*    </span>*/}
                                 {/*  </div>*/}
                                 {/*)}*/}
-                                {(() => {
-                                  const handleTransactionClick = (trx: Transaction) => {
-                                    setEditModal({
-                                      isOpen: true,
-                                      transaction: trx
-                                    });
-                                  };
-                                  return day.data.trx_list.slice(0, 2).map((trx) => (
+                                {day.data.trx_list.slice(0, 2).map((trx) => (
                                   <div 
                                     key={trx.trx_id}
                                     className={`${styles.transaction} ${
                                       trx.trx_type === 'INCOME' ? styles.income : styles.expense
                                     } ${trx.is_shared ? styles.shared : ''}`}
-                                    onClick={() => handleTransactionClick(trx)}
-                                    style={{ cursor: 'pointer' }}
                                   >
                                     <span className={styles.amount}>
                                       {formatAmount(trx.amount, trx.trx_type)}
@@ -250,8 +231,7 @@ export default function CalendarPage() {
                                     {/*  ({trx.wlt_name})*/}
                                     {/*</span>*/}
                                   </div>
-                                ));
-                                })()}
+                                ))}
                                 {day.data.trx_list.length > 2 && (
                                   <div 
                                     className={styles.moreTransactions}
@@ -277,25 +257,6 @@ export default function CalendarPage() {
           </div>
         </div>
       </main>
-      {/* 거래 수정 모달 */}
-      {editModal.isOpen && (
-        <TransactionEditModal
-          isOpen={editModal.isOpen}
-          onClose={() => setEditModal({ isOpen: false, transaction: null })}
-          transaction={editModal.transaction}
-          onSuccess={() => {
-            // 캘린더 데이터 다시 로드
-            const yyyy = currentDate.year.toString();
-            const mm = currentDate.month.toString().padStart(2, '0');
-            fetch(`/api/calendar?usr_id=${session?.user?.id}&yyyy=${yyyy}&mm=${mm}`)
-              .then(res => res.json())
-              .then(result => setCalendarData(result.data))
-              .catch(err => console.error('캘린더 데이터 로드 오류:', err));
-          }}
-          userId={session?.user?.id || ''}
-        />
-      )}
-
       {modal.isOpen && (
         <TransactionModal
           date={modal.date}
