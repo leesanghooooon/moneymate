@@ -1,226 +1,232 @@
 .description {
-  color: #6b7280;
+  color: #6B7280;
   font-size: 14px;
   margin-bottom: 20px;
+  padding: 0 16px;
+}
+
+.goalList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.goalItem {
+  padding: 16px;
+  background-color: #F9FAFB;
+  border-radius: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/*.rankBadge {*/
+/*  width: 24px;*/
+/*  height: 24px;*/
+/*  background-color: #4F46E5;*/
+/*  color: white;*/
+/*  border-radius: 50%;*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*  justify-content: center;*/
+/*  font-weight: 600;*/
+/*  font-size: 14px;*/
+/*  flex-shrink: 0;*/
+/*}*/
+
+.goalContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goalName {
+  font-weight: 600;
+  color: #111827;
+  font-size: 16px;
+}
+
+.goalType {
+  font-size: 14px;
+  color: #6B7280;
+  background-color: #F3F4F6;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.goalProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: #E5E7EB;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #4F46E5;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.currentAmount {
+  font-weight: 600;
+  color: #111827;
+}
+
+.progressPercent {
+  color: #4F46E5;
+  font-weight: 600;
+}
+
+.goalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.targetAmount {
+  color: #6B7280;
+}
+
+.walletName {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.moreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background-color: white;
+  border: 1px dashed #E5E7EB;
+  border-radius: 12px;
+  color: #4F46E5;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.moreButton:hover {
+  background-color: #F9FAFB;
+  border-color: #4F46E5;
+}
+
+.remainCount {
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.arrowIcon {
+  font-size: 18px;
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+
+.moreButton:hover .arrowIcon {
+  transform: translateX(4px);
 }
 
 .foodList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .foodItem {
+  padding: 16px;
+  background-color: #F9FAFB;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.foodItem:hover {
-  background: #f9fafb;
-}
-
-.foodIcon {
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.foodInfo {
-  flex: 1;
-}
-
-.foodName {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 4px;
-}
-
-.foodPrice {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-/* charts */
-.chartsRow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.donutCard {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px;
-  background: #ffffff;
-  overflow: hidden; /* 카드 밖으로 넘침 방지 */
-}
-
-.sectionTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 10px;
-}
-
-.donut {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  margin: 0 auto;
-  max-width: 100%;
-}
-
-.donutSvg {
-  width: 100%;
-  height: 100%;
-}
-
-.donutText {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-.donutPrimary {
-  font-size: 19px; /* 살짝 축소 */
-  font-weight: 800;
-  color: #111827;
-}
-
-.donutSecondary {
-  font-size: 11px; /* 살짝 축소 */
-  color: #6b7280;
-  margin-top: 2px;
-  word-break: break-word;
-}
-
-.legend {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #374151;
-  font-size: 11px; /* 축소 */
-  line-height: 1.2;
-}
-
-.legendColor {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-/* stacked bar */
-.stackedBar {
-  display: flex;
-  width: 100%;
-  height: 20px;
-  background: #f3f4f6;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.barSegment {
-  position: relative;
+.rankBadge {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #4F46E5;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  min-width: 2px; /* 극단적 좁은 구간 보호 */
+  flex-shrink: 0;
 }
 
-.barSaving {
-  background: #22c55e;
+.foodContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.barSpending {
-  background: #ef4444;
+.foodInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.barText {
-  font-size: 10px; /* 축소 */
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 4px;
-}
-
-.barTotals {
+.foodHeader {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap; /* 줄바꿈 허용 */
-}
-
-.totalItem {
-  display: flex;
   align-items: center;
+}
+
+.foodName {
+  font-weight: 600;
+  color: #111827;
+}
+
+.foodPrice {
+  color: #4F46E5;
+  font-weight: 600;
+}
+
+.foodMeta {
+  display: flex;
   gap: 8px;
-  color: #374151;
-  font-size: 11px; /* 축소 */
-  line-height: 1.2;
-  max-width: 100%;
+  font-size: 0.9em;
+  color: #666;
 }
 
-.totalItem span:last-child {
-  overflow-wrap: anywhere; /* 긴 금액/텍스트 줄바꿈 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6B7280;
 }
 
-/* sub section */
-.subSection {
-  margin-top: 16px;
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #EF4444;
+  text-align: center;
+  padding: 0 20px;
 }
-
-.subSectionTitle {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 10px 0 6px;
-}
-
-/* 지출 형태 비율은 세로 레이아웃로 오버라이드 */
-.subSection .barTotals {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-
-.subSection .totalItem {
-  width: 100%;
-}
-
-.barSubscription {
-  background: #3b82f6;
-}
-
-.barInstallment {
-  background: #8b5cf6;
-}
-
-.barOneTime {
-  background: #9ca3af;
-} 

@@ -1,154 +1,147 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/MostOrderedCard.module.css';
+import { get } from '@/lib/api/common';
+
+interface SavingsGoal {
+  sav_goal_id: string;
+  goal_name: string;
+  target_amount: number;
+  current_amount: number;
+  start_date: string;
+  end_date: string;
+  goal_type_cd_nm: string;
+  purpose_cd_nm: string;
+  deposit_cycle_cd_nm: string;
+  wlt_name: string;
+}
 
 const MostOrderedCard = () => {
-  // 더미 데이터 (실제 연동 시 교체)
-  const monthlyBudget = 2000000; // 이번 달 예산
-  const spentAmount = 1250000; // 이번 달 지출
-  const remainingBudget = Math.max(monthlyBudget - spentAmount, 0);
-  const budgetSpentPercent = Math.min(
-    Math.round((spentAmount / monthlyBudget) * 100),
-    100
-  );
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
 
-  const savedAmount = 450000; // 이번 달 저축액
-  const consumptionAmount = spentAmount; // 소비액을 지출액으로 동일하게 사용
-  const savingVsSpendingTotal = savedAmount + consumptionAmount;
-  const savingPercent = Math.round((savedAmount / savingVsSpendingTotal) * 100);
-  const spendingPercent = 100 - savingPercent;
+  useEffect(() => {
+    const fetchSavingsGoals = async () => {
+      if (!session?.user?.id) return;
 
-  // 지출 형태(구독/할부/일시불) 더미 값
-  const subscriptionAmount = 180000; // 구독(정기결제)
-  const installmentAmount = 320000; // 할부 결제 합계(이번 달 납부액)
-  const oneTimeAmount = Math.max(consumptionAmount - subscriptionAmount - installmentAmount, 0);
-  const spendingTypeTotal = subscriptionAmount + installmentAmount + oneTimeAmount || 1;
-  const subscriptionPercent = Math.round((subscriptionAmount / spendingTypeTotal) * 100);
-  const installmentPercent = Math.round((installmentAmount / spendingTypeTotal) * 100);
-  const oneTimePercent = Math.max(0, 100 - subscriptionPercent - installmentPercent);
+      try {
+        setLoading(true);
+        const response = await get('/savings-goals', {
+          params: {
+            usr_id: session.user.id
+          }
+        });
 
-  const formatKRW = (v: number) => `${v.toLocaleString('ko-KR')}원`;
+        if (response.data.success && response.data.data) {
+          // 숫자 타입으로 변환 확인
+          const processedGoals = response.data.data.map((goal: any) => ({
+            ...goal,
+            target_amount: Number(goal.target_amount),
+            current_amount: Number(goal.current_amount)
+          }));
+          setGoals(processedGoals);
+        }
+      } catch (err) {
+        console.error('저축목표 조회 오류:', err);
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const CIRC_R = 36; // 반지름
-  const CIRC_C = 2 * Math.PI * CIRC_R; // 둘레
+    fetchSavingsGoals();
+  }, [session?.user?.id]);
+
+  // KRW 포맷 함수 (3자리 콤마 + '원')
+  const formatKRW = (value: number) => {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'decimal',
+      maximumFractionDigits: 0
+    }).format(value) + '원';
+  };
+
+  // 진행률 계산
+  const calculateProgress = (current: number, target: number) => {
+    if (!current || !target) return 0;
+    return Math.min(Math.round((current / target) * 100), 100);
+  };
+
+  if (loading) {
+    return (
+      <DashboardCard title="저축목표 현황" cardSize="card-4">
+        <div className={styles.loading}>Loading...</div>
+      </DashboardCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardCard title="저축목표 현황" cardSize="card-4">
+        <div className={styles.error}>{error}</div>
+      </DashboardCard>
+    );
+  }
 
   return (
-    <DashboardCard title="예산 소진율 & 저축/소비 비율" cardSize="card-4">
+    <DashboardCard title="저축목표 현황" cardSize="card-4">
       <div className={styles.description}>
-        이번 달 예산 소진율과 저축 대비 소비 비율을 한눈에 확인해요.
+        현재 진행 중인 저축목표의 달성 현황을 확인할 수 있어요.
       </div>
 
-      <div className={styles.chartsRow}>
-        {/* 예산 소진율 도넛 */}
-        <div className={styles.donutCard}>
-          <div className={styles.sectionTitle}>예산 소진율</div>
-          <div className={styles.donut}>
-            <svg className={styles.donutSvg} viewBox="0 0 100 100" aria-label="예산 소진율">
-              <circle cx="50" cy="50" r={CIRC_R} fill="none" stroke="#e5e7eb" strokeWidth="10" />
-              <circle
-                cx="50"
-                cy="50"
-                r={CIRC_R}
-                fill="none"
-                stroke="#f97316" /* 소비색 */
-                strokeWidth="10"
-                strokeDasharray={`${CIRC_C}`}
-                strokeDashoffset={`${CIRC_C * (1 - budgetSpentPercent / 100)}`}
-                strokeLinecap="round"
-                transform="rotate(-90 50 50)"
-              />
-            </svg>
-            <div className={styles.donutText}>
-              <div className={styles.donutPrimary}>{budgetSpentPercent}%</div>
-              <div className={styles.donutSecondary}>{formatKRW(spentAmount)}</div>
-            </div>
-          </div>
-          <div className={styles.legend}>
-            <div className={styles.legendItem}>
-              <span className={styles.legendColor} style={{ background: '#f97316' }} />
-              <span>소진 {formatKRW(spentAmount)}</span>
-            </div>
-            <div className={styles.legendItem}>
-              <span className={styles.legendColor} style={{ background: '#d1d5db' }} />
-              <span>잔여 {formatKRW(remainingBudget)}</span>
-            </div>
-          </div>
-        </div>
+      <div className={styles.goalList}>
+        {goals.slice(0, 2).map((goal) => (
+          <div key={goal.sav_goal_id} className={styles.goalItem}>
+            {/*<div className={styles.rankBadge}>{goals.indexOf(goal) + 1}</div>*/}
+            <div className={styles.goalContent}>
+              <div className={styles.goalHeader}>
+                <div className={styles.goalName}>{goal.goal_name}</div>
+                <div className={styles.goalType}>{goal.purpose_cd_nm}</div>
+              </div>
 
-        {/* 저축 vs 소비: 가로 스택 바 */}
-        <div className={styles.donutCard}>
-          <div className={styles.sectionTitle}>저축 vs 소비</div>
-          <div className={styles.stackedBar} aria-label="저축과 소비 비율 진행바">
-            <div
-              className={`${styles.barSegment} ${styles.barSaving}`}
-              style={{ width: `${savingPercent}%` }}
-            >
-              <span className={styles.barText}>{savingPercent}%</span>
-            </div>
-            <div
-              className={`${styles.barSegment} ${styles.barSpending}`}
-              style={{ width: `${spendingPercent}%` }}
-            >
-              <span className={styles.barText}>{spendingPercent}%</span>
-            </div>
-          </div>
-          <div className={styles.barTotals}>
-            <div className={styles.totalItem}>
-              <span className={styles.legendColor} style={{ background: '#22c55e' }} />
-              <span>저축 {formatKRW(savedAmount)}</span>
-            </div>
-            <div className={styles.totalItem}>
-              <span className={styles.legendColor} style={{ background: '#ef4444' }} />
-              <span>소비 {formatKRW(consumptionAmount)}</span>
-            </div>
-          </div>
+              <div className={styles.goalProgress}>
+                <div className={styles.progressBar}>
+                  <div 
+                    className={styles.progressFill}
+                    style={{ 
+                      width: `${calculateProgress(goal.current_amount, goal.target_amount)}%`,
+                    }}
+                  />
+                </div>
+                <div className={styles.progressInfo}>
+                  <span className={styles.currentAmount}>
+                    {formatKRW(goal.current_amount)}
+                  </span>
+                  <span className={styles.progressPercent}>
+                    {calculateProgress(goal.current_amount, goal.target_amount)}%
+                  </span>
+                </div>
+              </div>
 
-          {/* 지출 형태: 구독 vs 할부 vs 일시불 */}
-          <div className={styles.subSection}>
-            <div className={styles.subSectionTitle}>지출 형태 비율</div>
-            <div className={styles.stackedBar} aria-label="구독/할부/일시불 비율 진행바">
-              <div
-                className={`${styles.barSegment} ${styles.barSubscription}`}
-                style={{ width: `${subscriptionPercent}%` }}
-                title={`구독 ${subscriptionPercent}%`}
-              >
-                <span className={styles.barText}>{subscriptionPercent}%</span>
-              </div>
-              <div
-                className={`${styles.barSegment} ${styles.barInstallment}`}
-                style={{ width: `${installmentPercent}%` }}
-                title={`할부 ${installmentPercent}%`}
-              >
-                <span className={styles.barText}>{installmentPercent}%</span>
-              </div>
-              <div
-                className={`${styles.barSegment} ${styles.barOneTime}`}
-                style={{ width: `${oneTimePercent}%` }}
-                title={`일시불 ${oneTimePercent}%`}
-              >
-                <span className={styles.barText}>{oneTimePercent}%</span>
-              </div>
-            </div>
-            <div className={styles.barTotals}>
-              <div className={styles.totalItem}>
-                <span className={styles.legendColor} style={{ background: '#3b82f6' }} />
-                <span>구독 {formatKRW(subscriptionAmount)}</span>
-              </div>
-              <div className={styles.totalItem}>
-                <span className={styles.legendColor} style={{ background: '#8b5cf6' }} />
-                <span>할부 {formatKRW(installmentAmount)}</span>
-              </div>
-              <div className={styles.totalItem}>
-                <span className={styles.legendColor} style={{ background: '#9ca3af' }} />
-                <span>일시불 {formatKRW(oneTimeAmount)}</span>
+              <div className={styles.goalFooter}>
+                <div className={styles.targetAmount}>
+                  목표금액: {formatKRW(goal.target_amount)}
+                </div>
+                <div className={styles.walletName}>{goal.wlt_name}</div>
               </div>
             </div>
           </div>
-        </div>
+        ))}
+
+        {goals.length > 2 && (
+          <button className={styles.moreButton}>
+            <span>더 보기</span>
+            <span className={styles.remainCount}>+{goals.length - 2}</span>
+            <span className={styles.arrowIcon}>→</span>
+          </button>
+        )}
       </div>
     </DashboardCard>
   );
 };
 
-export default MostOrderedCard; 
+export default MostOrderedCard;

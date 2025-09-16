@@ -89,42 +89,20 @@ const OrderTimeCard = () => {
     <DashboardCard title="이번 달 최대 지출 TOP 5" cardSize="card-4">
       <div className={styles.foodList}>
         {expenditures.map((item, idx) => (
-          <div key={item.trx_id} className={styles.foodItem} style={{ alignItems: 'center', gap: 12 }}>
-            {/* 순위 뱃지 */}
-            <div
-              aria-label={`rank-${idx + 1}`}
-              style={{
-                minWidth: 20,
-                fontSize: 25,
-                fontWeight: 700,
-                color: '#000',
-                textAlign: 'center',
-              }}
-            >
+          <div key={item.trx_id} className={styles.foodItem}>
+            <div className={styles.rankBadge} aria-label={`rank-${idx + 1}`}>
               {idx + 1}
             </div>
-
-            {/* 카테고리와 지갑 정보 */}
-            <div className={styles.foodInfo} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className={styles.foodName} style={{ fontWeight: 600 }}>
+            <div className={styles.foodContent}>
+              <div className={styles.foodHeader}>
+                <div className={styles.foodName}>
                   {item.category_name}
                 </div>
-                <div className={styles.foodPrice} style={{ 
-                  opacity: 0.8,
-                  fontWeight: 600,
-                  color: '#4F46E5'  // 금액을 보라색으로 강조
-                }}>
+                <div className={styles.foodPrice}>
                   {formatKRW(item.amount)}
                 </div>
               </div>
-              <div style={{ 
-                display: 'flex', 
-                gap: 8, 
-                fontSize: '0.9em', 
-                color: '#666',
-                marginTop: '2px'  // 간격 추가
-              }}>
+              <div className={styles.foodMeta}>
                 <span>{item.wlt_name}</span>
                 {item.memo && <span>| {item.memo}</span>}
               </div>
