@@ -139,18 +139,18 @@ const OrderCard = () => {
         });
         
         // 샘플 데이터 사용
-        const sampleData = generateSampleData();
-        console.log('샘플 데이터:', sampleData);
-        console.log('샘플 데이터:', response.data.data);
+        // const sampleData = generateSampleData();
+        // console.log('샘플 데이터:', sampleData);
+        // console.log('샘플 데이터:', response.data.data);
         
-        // if (response.data.success) {
-        //   setOrderData(response.data.data.daily);
-        //   setSummary(response.data.data.summary);
-        // }
+        if (response.data.success) {
+          setOrderData(response.data.data.daily);
+          setSummary(response.data.data.summary);
+        }
         
         // 샘플 데이터 설정
-        setOrderData(sampleData.daily);
-        setSummary(sampleData.summary);
+        // setOrderData(sampleData.daily);
+        // setSummary(sampleData.summary);
         
       } catch (err) {
         console.error('주간 지출 통계 조회 오류:', err);

@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     const specificDate = new Date(today);
     const specificWeekRanges = getWeekDateRanges(specificDate);
 
-    console.log('specificWeekRanges:',specificWeekRanges)
 
     // 이번 주의 종료일 (오늘)
     const thisWeekStart = specificWeekRanges.thisWeekStart;
@@ -35,41 +34,44 @@ export async function GET(request: NextRequest) {
     // SQL 쿼리 작성
     const sql = `
       WITH RECURSIVE dates AS (
-        SELECT DATE(?) as date
-        UNION ALL
-        SELECT DATE_ADD(date, INTERVAL 1 DAY)
-        FROM dates
-        WHERE date < ?
-      ),
-      this_week AS (
-        SELECT 
-          d.date,
-          COALESCE(SUM(t.amount), 0) as amount
-        FROM dates d
-        LEFT JOIN MMT_TRX_TRN t ON DATE(t.trx_date) = d.date 
-          AND t.usr_id = ?
-          AND t.trx_type = 'EXPENSE'
-          AND t.use_yn = 'Y'
-        GROUP BY d.date
-      ),
-      last_week AS (
-        SELECT 
-          DATE_ADD(d.date, INTERVAL 7 DAY) as date,
-          COALESCE(SUM(t.amount), 0) as amount
-        FROM dates d
-        LEFT JOIN MMT_TRX_TRN t ON DATE(t.trx_date) = d.date 
-          AND t.usr_id = ?
-          AND t.trx_type = 'EXPENSE'
-          AND t.use_yn = 'Y'
-        WHERE d.date BETWEEN ? AND ?
-        GROUP BY d.date
-      )
-      SELECT 
+        SELECT DATE(?) AS d
+      UNION ALL
+      SELECT DATE_ADD(d, INTERVAL 1 DAY)
+      FROM dates
+      WHERE d < DATE(?)
+        ),
+        this_week AS (
+      SELECT
+        d.d AS date,
+        COALESCE(SUM(t.amount), 0) AS amount
+      FROM dates d
+        LEFT JOIN MMT_TRX_TRN t
+      ON t.usr_id   = ?
+        AND t.trx_type = 'EXPENSE'
+        AND t.use_yn   = 'Y'
+        AND t.trx_date >= d.d
+        AND t.trx_date <  d.d + INTERVAL 1 DAY
+      GROUP BY d.d
+        ),
+        last_month_same_week AS (
+      SELECT
+        DATE_ADD(DATE(t.trx_date), INTERVAL DATEDIFF(?, ?) DAY) AS date_cur,
+        COALESCE(SUM(t.amount), 0) AS amount
+      FROM MMT_TRX_TRN t
+      WHERE t.usr_id   = ?
+        AND t.trx_type = 'EXPENSE'
+        AND t.use_yn   = 'Y'
+        AND t.trx_date >= DATE(?)
+        AND t.trx_date <  DATE(?) + INTERVAL 1 DAY
+      GROUP BY DATE_ADD(DATE(t.trx_date), INTERVAL DATEDIFF(?, ?) DAY)
+        )
+      SELECT
         tw.date,
-        tw.amount as current_amount,
-        lw.amount as previous_amount
+        tw.amount AS current_amount,
+        COALESCE(lm.amount, 0) AS previous_amount
       FROM this_week tw
-      LEFT JOIN last_week lw ON tw.date = lw.date
+             LEFT JOIN last_month_same_week lm
+                       ON lm.date_cur = tw.date
       ORDER BY tw.date;
     `;
 
@@ -77,9 +79,13 @@ export async function GET(request: NextRequest) {
       thisWeekStart,
       thisWeekEnd,
       usr_id,
+      thisWeekStart,
+      lastWeekStart,
       usr_id,
       lastWeekStart,
-      lastWeekEnd
+      lastWeekEnd,
+      thisWeekStart,
+      lastWeekStart,
     ];
 
     const rows = await query(sql, params);
@@ -91,10 +97,10 @@ export async function GET(request: NextRequest) {
     // 날짜 포맷팅
     const formattedRows = rows.map((row: any) => ({
       ...row,
-      date: new Date(row.date).toLocaleDateString('ko-KR', {
-        month: 'long',
-        day: 'numeric'
-      })
+      // date: new Date(row.date).toLocaleDateString('ko-KR', {
+      //   month: 'long',
+      //   day: 'numeric'
+      // })
     }));
 
     return NextResponse.json({

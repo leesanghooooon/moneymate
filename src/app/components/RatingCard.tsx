@@ -37,9 +37,6 @@ const RatingCard = () => {
         const startDate = getFirstDayOfMonth();
         const endDate = getLastDayOfMonth();
 
-        console.log('startDate:',startDate)
-        console.log('endDate:',endDate)
-
         // 현금성 지출 조회 (CASH, CHECK_CARD)
         const cashResponse = await get('/expenses', {
           params: {
