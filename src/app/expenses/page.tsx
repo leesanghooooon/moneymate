@@ -347,6 +347,12 @@ export default function ExpensesPage() {
     return new Intl.NumberFormat('ko-KR').format(Number(numbers));
   };
 
+  // 엑셀간편등록 페이지로 이동하는 함수
+  const handleExcelRegistration = () => {
+    // 향후 엑셀간편등록 페이지로 이동
+    router.push('/expenses/excel');
+  };
+
   return (
       <div className={layoutStyles.dashboard}>
         <main className={layoutStyles.dashboardBody}>
@@ -361,6 +367,7 @@ export default function ExpensesPage() {
                   <div className={styles.headerRight}>
                     <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
                     <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
+                    <button className={styles.buttonPrimary} onClick={handleExcelRegistration}>엑셀간편등록</button>
                   </div>
                 </div>
               </header>

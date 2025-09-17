@@ -52,9 +52,9 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e5e7eb;
+  /*margin-bottom: 24px;*/
+  /*padding-bottom: 20px;*/
+  /*border-bottom: 1px solid #e5e7eb;*/
 }
 
 .walletButton {
@@ -731,5 +731,152 @@
   
   .bulkTableHeader {
     display: none;
+  }
+}
+
+/* 단계별 섹션 스타일 */
+.stepSection {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 30%;
+  font-weight: 600;
+  font-size: 14px;
+  margin-right: 12px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.stepContent {
+  margin-left: 44px;
+}
+
+.stepDescription {
+  color: #6b7280;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* 파일 업로드 영역 */
+.fileUploadArea {
+  margin-top: 16px;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileUploadLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.fileUploadLabel:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.fileUploadIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.fileUploadText {
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.fileUploadSubtext {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 정보 섹션 */
+.infoSection {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.infoCard {
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.infoTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.infoList {
+  margin: 0;
+  padding-left: 20px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.infoList li {
+  margin-bottom: 8px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .infoSection {
+    grid-template-columns: 1fr;
+  }
+  
+  .stepContent {
+    margin-left: 0;
+  }
+  
+  .stepHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .stepNumber {
+    margin-right: 0;
+    margin-bottom: 8px;
   }
 }
