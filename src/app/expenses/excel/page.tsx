@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
+import ExcelUploadModal from '@/components/ExcelUploadModal';
 import { getWallets, Wallet } from '../../../lib/api/commonCodes';
 import layoutStyles from '../../../styles/css/page.module.css';
 import styles from '../../../styles/css/expenses.module.css';
@@ -11,11 +12,11 @@ import styles from '../../../styles/css/expenses.module.css';
 export default function ExcelRegistrationPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedWallet, setSelectedWallet] = useState('');
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   // 세션이 있을 때 모든 지갑 목록 조회
   useEffect(() => {
@@ -50,38 +51,25 @@ export default function ExcelRegistrationPage() {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUploadStart = () => {
     if (!selectedFile || !selectedWallet) {
       alert('파일과 지갑을 선택해주세요.');
       return;
     }
+    setShowUploadModal(true);
+  };
 
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('usr_id', session?.user?.id || '');
-      formData.append('wlt_id', selectedWallet);
-
-      const response = await fetch('/api/expenses/bulk', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert(result.message);
-        router.push('/expenses');
-      } else {
-        alert(result.message || '업로드 실패');
-      }
-    } catch (error) {
-      console.error('업로드 오류:', error);
-      alert('업로드 중 오류가 발생했습니다.');
-    } finally {
-      setIsUploading(false);
+  const handleUploadComplete = (result: { success: number; failed: number; errors: any[] }) => {
+    setShowUploadModal(false);
+    
+    if (result.failed === 0) {
+      alert(`모든 거래가 성공적으로 등록되었습니다! (총 ${result.success}건)`);
+    } else {
+      alert(`처리 완료: 성공 ${result.success}건, 실패 ${result.failed}건`);
     }
+    
+    // 거래등록 페이지로 이동
+    // router.push('/expenses');
   };
 
   return (
@@ -150,6 +138,24 @@ export default function ExcelRegistrationPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* 지갑 선택 드롭다운 (대안) */}
+                  {/*<div className={styles.field}>*/}
+                  {/*  <label className={styles.label}>또는 드롭다운에서 선택</label>*/}
+                  {/*  <select */}
+                  {/*    className={styles.select}*/}
+                  {/*    value={selectedWallet}*/}
+                  {/*    onChange={(e) => setSelectedWallet(e.target.value)}*/}
+                  {/*    disabled={loading}*/}
+                  {/*  >*/}
+                  {/*    <option value="">지갑을 선택하세요</option>*/}
+                  {/*    {wallets.map((wallet) => (*/}
+                  {/*      <option key={wallet.wlt_id} value={wallet.wlt_id}>*/}
+                  {/*        {wallet.wlt_name}*/}
+                  {/*      </option>*/}
+                  {/*    ))}*/}
+                  {/*  </select>*/}
+                  {/*</div>*/}
                 </div>
               </div>
 
@@ -189,10 +195,10 @@ export default function ExcelRegistrationPage() {
               <div className={styles.actions}>
                 <button 
                   className={styles.buttonPrimary}
-                  onClick={handleUpload}
-                  disabled={!selectedFile || !selectedWallet || isUploading}
+                  onClick={handleUploadStart}
+                  disabled={!selectedFile || !selectedWallet}
                 >
-                  {isUploading ? '업로드 중...' : '업로드 시작'}
+                  업로드 시작
                 </button>
                 <button 
                   className={styles.buttonGhost}
@@ -206,7 +212,7 @@ export default function ExcelRegistrationPage() {
             {/* 사용 방법 및 주의사항 */}
             <section className={styles.infoSection}>
               <div className={styles.infoCard}>
-                <h4 className={styles.infoTitle}>사용 방법</h4>
+                <h4 className={styles.infoTitle}>📋 사용 방법</h4>
                 <ol className={styles.infoList}>
                   <li>템플릿을 다운로드합니다.</li>
                   <li>템플릿에 거래 정보를 입력합니다.</li>
@@ -216,7 +222,7 @@ export default function ExcelRegistrationPage() {
               </div>
               
               <div className={styles.infoCard}>
-                <h4 className={styles.infoTitle}>주의사항</h4>
+                <h4 className={styles.infoTitle}>⚠️ 주의사항</h4>
                 <ul className={styles.infoList}>
                   <li>파일 형식은 .xlsx 또는 .xls만 지원됩니다.</li>
                   <li>거래유형은 "수입" 또는 "지출"로 입력해주세요.</li>
@@ -229,6 +235,18 @@ export default function ExcelRegistrationPage() {
           </div>
         </div>
       </main>
+
+      {/* 엑셀 업로드 모달 */}
+      {showUploadModal && selectedFile && (
+        <ExcelUploadModal
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          file={selectedFile}
+          usr_id={session?.user?.id || ''}
+          wlt_id={selectedWallet}
+          onComplete={handleUploadComplete}
+        />
+      )}
     </div>
   );
 }
