@@ -63,6 +63,18 @@ const sampleData = {
   ]
 };
 
+// 데이터가 없을 때 표시할 기본 차트 데이터 (중립 색상, 0값)
+const defaultChartData = {
+  labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+  datasets: [
+    {
+      label: '지출 없음',
+      data: new Array(12).fill(0),
+      backgroundColor: '#E5E7EB'
+    }
+  ]
+};
+
 // 차트 데이터 변환 함수
 const transformApiDataToChartData = (apiDatas: ApiMonthlyData[]) => {
   const apiData = apiDatas.data;
@@ -205,30 +217,25 @@ const RevenueCard = () => {
   };
 
   // 총 지출액 계산
-  const totalExpense = chartData?.datasets.reduce((total: number, dataset: any) => {
+  const effectiveData = chartData || defaultChartData;
+  const totalExpense = effectiveData?.datasets.reduce((total: number, dataset: any) => {
     return total + dataset.data.reduce((sum: number, value: number) => sum + value, 0);
   }, 0) || 0;
 
   if (loading) {
-    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+    return <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
       <div className={styles.loading}>Loading...</div>
     </DashboardCard>;
   }
 
   if (error) {
-    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+    return <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
       <div className={styles.error}>{error}</div>
     </DashboardCard>;
   }
 
-  if (!chartData) {
-    return <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
-      <div className={styles.error}>No data available</div>
-    </DashboardCard>;
-  }
-
   return (
-    <DashboardCard title="Monthly Expenses by Category" showViewReport={true} cardSize="card-9">
+    <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
       <div className={styles.revenueInfo}>
         <div className={styles.amount}>
           Total: {new Intl.NumberFormat('ko-KR').format(totalExpense)}원
@@ -239,14 +246,14 @@ const RevenueCard = () => {
       </div>
       
       <div className={styles.chartContainer}>
-        <Bar data={chartData} options={options} height={300} />
+        <Bar data={effectiveData} options={options} height={300} />
       </div>
 
       <div className={styles.legend}>
-        {chartData.datasets.map((dataset: any, index: number) => (
+        {effectiveData.datasets.map((dataset: any, index: number) => (
           <div key={index} className={styles.legendItem}>
-            <span 
-              className={styles.legendColor} 
+            <span
+              className={styles.legendColor}
               style={{ backgroundColor: dataset.backgroundColor }}
             />
             <span className={styles.legendLabel}>{dataset.label}</span>

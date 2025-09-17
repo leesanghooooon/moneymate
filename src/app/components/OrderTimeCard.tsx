@@ -83,6 +83,20 @@ const OrderTimeCard = () => {
     );
   }
 
+  // 빈 상태 처리: 동일 카드 높이 유지 + 유도 액션
+  if (!loading && expenditures.length === 0) {
+    return (
+      <DashboardCard title="이번 달 최대 지출 TOP 5" cardSize="card-4">
+        <a href="/expenses" className={styles.emptyStateButton} aria-label="지출 추가하러 가기">
+          <div className={styles.emptyStateContent}>
+            <span className={styles.plusIcon}>＋</span>
+            <span>이번 달 지출 내역이 없어요. 지금 기록해보세요</span>
+          </div>
+        </a>
+      </DashboardCard>
+    );
+  }
+
   return (
     <DashboardCard title="이번 달 최대 지출 TOP 5" cardSize="card-4">
       <div className={styles.foodList}>
