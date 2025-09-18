@@ -809,6 +809,13 @@
   background: #eff6ff;
 }
 
+/* 드래그 중 비주얼 피드백 */
+.dragActive {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) inset;
+}
+
 .fileUploadIcon {
   font-size: 48px;
   margin-bottom: 12px;
@@ -954,6 +961,13 @@
 .fileUploadLabel:hover {
   border-color: #3b82f6;
   background: #eff6ff;
+}
+
+/* 드래그 중 비주얼 피드백 */
+.dragActive {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) inset;
 }
 
 .fileUploadIcon {

@@ -41,6 +41,15 @@ export default function ExcelUploadModal({
   const [progress, setProgress] = useState(0);
   const [categoryMapping, setCategoryMapping] = useState<Record<string, string>>({});
   const hasInitialized = useRef(false);
+  const dataListBodyRef = useRef<HTMLDivElement | null>(null);
+  const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const scrollToRow = (rowNumber: number) => {
+    const el = rowRefs.current.get(rowNumber);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
 
   useEffect(() => {
     if (isOpen && file && !hasInitialized.current) {
@@ -192,6 +201,7 @@ export default function ExcelUploadModal({
           ? { ...r, status: 'processing' }
           : r
       ));
+      scrollToRow(row.rowNumber);
 
       try {
         // 거래유형 매핑
@@ -352,7 +362,15 @@ export default function ExcelUploadModal({
           {/* 진행 상태 */}
           <div className={styles.progressSection}>
             <div className={styles.progressHeader}>
-              <span className={styles.stepIndicator}>
+              <span
+                className={
+                  `${styles.stepIndicator} ` +
+                  `${(currentStep === 'loading' || currentStep === 'processing') ? styles.blinking : ''} ` +
+                  `${currentStep === 'loading' ? styles.loadingText : ''} ` +
+                  `${currentStep === 'processing' ? styles.processingText : ''}` +
+                  `${currentStep === 'completed' ? styles.completedText : ''}`
+                }
+              >
                 {currentStep === 'loading' && '📖 엑셀 파일 읽는 중...'}
                 {currentStep === 'processing' && '⚙️ 데이터 처리 중...'}
                 {currentStep === 'completed' && '🎉 처리 완료!'}
@@ -381,10 +399,20 @@ export default function ExcelUploadModal({
               <span>상태</span>
             </div>
             
-            <div className={styles.dataListBody}>
-              {rows.map((row) => (
-                <div key={row.rowNumber} className={styles.dataRow}>
-                  <span className={styles.rowNumber}>{row.rowNumber}</span>
+            <div className={styles.dataListBody} ref={dataListBodyRef}>
+              {rows.map((row, idx) => (
+                <div
+                  key={row.rowNumber}
+                  className={styles.dataRow}
+                  ref={(el) => {
+                    if (el) {
+                      rowRefs.current.set(row.rowNumber, el);
+                    } else {
+                      rowRefs.current.delete(row.rowNumber);
+                    }
+                  }}
+                >
+                  <span className={styles.rowNumber}>{idx + 1}</span>
                   <span className={styles.trxType}>{row.거래유형}</span>
                   <span className={styles.trxDate}>{row.거래일자}</span>
                   <span className={styles.amount}>{row.금액.toLocaleString()}원</span>
@@ -402,13 +430,13 @@ export default function ExcelUploadModal({
           {rows.some(row => row.status === 'error') && (
             <div className={styles.errorSection}>
               <h4>오류 상세</h4>
-              {rows
-                .filter(row => row.status === 'error')
-                .map((row) => (
+              {rows.map((row, idx) => (
+                row.status === 'error' ? (
                   <div key={row.rowNumber} className={styles.errorItem}>
-                    <strong>행 {row.rowNumber}:</strong> {row.errorMessage}
+                    <strong>행 {idx + 1}:</strong> {row.errorMessage}
                   </div>
-                ))}
+                ) : null
+              ))}
             </div>
           )}
         </div>

@@ -68,8 +68,44 @@
   margin-bottom: 24px;
 }
 
+/* 디자인 강화: 진행 상태 헤더 중앙 정렬 및 배경/보더 추가 */
 .progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: center;
   margin-bottom: 12px;
+}
+
+/* 깜빡임 효과 */
+.stepIndicator.blinking {
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+/* 상태별 텍스트 스타일 */
+.stepIndicator.loadingText {
+  color: #2563eb; /* blue-600 */
+}
+
+.stepIndicator.processingText {
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.stepIndicator.completedText {
+  color: #059669;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.35; }
+  100% { opacity: 1; }
 }
 
 .stepIndicator {

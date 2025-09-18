@@ -17,6 +17,7 @@ export default function ExcelRegistrationPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   // 세션이 있을 때 모든 지갑 목록 조회
   useEffect(() => {
@@ -49,6 +50,39 @@ export default function ExcelRegistrationPage() {
     if (file) {
       setSelectedFile(file);
     }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement | HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    const dt = e.dataTransfer;
+    if (!dt) return;
+
+    const file = dt.files && dt.files[0] ? dt.files[0] : null;
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+    const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
+    if (!isExcel) {
+      alert('엑셀 파일(.xlsx, .xls)만 업로드할 수 있습니다.');
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement | HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement | HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
   };
 
   const handleUploadStart = () => {
@@ -138,24 +172,6 @@ export default function ExcelRegistrationPage() {
                       </button>
                     ))}
                   </div>
-
-                  {/* 지갑 선택 드롭다운 (대안) */}
-                  {/*<div className={styles.field}>*/}
-                  {/*  <label className={styles.label}>또는 드롭다운에서 선택</label>*/}
-                  {/*  <select */}
-                  {/*    className={styles.select}*/}
-                  {/*    value={selectedWallet}*/}
-                  {/*    onChange={(e) => setSelectedWallet(e.target.value)}*/}
-                  {/*    disabled={loading}*/}
-                  {/*  >*/}
-                  {/*    <option value="">지갑을 선택하세요</option>*/}
-                  {/*    {wallets.map((wallet) => (*/}
-                  {/*      <option key={wallet.wlt_id} value={wallet.wlt_id}>*/}
-                  {/*        {wallet.wlt_name}*/}
-                  {/*      </option>*/}
-                  {/*    ))}*/}
-                  {/*  </select>*/}
-                  {/*</div>*/}
                 </div>
               </div>
 
@@ -167,7 +183,7 @@ export default function ExcelRegistrationPage() {
                 </div>
                 <div className={styles.stepContent}>
                   <p className={styles.stepDescription}>
-                    작성한 엑셀 파일을 업로드하세요.
+                    작성한 엑셀 파일을 업로드하세요. 파일을 선택하거나, 아래 영역에 드래그 앤 드롭 하세요.
                   </p>
                   
                   <div className={styles.fileUploadArea}>
@@ -178,10 +194,17 @@ export default function ExcelRegistrationPage() {
                       className={styles.fileInput}
                       id="file-upload"
                     />
-                    <label htmlFor="file-upload" className={styles.fileUploadLabel}>
+                    <label
+                      htmlFor="file-upload"
+                      className={`${styles.fileUploadLabel} ${isDragActive ? styles.dragActive : ''}`}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
                       <div className={styles.fileUploadIcon}>📁</div>
                       <div className={styles.fileUploadText}>
-                        {selectedFile ? selectedFile.name : '엑셀 파일을 선택하세요'}
+                        {selectedFile ? selectedFile.name : '엑셀 파일을 선택하거나 드래그 앤 드롭 하세요'}
                       </div>
                       <div className={styles.fileUploadSubtext}>
                         .xlsx, .xls 파일만 지원됩니다
@@ -212,7 +235,7 @@ export default function ExcelRegistrationPage() {
             {/* 사용 방법 및 주의사항 */}
             <section className={styles.infoSection}>
               <div className={styles.infoCard}>
-                <h4 className={styles.infoTitle}>📋 사용 방법</h4>
+                <h4 className={styles.infoTitle}>사용 방법</h4>
                 <ol className={styles.infoList}>
                   <li>템플릿을 다운로드합니다.</li>
                   <li>템플릿에 거래 정보를 입력합니다.</li>
@@ -222,7 +245,7 @@ export default function ExcelRegistrationPage() {
               </div>
               
               <div className={styles.infoCard}>
-                <h4 className={styles.infoTitle}>⚠️ 주의사항</h4>
+                <h4 className={styles.infoTitle}>주의사항</h4>
                 <ul className={styles.infoList}>
                   <li>파일 형식은 .xlsx 또는 .xls만 지원됩니다.</li>
                   <li>거래유형은 "수입" 또는 "지출"로 입력해주세요.</li>
