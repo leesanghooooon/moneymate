@@ -36,12 +36,24 @@ const Header = () => {
     { id: 'statistics', label: 'Statistics' },
   ];
 
-  // URL 경로에 따라 active 메뉴 설정
+  // URL 경로에 따라 active 메뉴 설정 (prefix 매칭, 가장 긴 경로 우선)
   useEffect(() => {
-    const currentPath = pathname;
-    const currentMenuItem = menuItems.find(item => item.path === currentPath);
-    if (currentMenuItem) {
-      setActiveMenu(currentMenuItem.id);
+    const currentPath = pathname || '/';
+
+    // path가 있는 항목만, 경로 길이 기준 내림차순으로 정렬
+    const matched = menuItems
+      .filter((item) => !!item.path)
+      .sort((a, b) => (b.path!.length - a.path!.length))
+      .find((item) => {
+        const p = item.path!;
+        if (p === '/') {
+          return currentPath === '/';
+        }
+        return currentPath.startsWith(p + '/') || currentPath === p;
+      });
+
+    if (matched) {
+      setActiveMenu(matched.id);
     } else {
       // 기본값으로 home 설정
       setActiveMenu('home');

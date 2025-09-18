@@ -367,10 +367,25 @@ export default function ExpensesPage() {
                   <div className={styles.headerRight}>
                     <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
                     <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
-                    <button className={styles.buttonPrimary} onClick={handleExcelRegistration}>엑셀간편등록</button>
                   </div>
                 </div>
               </header>
+
+              {/* 엑셀 간편등록 콜투액션 카드 */}
+              <div
+                className={styles.excelCallout}
+                onClick={handleExcelRegistration}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleExcelRegistration(); }}
+              >
+                <div className={styles.excelCalloutIcon}>📊</div>
+                <div className={styles.excelCalloutContent}>
+                  <div className={styles.excelCalloutTitle}>엑셀 간편등록으로 빠르게 등록</div>
+                  <div className={styles.excelCalloutDesc}>엑셀 파일을 업로드하여 여러 거래를 한 번에 등록할 수 있어요.</div>
+                </div>
+                <div className={styles.excelCalloutCta}>바로가기 →</div>
+              </div>
 
               <section className={styles.formSection}>
                 {error && <div style={{ color: '#ef4444', marginBottom: 8 }}>{error}</div>}

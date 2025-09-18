@@ -1041,3 +1041,66 @@
     margin-bottom: 8px;
   }
 }
+
+/* 엑셀 간편등록 콜투액션 카드 */
+.excelCallout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  margin: 0 0 16px 0;
+}
+
+.excelCallout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+  border-color: #c7d2fe;
+}
+
+.excelCalloutIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex: 0 0 44px;
+}
+
+.excelCalloutContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.excelCalloutTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.excelCalloutDesc {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.excelCalloutCta {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+@media (max-width: 768px) {
+  .excelCallout {
+    align-items: flex-start;
+  }
+}

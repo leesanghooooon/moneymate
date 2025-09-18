@@ -90,10 +90,12 @@ export async function GET(request: NextRequest) {
 
     const rows = await query(sql, params);
 
-    // 집계 데이터 계산
-    const thisWeekTotal = rows.reduce((sum: number, row: any) => sum + row.current_amount, 0);
-    const lastWeekTotal = rows.reduce((sum: number, row: any) => sum + row.previous_amount, 0);
-    
+    // 집계 데이터 계산 (문자열 누적 방지)
+    const thisWeekTotal = rows.reduce((sum: number, row: any) => sum + Number(row.current_amount || 0), 0);
+    const lastWeekTotal = rows.reduce((sum: number, row: any) => sum + Number(row.previous_amount || 0), 0);
+
+    console.log('thisWeekTotal:', thisWeekTotal)
+
     // 날짜 포맷팅
     const formattedRows = rows.map((row: any) => ({
       ...row,
