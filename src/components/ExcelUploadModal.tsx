@@ -63,11 +63,10 @@ export default function ExcelUploadModal({
   const loadExcelData = async () => {
     setIsLoading(true);
     setCurrentStep('loading');
-    
+
     try {
       // 카테고리 매핑을 미리 조회
       const categoryData = await getCategories();
-      console.log(categoryData)
 
       //TODO setCategoryMapping(mapping);을 했는데 categoryMapping에서 왜 못 불러오지?
       const mapping: Record<string, string> = {};
@@ -75,12 +74,8 @@ export default function ExcelUploadModal({
         mapping[c.cd_nm] = c.cd;
         categoryMapping[c.cd_nm] = c.cd;
       })
-      // categoryData.map((cat: any) => {
-      //   mapping[cat.cd_nm] = cat.cd;
-      // });
-      // console.log(mapping)
+
       setCategoryMapping(mapping);
-      console.log(categoryMapping)
 
       // ExcelJS를 사용하여 파일 읽기
       const ExcelJS = (await import('exceljs')).default;
@@ -103,7 +98,7 @@ export default function ExcelUploadModal({
           const rowData: ExcelRow = {
             rowNumber,
             거래유형: row.getCell(1).value as string,
-            거래일자: row.getCell(2).value as string,
+            거래일자: toYmd(row.getCell(2).value),
             금액: Number(row.getCell(3).value),
             카테고리: row.getCell(4).value as string,
             메모: row.getCell(5).value as string || ''
@@ -133,9 +128,7 @@ export default function ExcelUploadModal({
 
           // 카테고리 매핑 검증
           const category_cd = mapping[rowData.카테고리];
-          console.log("mapping:",mapping[rowData.카테고리])
           if (!category_cd) {
-            console.log("mapping:",category_cd)
             throw new Error(`알 수 없는 카테고리입니다: ${rowData.카테고리}`);
           }
 
@@ -165,7 +158,7 @@ export default function ExcelUploadModal({
       
       // 데이터 로드 완료 후 자동으로 처리 시작
       setTimeout(() => {
-        processRows(loadedRows);
+        processRows(loadedRows, mapping);
       }, 1000);
     } catch (error: any) {
       console.error('엑셀 로드 오류:', error);
@@ -174,7 +167,7 @@ export default function ExcelUploadModal({
     }
   };
 
-  const processRows = async (rowsToProcess: ProcessedRow[]) => {
+  const processRows = async (rowsToProcess: ProcessedRow[], mapping: Record<string, string>) => {
     setCurrentStep('processing');
     let successCount = 0;
     let failedCount = 0;
@@ -203,8 +196,8 @@ export default function ExcelUploadModal({
       try {
         // 거래유형 매핑
         const trx_type = row.거래유형 === '수입' ? 'INCOME' : 'EXPENSE';
-        const category_cd = categoryMapping[row.카테고리];
-        console.log(categoryMapping)
+        const category_cd = mapping[row.카테고리];
+
         if (!category_cd) {
           throw new Error(`알 수 없는 카테고리입니다: ${row.카테고리}`);
         }
@@ -312,6 +305,31 @@ export default function ExcelUploadModal({
       default:
         return '대기중';
     }
+  };
+
+  const toYmd = (v: any) => {
+    // 1) Date 객체인 경우
+    if (v instanceof Date) {
+      const y = v.getFullYear();
+      const m = String(v.getMonth() + 1).padStart(2, '0');
+      const d = String(v.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    // 2) 엑셀 일련번호(숫자)인 경우 (시리얼 → JS Date 변환)
+    if (typeof v === 'number') {
+      // Excel serial date -> JS Date
+      const jsDate = new Date(Math.round((v - 25569) * 86400 * 1000));
+      const y = jsDate.getFullYear();
+      const m = String(jsDate.getMonth() + 1).padStart(2, '0');
+      const d = String(jsDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    // 3) 문자열인 경우
+    if (typeof v === 'string') {
+      return v.trim();
+    }
+    // 그 외(빈값 등)
+    return '';
   };
 
   if (!isOpen) return null;
