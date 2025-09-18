@@ -158,7 +158,7 @@ const RatingCard = () => {
   return (
     <DashboardCard title="결제수단별 지출 요약" cardSize="card-4">
       <div className={styles.description}>
-        결제수단별 합계와 카드사별 상세 합계를 확인할 수 있어요.
+        결제수단과 카드사별 상세 합계를 확인할 수 있어요.
       </div>
 
       {/* 현금/카드 요약 */}

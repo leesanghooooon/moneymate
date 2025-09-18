@@ -241,7 +241,7 @@ const RevenueCard = () => {
           Total: {new Intl.NumberFormat('ko-KR').format(totalExpense)}원
         </div>
         <div className={styles.period}>
-          Expenses from Jan-Dec, {new Date().getFullYear()}
+          올해의 1월부터 12월까지의 지출 내역을 확인합니다. {/*{new Date().getFullYear()}*/}
         </div>
       </div>
       

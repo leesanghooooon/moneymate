@@ -269,3 +269,338 @@
 .logoutButton:hover {
   background: #dc2626;
 }
+
+/* 알람 영역 - 텍스트 기반 */
+.notificationContainer {
+  position: relative;
+  margin-right: 16px;
+  display: none;
+}
+
+.notificationTextArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  justify-content: space-between;
+}
+
+.notificationTextArea:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notificationText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.unreadIndicator {
+  color: #ef4444;
+  font-size: 12px;
+  animation: pulse 2s infinite;
+}
+
+.notificationCount {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.noNotificationText {
+  color: #64748b;
+}
+
+.dropdownArrow {
+  font-size: 10px;
+  color: #64748b;
+  transition: transform 0.3s ease;
+}
+
+.dropdownArrow.open {
+  transform: rotate(180deg);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 알람 드롭다운 */
+.notificationDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 380px;
+  max-height: 500px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #E5E7EB;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.notificationDropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.notificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.notificationHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.markAllReadButton {
+  background: none;
+  border: none;
+  color: #3B82F6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.markAllReadButton:hover {
+  background-color: #F3F4F6;
+}
+
+.notificationList {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.notificationItem:hover {
+  background-color: #F9FAFB;
+}
+
+.notificationItem.unread {
+  background-color: #F0F9FF;
+  border-left: 3px solid #3B82F6;
+}
+
+.notificationItem .notificationIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.notificationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notificationMessage {
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notificationTime {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.unreadDot {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 8px;
+  height: 8px;
+  background: #3B82F6;
+  border-radius: 50%;
+}
+
+.emptyNotification {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6B7280;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.emptyNotification p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.notificationFooter {
+  padding: 12px 20px;
+  border-top: 1px solid #E5E7EB;
+  background-color: #F9FAFB;
+  border-radius: 0 0 12px 12px;
+}
+
+.viewAllButton {
+  width: 100%;
+  background: none;
+  border: 1px solid #D1D5DB;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewAllButton:hover {
+  background-color: #F3F4F6;
+  border-color: #9CA3AF;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .notificationTextArea {
+    min-width: 100px;
+    padding: 6px 10px;
+  }
+
+  .notificationText {
+    font-size: 13px;
+  }
+
+  .notificationDropdown {
+    width: 320px;
+    right: -20px;
+  }
+
+  .notificationItem {
+    padding: 12px 16px;
+  }
+
+  .notificationItem .notificationIcon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+/* 환영 메시지 영역 */
+.welcomeMessage {
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.welcomeText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6c727b;
+  /*background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);*/
+  padding: 8px 16px;
+  border-radius: 20px;
+  /*border: 1px solid #bae6fd;*/
+  /*white-space: nowrap;*/
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .welcomeText {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcomeMessage {
+    margin-right: 8px;
+  }
+
+  .welcomeText {
+    font-size: 12px;
+    padding: 4px 8px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 640px) {
+  .welcomeMessage {
+    display: none; /* 모바일에서는 환영 메시지 숨김 */
+  }
+}
