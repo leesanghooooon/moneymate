@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import ExcelJS, { Cell } from 'exceljs';
 import { dbSelect } from '../../../../lib/db-utils';
+import { categoryMappingData } from '../../../../lib/category-mapping';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ export const dynamic = 'force-dynamic';
  *       엑셀 파일로 거래를 일괄 등록하기 위한 템플릿을 다운로드합니다.
  *       - 헤더는 한글 컬럼명으로 구성됩니다.
  *       - 거래유형과 카테고리는 드롭다운으로 선택 가능합니다.
+ *       - 메모 입력 시 카테고리 자동 매핑 기능이 포함됩니다.
  *       - is_fixed, is_installment는 제거되었으며 서버에서 기본값 'N'으로 처리됩니다.
  *       - 할부 관련 필드는 현재 지원하지 않습니다.
  *     tags: [Expenses]
@@ -40,9 +42,14 @@ export async function GET(_req: NextRequest) {
   const categoryNames: string[] = (categories || []).map((c: any) => String(c.cd_nm)).filter(Boolean);
 
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('지출등록');
+  
+  // 첫 번째 시트: 거래 등록
+  const mainSheet = workbook.addWorksheet('거래등록');
+  
+  // 두 번째 시트: 카테고리 매핑
+  const mappingSheet = workbook.addWorksheet('카테고리매핑');
 
-  // 요구사항: 헤더는 한글명, usr_id/wlt_id 제거, 할부 관련 및 is_* 제거
+  // 메인 시트 컬럼 설정
   const columns: { header: string; key: string; width?: number }[] = [
     { header: '거래유형', key: 'trx_type', width: 12 },
     { header: '거래일자', key: 'trx_date', width: 14 },
@@ -50,10 +57,10 @@ export async function GET(_req: NextRequest) {
     { header: '카테고리', key: 'category_cd', width: 22 },
     { header: '메모', key: 'memo', width: 40 }
   ];
-  sheet.columns = columns;
+  mainSheet.columns = columns;
 
-  // 스타일: 헤더(1행)
-  const headerRow = sheet.getRow(1);
+  // 메인 시트 헤더 스타일
+  const headerRow = mainSheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: 'FF111827' } };
   headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
   headerRow.height = 20;
@@ -71,8 +78,54 @@ export async function GET(_req: NextRequest) {
     } as any;
   });
 
+  // 카테고리 매핑 시트 설정
+  const mappingColumns = [
+    { header: '메모 키워드', key: 'memo_keyword', width: 30 },
+    { header: '카테고리', key: 'category', width: 20 }
+  ];
+  mappingSheet.columns = mappingColumns;
+
+  // 카테고리 매핑 시트 헤더 스타일
+  const mappingHeaderRow = mappingSheet.getRow(1);
+  mappingHeaderRow.font = { bold: true, color: { argb: 'FF111827' } };
+  mappingHeaderRow.alignment = { vertical: 'middle', horizontal: 'center' };
+  mappingHeaderRow.height = 20;
+  mappingHeaderRow.eachCell((cell: Cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE5E7EB' }
+    } as any;
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+    } as any;
+  });
+
+  // 카테고리 매핑 데이터 추가 (예시)
+  const mappingData = categoryMappingData;
+
+  // 매핑 데이터를 시트에 추가
+  mappingData.forEach((item, index) => {
+    const row = mappingSheet.getRow(index + 2);
+    row.getCell(1).value = item.memo_keyword;
+    row.getCell(2).value = item.category;
+    
+    // 매핑 데이터 스타일
+    row.eachCell((cell: Cell) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+      } as any;
+    });
+  });
+
   const maxRows = 10001;
-  const ws: any = sheet; // dataValidations 타입 미정으로 any 캐스팅
+  const ws: any = mainSheet; // dataValidations 타입 미정으로 any 캐스팅
 
   // 거래유형 드롭다운: 코드 한글명으로 구성 (TRX_TYPE → 수입/지출)
   ws.dataValidations.add('A2:A' + maxRows, {
@@ -82,7 +135,7 @@ export async function GET(_req: NextRequest) {
   });
 
   // 날짜 포맷 (YYYY-MM-DD)
-  sheet.getColumn('trx_date').numFmt = 'yyyy-mm-dd';
+  mainSheet.getColumn('trx_date').numFmt = 'yyyy-mm-dd';
 
   // 금액: 숫자만 허용 (0 초과)
   ws.dataValidations.add('C2:C' + maxRows, {
@@ -93,7 +146,6 @@ export async function GET(_req: NextRequest) {
   });
 
   // 카테고리 드롭다운: 카테고리 한글명 목록으로 구성
-  // Excel 데이터 유효성의 formula 길이 제한을 고려해 255자 초과시 일부만 사용
   const joined = categoryNames.join(',');
   const categoryFormula = joined.length > 255 ? '"' + categoryNames.slice(0, 20).join(',') + '"' : '"' + joined + '"';
   ws.dataValidations.add('D2:D' + maxRows, {
@@ -102,13 +154,24 @@ export async function GET(_req: NextRequest) {
     formulae: [categoryFormula]
   });
 
+  // 카테고리 자동 매핑을 위한 수식 추가 (E열 메모 입력 시 D열 카테고리 자동 설정)
+  // VLOOKUP 함수를 사용하여 메모에서 키워드를 찾아 카테고리 자동 설정
+  for (let i = 2; i <= maxRows; i++) {
+    const categoryCell = mainSheet.getRow(i).getCell(4); // D열 (카테고리)
+    const memoCell = mainSheet.getRow(i).getCell(5); // E열 (메모)
+    
+    // 메모가 입력되면 자동으로 카테고리를 설정하는 수식
+    categoryCell.value = {
+      formula: `=IF(E${i}<>"",VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),"")`
+    };
+  }
+
   // 주석 및 안내
-  // is_fixed, is_installment은 템플릿에서 제거되었으며, 엑셀 업로드 API에서 기본값 'N'으로 처리 예정
-  headerRow.getCell(5).note = '선택 입력 (비워둘 수 있음)';
+  headerRow.getCell(5).note = '메모 입력 시 카테고리가 자동으로 설정됩니다. 수동으로 변경도 가능합니다.';
 
   // 첫 행 고정 및 필터
-  sheet.views = [{ state: 'frozen', ySplit: 1 }];
-  sheet.autoFilter = {
+  mainSheet.views = [{ state: 'frozen', ySplit: 1 }];
+  mainSheet.autoFilter = {
     from: { row: 1, column: 1 },
     to: { row: 1, column: columns.length }
   };
