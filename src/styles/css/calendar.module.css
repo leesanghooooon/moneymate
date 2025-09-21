@@ -130,6 +130,7 @@
   transition: all 0.2s ease;
   min-height: 80px;
   position: relative;
+  overflow: hidden; /* dayCell 영역을 초과하는 내용 숨김 */
 }
 
 .dayCell:hover {
@@ -226,6 +227,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  max-width: 100%; /* dayCell 너비를 초과하지 않도록 제한 */
 }
 
 .moreTransactions {

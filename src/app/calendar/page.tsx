@@ -209,20 +209,6 @@ export default function CalendarPage() {
                             </div>
                             {day.data && (
                               <div className={styles.transactions}>
-                                {/*{day.data.income_sum > 0 && (*/}
-                                {/*  <div className={`${styles.transaction} ${styles.income}`}>*/}
-                                {/*    <span className={styles.amount}>*/}
-                                {/*      {formatAmount(day.data.income_sum, 'INCOME')}*/}
-                                {/*    </span>*/}
-                                {/*  </div>*/}
-                                {/*)}*/}
-                                {/*{day.data.expense_sum > 0 && (*/}
-                                {/*  <div className={`${styles.transaction} ${styles.expense}`}>*/}
-                                {/*    <span className={styles.amount}>*/}
-                                {/*      {formatAmount(day.data.expense_sum, 'EXPENSE')}*/}
-                                {/*    </span>*/}
-                                {/*  </div>*/}
-                                {/*)}*/}
                                 {(() => {
                                   const handleTransactionClick = (trx: Transaction) => {
                                     // 공유가계부인 경우 수정 모달을 열지 않음
@@ -254,9 +240,6 @@ export default function CalendarPage() {
                                       {getSharedIcon(trx.is_shared)}
                                       {trx.memo || trx.category_cd_nm} ({trx.wlt_name})
                                     </span>
-                                    {/*<span className={styles.sharedWallet}>*/}
-                                    {/*  ({trx.wlt_name})*/}
-                                    {/*</span>*/}
                                   </div>
                                 ));
                                 })()}
