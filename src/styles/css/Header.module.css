@@ -51,25 +51,34 @@
 
 .menuList {
   display: flex;
+  align-items: center;
+  gap: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 8px;
 }
 
 .menuItem {
   display: flex;
   align-items: center;
-  padding: 8px 16px;
-  background: transparent;
+  gap: 8px;
+  padding: 12px 20px;
+  background: none;
   border: none;
   border-radius: 8px;
-  color: #6b7280;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+}
+
+.menuIcon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+  transition: all 0.2s ease;
 }
 
 .menuItem:hover {
@@ -78,13 +87,16 @@
 }
 
 .menuItem.active {
-  background: #f0f9ff;
-  color: #4f46e5;
-  font-weight: 600;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  color: white;
+}
+
+.menuItem.active .menuIcon {
+  color: white;
 }
 
 .label {
-  font-size: 14px;
+  font-weight: 500;
 }
 
 .headerRight {
@@ -99,23 +111,57 @@
   gap: 12px;
 }
 
+.loginButton {
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loginButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.signupButton {
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.signupButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
 .welcomeMessage {
   display: flex;
   align-items: center;
+  margin-right: 16px;
 }
 
 .welcomeText {
   background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 8px 16px;
-  /*border: 1px solid #e5e7eb;*/
   border-radius: 20px;
-  background-color: rgba(139, 92, 246, 0.05);
-  animation: fadeIn 0.5s ease-out;
+  background-color: rgba(139, 92, 246, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -139,17 +185,15 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: transparent;
-  border: 1px solid #e5e7eb;
+  background: none;
+  border: none;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0;
 }
 
 .profileButton:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f3f4f6;
 }
 
 .profileImage {
@@ -163,11 +207,10 @@
 }
 
 .defaultProfile {
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(135deg, #8b5cf6, #06b6d4);
   color: white;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,17 +222,17 @@
   position: absolute;
   top: 100%;
   right: 0;
+  margin-top: 8px;
+  width: 200px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  min-width: 200px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease;
   z-index: 1001;
-  margin-top: 8px;
 }
 
 .dropdownMenu.show {
@@ -199,7 +242,7 @@
 }
 
 .dropdownHeader {
-  padding: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -216,8 +259,13 @@
   color: #6b7280;
 }
 
+.dropdownDivider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 8px 0;
+}
+
 .dropdownItem {
-  display: block;
   width: 100%;
   padding: 12px 16px;
   background: none;
@@ -226,245 +274,191 @@
   font-size: 14px;
   color: #374151;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .dropdownItem:hover {
   background: #f9fafb;
 }
 
-.dropdownDivider {
-  height: 1px;
-  background: #f3f4f6;
-  margin: 8px 0;
-}
-
-.loginButton {
-  padding: 8px 16px;
-  background: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.loginButton:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
-}
-
-.signupButton {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.signupButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-/* 모바일 하단 네비게이션 */
-.mobileBottomNav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  display: none;
-}
-
-.mobileNavContainer {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 8px 0;
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-.mobileNavItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  min-width: 60px;
-  min-height: 60px;
-}
-
-.mobileNavItem:hover {
-  background: #f9fafb;
-}
-
-.mobileNavItem.mobileActive {
-  background: #f0f9ff;
-  color: #4f46e5;
-}
-
-.mobileNavIcon {
-  font-size: 20px;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.mobileNavLabel {
-  font-size: 10px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.2;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
-  .headerInner {
-    padding: 0 24px;
-  }
-  
   .welcomeText {
     font-size: 13px;
     padding: 6px 12px;
   }
-  
   .header {
-    --header-height: 72px;
+    --header-height: 72px; /* 태블릿 헤더 높이 */
   }
 }
 
 @media (max-width: 768px) {
   .header {
-    --header-height: 64px;
+    --header-height: 64px; /* 모바일 헤더 높이 */
     padding: 0 12px;
+    position: fixed; /* 상단 고정 유지 */
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    z-index: 999; /* 하단 네비게이션보다 낮게 */
   }
-  
-  .headerInner {
-    padding: 0 16px;
-  }
-  
   .headerCenter {
-    display: none;
+    display: none; /* 모바일에서 데스크톱 네비게이션 숨김 */
   }
-  
   .welcomeMessage {
-    display: none;
+    display: none; /* 모바일에서 환영 메시지 숨김 */
   }
-  
   .headerRight {
     gap: 8px;
   }
-  
   .profileButton {
     width: 36px;
     height: 36px;
   }
-  
   .profileImage {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
-  
   .defaultProfile {
-    width: 28px;
-    height: 28px;
     font-size: 14px;
   }
-  
-  /* 모바일 하단 네비게이션 표시 */
-  .mobileBottomNav {
-    display: block;
-  }
-  
-  /* 모바일에서 프로필 드롭다운 위치 조정 - 하단에서 위쪽으로 */
+
+  /* 드롭다운 메뉴 (모바일에서 상단 프로필용) */
   .dropdownMenu {
-    /*bottom: 100%;*/
+    position: absolute;
+    bottom: 100%; /* 프로필 버튼 위쪽으로 */
     top: auto;
-    margin-bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px); /* 초기 위치 조정 */
+    margin-bottom: 8px; /* 하단 네비게이션과의 간격 */
     margin-top: 0;
-    transform: translateY(10px);
+    width: 200px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 1002; /* 하단 네비게이션보다 위에 표시 */
   }
-  
+
   .dropdownMenu.show {
-    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0); /* 최종 위치 */
+  }
+
+  /* 모바일 하단 네비게이션 */
+  .mobileBottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    height: 80px; /* 모바일 하단 네비게이션 높이 */
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileNavContainer {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 500px; /* 최대 너비 제한 */
+  }
+
+  .mobileNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    min-width: 60px; /* 터치 영역 확보 */
+    min-height: 60px; /* 터치 영역 확보 */
+  }
+
+  .mobileNavItem:hover {
+    background: #f3f4f6;
+  }
+
+  .mobileNavItem.mobileActive {
+    background: #f0f9ff;
+    color: #4f46e5;
+  }
+
+  .mobileNavIcon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.5;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .mobileNavLabel {
+    font-weight: 500;
   }
 }
 
 @media (max-width: 480px) {
   .header {
-    --header-height: 56px;
+    --header-height: 56px; /* 작은 모바일 헤더 높이 */
     padding: 0 8px;
   }
-  
-  .headerInner {
-    padding: 0 12px;
-  }
-  
   .logo h2 {
     font-size: 18px;
   }
-  
-  .mobileNavContainer {
-    padding: 6px 0;
+  .profileButton {
+    width: 32px;
+    height: 32px;
   }
-  
+  .profileImage {
+    width: 28px;
+    height: 28px;
+  }
+  .defaultProfile {
+    font-size: 12px;
+  }
+  .mobileBottomNav {
+    height: 70px; /* 작은 모바일 하단 네비게이션 높이 */
+  }
   .mobileNavItem {
     min-width: 50px;
     min-height: 50px;
     padding: 6px 8px;
   }
-  
   .mobileNavIcon {
-    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.5;
     margin-bottom: 2px;
   }
-  
   .mobileNavLabel {
     font-size: 9px;
   }
 }
 
-/* 터치 최적화 */
-@media (hover: none) and (pointer: coarse) {
-  .menuItem:hover,
-  .profileButton:hover,
-  .loginButton:hover,
-  .signupButton:hover,
-  .mobileNavItem:hover {
-    transform: none;
+/* 데스크톱에서 모바일 네비게이션 숨김 */
+@media (min-width: 769px) {
+  .mobileBottomNav {
+    display: none;
   }
-  
-  .menuItem:active,
-  .profileButton:active,
-  .loginButton:active,
-  .signupButton:active,
-  .mobileNavItem:active {
-    transform: scale(0.95);
-  }
-}
-
-/* 접근성 개선 */
-.menuItem:focus,
-.profileButton:focus,
-.loginButton:focus,
-.signupButton:focus,
-.mobileNavItem:focus {
-  outline: 2px solid #8b5cf6;
-  outline-offset: 2px;
 }

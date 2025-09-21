@@ -5,6 +5,13 @@ import styles from '../styles/css/Header.module.css';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
+import { 
+  HomeIcon, 
+  CurrencyDollarIcon,
+  BanknotesIcon,
+  CalendarDaysIcon, 
+  ChartBarIcon 
+} from '@heroicons/react/24/outline';
 
 interface Notification {
   id: string;
@@ -118,11 +125,40 @@ const Header = () => {
   }, []);
   
   const menuItems = [
-    { id: 'home', label: 'Home', path: '/', icon: '🏠' },
-    { id: 'expenses', label: 'Expenses', path: '/expenses', icon: '💰' },
-    { id: 'savings', label: 'Goal', path: '/savings', icon: '🎯' },
-    { id: 'calendar', label: 'Calendar', path: '/calendar', icon: '📅' },
-    { id: 'statistics', label: 'Statistics', icon: '📊' },
+    { 
+      id: 'home', 
+      label: 'Home', 
+      path: '/', 
+      icon: HomeIcon,
+      iconName: 'Home'
+    },
+    { 
+      id: 'expenses', 
+      label: 'Expenses', 
+      path: '/expenses', 
+      icon: CurrencyDollarIcon,
+      iconName: 'Expenses'
+    },
+    { 
+      id: 'savings', 
+      label: 'Goal', 
+      path: '/savings', 
+      icon: BanknotesIcon,
+      iconName: 'Savings'
+    },
+    { 
+      id: 'calendar', 
+      label: 'Calendar', 
+      path: '/calendar', 
+      icon: CalendarDaysIcon,
+      iconName: 'Calendar'
+    },
+    { 
+      id: 'statistics', 
+      label: 'Statistics', 
+      icon: ChartBarIcon,
+      iconName: 'Statistics'
+    },
   ];
 
   // URL 경로에 따라 active 메뉴 설정
@@ -190,7 +226,7 @@ const Header = () => {
       case 'reminder':
         return '⏰';
       case 'system':
-        return '��';
+        return '🔔';
       default:
         return '📢';
     }
@@ -225,16 +261,20 @@ const Header = () => {
           <div className={styles.headerCenter}>
             <nav className={styles.navigation}>
               <ul className={styles.menuList}>
-                {menuItems.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
-                      onClick={() => handleClick(item)}
-                    >
-                      <span className={styles.label}>{item.label}</span>
-                    </button>
-                  </li>
-                ))}
+                {menuItems.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
+                        onClick={() => handleClick(item)}
+                      >
+                        <IconComponent className={styles.menuIcon} />
+                        <span className={styles.label}>{item.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           </div>
@@ -327,16 +367,19 @@ const Header = () => {
       {/* 모바일 하단 네비게이션 */}
       <nav className={styles.mobileBottomNav}>
         <div className={styles.mobileNavContainer}>
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              className={`${styles.mobileNavItem} ${activeMenu === item.id ? styles.mobileActive : ''}`}
-              onClick={() => handleClick(item)}
-            >
-              <span className={styles.mobileNavIcon}>{item.icon}</span>
-              <span className={styles.mobileNavLabel}>{item.label}</span>
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <button
+                key={item.id}
+                className={`${styles.mobileNavItem} ${activeMenu === item.id ? styles.mobileActive : ''}`}
+                onClick={() => handleClick(item)}
+              >
+                <IconComponent className={styles.mobileNavIcon} />
+                <span className={styles.mobileNavLabel}>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </nav>
     </>
