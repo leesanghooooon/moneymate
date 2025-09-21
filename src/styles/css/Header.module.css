@@ -1,39 +1,36 @@
 .header {
-  --header-height: 72px;
-  height: var(--header-height);
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 999;
-  box-shadow: 0 2px 10px rgba(17, 24, 39, 0.04);
+  height: var(--header-height, 80px);
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .headerInner {
-  width: 100%;
-  max-width: 1200px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 30px;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
+  gap: 16px;
 }
 
 .logo h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #8b5cf6;
   background: linear-gradient(135deg, #8b5cf6, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -43,8 +40,8 @@
 .headerCenter {
   display: flex;
   align-items: center;
-  justify-content: center;
   flex: 1;
+  justify-content: center;
 }
 
 .navigation {
@@ -63,21 +60,21 @@
 .menuItem {
   display: flex;
   align-items: center;
-  background: none;
-  border: 1px solid transparent;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #4b5563;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
+  text-decoration: none;
 }
 
 .menuItem:hover {
   background: #f3f4f6;
-  color: #111827;
+  color: #374151;
 }
 
 .menuItem.active {
@@ -92,20 +89,48 @@
 
 .label {
   font-size: 14px;
-  font-weight: 600;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 0 0 auto;
+  gap: 16px;
 }
 
 .authSection {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.welcomeMessage {
+  display: flex;
+  align-items: center;
+}
+
+.welcomeText {
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  /*border: 1px ₩solid #e5e7eb;*/
+  border-radius: 20px;
+  background-color: rgba(139, 92, 246, 0.05);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .profileContainer {
@@ -115,17 +140,20 @@
 .profileButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
   border-radius: 50%;
+  cursor: pointer;
   transition: all 0.2s ease;
+  padding: 0;
 }
 
 .profileButton:hover {
-  background: #f3f4f6;
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
 .profileImage {
@@ -133,52 +161,39 @@
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.profileImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .defaultProfile {
-  width: 100%;
-  height: 100%;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  color: white;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #8b5cf6;
-  color: white;
-  font-weight: 600;
   font-size: 16px;
-}
-
-.dropdownArrow {
-  font-size: 12px;
-  color: #6b7280;
-  transition: transform 0.2s ease;
-}
-
-.dropdownArrow.open {
-  transform: rotate(180deg);
+  font-weight: 600;
 }
 
 .dropdownMenu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   right: 0;
-  width: 240px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-8px);
+  transform: translateY(-10px);
   transition: all 0.2s ease;
+  z-index: 1001;
+  margin-top: 8px;
 }
 
 .dropdownMenu.show {
@@ -189,418 +204,270 @@
 
 .dropdownHeader {
   padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .dropdownHeader strong {
   display: block;
   font-size: 14px;
+  font-weight: 600;
   color: #111827;
   margin-bottom: 4px;
 }
 
 .dropdownHeader span {
-  display: block;
   font-size: 12px;
   color: #6b7280;
 }
 
-.dropdownDivider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 4px 0;
-}
-
 .dropdownItem {
+  display: block;
   width: 100%;
-  padding: 8px 16px;
+  padding: 12px 16px;
   background: none;
   border: none;
   text-align: left;
   font-size: 14px;
   color: #374151;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .dropdownItem:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: #f9fafb;
 }
 
-.loginButton,
-.signupButton,
-.logoutButton {
+.dropdownDivider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 8px 0;
+}
+
+.loginButton {
   padding: 8px 16px;
-  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.loginButton {
-  background: transparent;
-  border: 1px solid #e5e7eb;
-  color: #374151;
-}
-
 .loginButton:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .signupButton {
-  background: #3b82f6;
-  border: none;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
   color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .signupButton:hover {
-  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
-.logoutButton {
-  background: #ef4444;
-  border: none;
-  color: white;
-}
-
-.logoutButton:hover {
-  background: #dc2626;
-}
-
-/* 알람 영역 - 텍스트 기반 */
-.notificationContainer {
-  position: relative;
-  margin-right: 16px;
+/* 모바일 하단 네비게이션 */
+.mobileBottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   display: none;
 }
 
-.notificationTextArea {
+.mobileNavContainer {
   display: flex;
+  justify-content: space-around;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid #cbd5e1;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  justify-content: space-between;
+  padding: 8px 0;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
-.notificationTextArea:hover {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  border-color: #94a3b8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.notificationText {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #475569;
-}
-
-.unreadIndicator {
-  color: #ef4444;
-  font-size: 12px;
-  animation: pulse 2s infinite;
-}
-
-.notificationCount {
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.noNotificationText {
-  color: #64748b;
-}
-
-.dropdownArrow {
-  font-size: 10px;
-  color: #64748b;
-  transition: transform 0.3s ease;
-}
-
-.dropdownArrow.open {
-  transform: rotate(180deg);
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* 알람 드롭다운 */
-.notificationDropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 380px;
-  max-height: 500px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid #E5E7EB;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-  margin-top: 8px;
-}
-
-.notificationDropdown.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.notificationHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #E5E7EB;
-}
-
-.notificationHeader h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.markAllReadButton {
-  background: none;
-  border: none;
-  color: #3B82F6;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.markAllReadButton:hover {
-  background-color: #F3F4F6;
-}
-
-.notificationList {
-  max-height: 350px;
-  overflow-y: auto;
-}
-
-.notificationItem {
-  display: flex;
-  align-items: flex-start;
-  padding: 16px 20px;
-  border-bottom: 1px solid #F3F4F6;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  position: relative;
-}
-
-.notificationItem:hover {
-  background-color: #F9FAFB;
-}
-
-.notificationItem.unread {
-  background-color: #F0F9FF;
-  border-left: 3px solid #3B82F6;
-}
-
-.notificationItem .notificationIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-
-.notificationContent {
-  flex: 1;
-  min-width: 0;
-}
-
-.notificationTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
-
-.notificationMessage {
-  font-size: 13px;
-  color: #6B7280;
-  line-height: 1.4;
-  margin-bottom: 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.notificationTime {
-  font-size: 12px;
-  color: #9CA3AF;
-}
-
-.unreadDot {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 8px;
-  height: 8px;
-  background: #3B82F6;
-  border-radius: 50%;
-}
-
-.emptyNotification {
+.mobileNavItem {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  color: #6B7280;
-}
-
-.emptyIcon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-
-.emptyNotification p {
-  margin: 0;
-  font-size: 14px;
-}
-
-.notificationFooter {
-  padding: 12px 20px;
-  border-top: 1px solid #E5E7EB;
-  background-color: #F9FAFB;
-  border-radius: 0 0 12px 12px;
-}
-
-.viewAllButton {
-  width: 100%;
   background: none;
-  border: 1px solid #D1D5DB;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 6px;
+  border: none;
+  padding: 8px 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  min-width: 60px;
+  min-height: 60px;
 }
 
-.viewAllButton:hover {
-  background-color: #F3F4F6;
-  border-color: #9CA3AF;
+.mobileNavItem:hover {
+  background: #f9fafb;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .notificationTextArea {
-    min-width: 100px;
-    padding: 6px 10px;
-  }
-
-  .notificationText {
-    font-size: 13px;
-  }
-
-  .notificationDropdown {
-    width: 320px;
-    right: -20px;
-  }
-
-  .notificationItem {
-    padding: 12px 16px;
-  }
-
-  .notificationItem .notificationIcon {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
+.mobileNavItem.mobileActive {
+  background: #f0f9ff;
+  color: #4f46e5;
 }
 
-/* 환영 메시지 영역 */
-.welcomeMessage {
-  margin-right: 16px;
-  display: flex;
-  align-items: center;
+.mobileNavIcon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  display: block;
 }
 
-.welcomeText {
-  font-size: 13px;
+.mobileNavLabel {
+  font-size: 10px;
   font-weight: 500;
-  color: #6c727b;
-  /*background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);*/
-  padding: 8px 16px;
-  border-radius: 20px;
-  /*border: 1px solid #bae6fd;*/
-  /*white-space: nowrap;*/
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  text-align: center;
+  line-height: 1.2;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
+  .headerInner {
+    padding: 0 24px;
+  }
+  
   .welcomeText {
     font-size: 13px;
     padding: 6px 12px;
   }
+  
+  .header {
+    --header-height: 72px;
+  }
 }
 
 @media (max-width: 768px) {
-  .welcomeMessage {
-    margin-right: 8px;
+  .header {
+    --header-height: 64px;
+    padding: 0 12px;
   }
-
-  .welcomeText {
-    font-size: 12px;
-    padding: 4px 8px;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  
+  .headerInner {
+    padding: 0 16px;
+  }
+  
+  .headerCenter {
+    display: none;
+  }
+  
+  .welcomeMessage {
+    display: none;
+  }
+  
+  .headerRight {
+    gap: 8px;
+  }
+  
+  .profileButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .profileImage {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .defaultProfile {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  /* 모바일 하단 네비게이션 표시 */
+  .mobileBottomNav {
+    display: block;
+  }
+  
+  /* 모바일에서 프로필 드롭다운 위치 조정 - 하단에서 위쪽으로 */
+  .dropdownMenu {
+    bottom: 100%;
+    top: auto;
+    margin-bottom: 8px;
+    margin-top: 0;
+    transform: translateY(10px);
+  }
+  
+  .dropdownMenu.show {
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 640px) {
-  .welcomeMessage {
-    display: none; /* 모바일에서는 환영 메시지 숨김 */
+@media (max-width: 480px) {
+  .header {
+    --header-height: 56px;
+    padding: 0 8px;
   }
+  
+  .headerInner {
+    padding: 0 12px;
+  }
+  
+  .logo h2 {
+    font-size: 18px;
+  }
+  
+  .mobileNavContainer {
+    padding: 6px 0;
+  }
+  
+  .mobileNavItem {
+    min-width: 50px;
+    min-height: 50px;
+    padding: 6px 8px;
+  }
+  
+  .mobileNavIcon {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+  
+  .mobileNavLabel {
+    font-size: 9px;
+  }
+}
+
+/* 터치 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .menuItem:hover,
+  .profileButton:hover,
+  .loginButton:hover,
+  .signupButton:hover,
+  .mobileNavItem:hover {
+    transform: none;
+  }
+  
+  .menuItem:active,
+  .profileButton:active,
+  .loginButton:active,
+  .signupButton:active,
+  .mobileNavItem:active {
+    transform: scale(0.95);
+  }
+}
+
+/* 접근성 개선 */
+.menuItem:focus,
+.profileButton:focus,
+.loginButton:focus,
+.signupButton:focus,
+.mobileNavItem:focus {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
 }

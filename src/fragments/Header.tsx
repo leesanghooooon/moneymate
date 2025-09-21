@@ -118,11 +118,11 @@ const Header = () => {
   }, []);
   
   const menuItems = [
-    { id: 'home', label: 'Home', path: '/' },
-    { id: 'expenses', label: 'Expenses', path: '/expenses' },
-    { id: 'savings', label: 'Goal', path: '/savings' },
-    { id: 'calendar', label: 'Calendar', path: '/calendar' },
-    { id: 'statistics', label: 'Statistics' },
+    { id: 'home', label: 'Home', path: '/', icon: '🏠' },
+    { id: 'expenses', label: 'Expenses', path: '/expenses', icon: '💰' },
+    { id: 'savings', label: 'Goal', path: '/savings', icon: '🎯' },
+    { id: 'calendar', label: 'Calendar', path: '/calendar', icon: '📅' },
+    { id: 'statistics', label: 'Statistics', icon: '📊' },
   ];
 
   // URL 경로에 따라 active 메뉴 설정
@@ -190,7 +190,7 @@ const Header = () => {
       case 'reminder':
         return '⏰';
       case 'system':
-        return '🔔';
+        return '��';
       default:
         return '📢';
     }
@@ -212,207 +212,134 @@ const Header = () => {
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.headerInner}>
-        <div className={styles.headerLeft}>
-          <div className={styles.logo}>
-            <h2>MoneyMate</h2>
+    <>
+      {/* 데스크톱 헤더 */}
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <div className={styles.headerLeft}>
+            <div className={styles.logo}>
+              <h2>MoneyMate</h2>
+            </div>
           </div>
-        </div>
-        
-        <div className={styles.headerCenter}>
-          <nav className={styles.navigation}>
-            <ul className={styles.menuList}>
-              {menuItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
-                    onClick={() => handleClick(item)}
-                  >
-                    <span className={styles.label}>{item.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-        
-        <div className={styles.headerRight}>
-          <div className={styles.authSection}>
-            {status === 'loading' ? (
-              <div style={{ width: '120px', height: '40px' }}></div>
-            ) : session?.user ? (
-              <>
-                {/* 환영 메시지 영역 */}
-                <div className={styles.welcomeMessage}>
-                  <span className={styles.welcomeText}>
-                    {session.user.nickname || session.user.email?.split('@')[0] || '사용자'}님, {welcomeMessage}
-                  </span>
-                </div>
-
-                {/* 알람 영역 - 주석처리 */}
-                {/* 
-                <div className={styles.notificationContainer} ref={notificationRef}>
-                  <div 
-                    className={styles.notificationTextArea}
-                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  >
-                    <span className={styles.notificationText}>
-                      {unreadCount > 0 ? (
-                        <>
-                          <span className={styles.unreadIndicator}>●</span>
-                          <span className={styles.notificationCount}>
-                            {unreadCount > 9 ? '9+' : unreadCount}개의 새 알림
-                          </span>
-                        </>
-                      ) : (
-                        <span className={styles.noNotificationText}>알림</span>
-                      )}
-                    </span>
-                    <span className={`${styles.dropdownArrow} ${isNotificationOpen ? styles.open : ''}`}>
-                      ▼
+          
+          <div className={styles.headerCenter}>
+            <nav className={styles.navigation}>
+              <ul className={styles.menuList}>
+                {menuItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
+                      onClick={() => handleClick(item)}
+                    >
+                      <span className={styles.label}>{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+          
+          <div className={styles.headerRight}>
+            <div className={styles.authSection}>
+              {status === 'loading' ? (
+                <div style={{ width: '120px', height: '40px' }}></div>
+              ) : session?.user ? (
+                <>
+                  {/* 환영 메시지 영역 */}
+                  <div className={styles.welcomeMessage}>
+                    <span className={styles.welcomeText}>
+                      {session.user.nickname || session.user.email?.split('@')[0] || '사용자'}님, {welcomeMessage}
                     </span>
                   </div>
-                  
-                  <div className={`${styles.notificationDropdown} ${isNotificationOpen ? styles.show : ''}`}>
-                    <div className={styles.notificationHeader}>
-                      <h3>알림</h3>
-                      {unreadCount > 0 && (
-                        <button 
-                          className={styles.markAllReadButton}
-                          onClick={markAllAsRead}
-                        >
-                          모두 읽음
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className={styles.notificationList}>
-                      {notifications.length === 0 ? (
-                        <div className={styles.emptyNotification}>
-                          <span className={styles.emptyIcon}>🔕</span>
-                          <p>새로운 알림이 없습니다</p>
-                        </div>
-                      ) : (
-                        notifications.map((notification) => (
-                          <div 
-                            key={notification.id}
-                            className={`${styles.notificationItem} ${!notification.isRead ? styles.unread : ''}`}
-                            onClick={() => handleNotificationClick(notification)}
-                          >
-                            <div 
-                              className={styles.notificationIcon}
-                              style={{ backgroundColor: getNotificationColor(notification.type) }}
-                            >
-                              {getNotificationIcon(notification.type)}
-                            </div>
-                            <div className={styles.notificationContent}>
-                              <div className={styles.notificationTitle}>
-                                {notification.title}
-                              </div>
-                              <div className={styles.notificationMessage}>
-                                {notification.message}
-                              </div>
-                              <div className={styles.notificationTime}>
-                                {notification.timestamp}
-                              </div>
-                            </div>
-                            {!notification.isRead && (
-                              <div className={styles.unreadDot}></div>
-                            )}
+
+                  {/* 프로필 영역 */}
+                  <div className={styles.profileContainer} ref={profileRef}>
+                    <button 
+                      className={styles.profileButton}
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    >
+                      <div className={styles.profileImage}>
+                        {session.user.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt="Profile"
+                            width={32}
+                            height={32}
+                          />
+                        ) : (
+                          <div className={styles.defaultProfile}>
+                            {(session.user.nickname || session.user.email || '').charAt(0).toUpperCase()}
                           </div>
-                        ))
-                      )}
-                    </div>
-                    
-                    {notifications.length > 0 && (
-                      <div className={styles.notificationFooter}>
-                        <button 
-                          className={styles.viewAllButton}
-                          onClick={() => {
-                            router.push('/notifications');
-                            setIsNotificationOpen(false);
-                          }}
-                        >
-                          모든 알림 보기
-                        </button>
+                        )}
                       </div>
-                    )}
+                    </button>
+                    
+                    <div className={`${styles.dropdownMenu} ${isProfileOpen ? styles.show : ''}`}>
+                      <div className={styles.dropdownHeader}>
+                        <strong>{session.user.nickname || session.user.email}</strong>
+                        <span>{session.user.email}</span>
+                      </div>
+                      <div className={styles.dropdownDivider} />
+                      <button className={styles.dropdownItem} onClick={() => router.push('/profile')}>
+                        계정 관리
+                      </button>
+                      <button className={styles.dropdownItem}>
+                        비밀번호 변경
+                      </button>
+                      <button className={styles.dropdownItem}>
+                        활동 기록
+                      </button>
+                      <div className={styles.dropdownDivider} />
+                      <button className={styles.dropdownItem} onClick={() => router.push('/wallets')}>
+                        지갑 관리
+                      </button>
+                      <button className={styles.dropdownItem} onClick={() => router.push('/share-groups')}>
+                        가계부 공유
+                      </button>
+                      <div className={styles.dropdownDivider} />
+                      <button className={styles.dropdownItem} onClick={handleLogout}>
+                        로그아웃
+                      </button>
+                    </div>
                   </div>
-                </div>
-                */}
-
-                {/* 프로필 영역 */}
-                <div className={styles.profileContainer} ref={profileRef}>
+                </>
+              ) : (
+                <>
                   <button 
-                    className={styles.profileButton}
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className={styles.loginButton}
+                    onClick={() => router.push('/login')}
                   >
-                    <div className={styles.profileImage}>
-                      {session.user.image ? (
-                        <Image
-                          src={session.user.image}
-                          alt="Profile"
-                          width={32}
-                          height={32}
-                        />
-                      ) : (
-                        <div className={styles.defaultProfile}>
-                          {(session.user.nickname || session.user.email || '').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+                    로그인
                   </button>
-                  
-                  <div className={`${styles.dropdownMenu} ${isProfileOpen ? styles.show : ''}`}>
-                    <div className={styles.dropdownHeader}>
-                      <strong>{session.user.nickname || session.user.email}</strong>
-                      <span>{session.user.email}</span>
-                    </div>
-                    <div className={styles.dropdownDivider} />
-                    <button className={styles.dropdownItem} onClick={() => router.push('/profile')}>
-                      계정 관리
-                    </button>
-                    <button className={styles.dropdownItem}>
-                      비밀번호 변경
-                    </button>
-                    <button className={styles.dropdownItem}>
-                      활동 기록
-                    </button>
-                    <div className={styles.dropdownDivider} />
-                    <button className={styles.dropdownItem} onClick={() => router.push('/wallets')}>
-                      지갑 관리
-                    </button>
-                    <button className={styles.dropdownItem} onClick={() => router.push('/share-groups')}>
-                      가계부 공유
-                    </button>
-                    <div className={styles.dropdownDivider} />
-                    <button className={styles.dropdownItem} onClick={handleLogout}>
-                      로그아웃
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <button 
-                  className={styles.loginButton}
-                  onClick={() => router.push('/login')}
-                >
-                  로그인
-                </button>
-                <button 
-                  className={styles.signupButton}
-                  onClick={() => router.push('/signup')}
-                >
-                  회원가입
-                </button>
-              </>
-            )}
+                  <button 
+                    className={styles.signupButton}
+                    onClick={() => router.push('/signup')}
+                  >
+                    회원가입
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* 모바일 하단 네비게이션 */}
+      <nav className={styles.mobileBottomNav}>
+        <div className={styles.mobileNavContainer}>
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              className={`${styles.mobileNavItem} ${activeMenu === item.id ? styles.mobileActive : ''}`}
+              onClick={() => handleClick(item)}
+            >
+              <span className={styles.mobileNavIcon}>{item.icon}</span>
+              <span className={styles.mobileNavLabel}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+    </>
   );
 };
 
