@@ -78,13 +78,9 @@
 }
 
 .menuItem.active {
-  background: #8b5cf6;
-  color: #ffffff;
-  border-color: #8b5cf6;
-}
-
-.menuItem.active:hover {
-  background: #7c3aed;
+  background: #f0f9ff;
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 .label {
@@ -116,7 +112,7 @@
   font-size: 14px;
   font-weight: 500;
   padding: 8px 16px;
-  /*border: 1px ₩solid #e5e7eb;*/
+  /*border: 1px solid #e5e7eb;*/
   border-radius: 20px;
   background-color: rgba(139, 92, 246, 0.05);
   animation: fadeIn 0.5s ease-out;
@@ -397,11 +393,12 @@
   
   /* 모바일에서 프로필 드롭다운 위치 조정 - 하단에서 위쪽으로 */
   .dropdownMenu {
-    bottom: 100%;
+    /*bottom: 100%;*/
     top: auto;
     margin-bottom: 8px;
     margin-top: 0;
     transform: translateY(10px);
+    z-index: 1002; /* 하단 네비게이션보다 위에 표시 */
   }
   
   .dropdownMenu.show {
