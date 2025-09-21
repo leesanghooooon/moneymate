@@ -193,7 +193,8 @@ const RevenueCard = () => {
             } else if (value >= 1000) {
               return (value / 1000).toFixed(0) + 'K';
             }
-            return value;
+            return value
+            // return new Intl.NumberFormat('ko-KR').format(value);
           },
           font: {
             size: 12
@@ -223,19 +224,19 @@ const RevenueCard = () => {
   }, 0) || 0;
 
   if (loading) {
-    return <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
+    return <DashboardCard title="카테고리별 월별 지출" showViewReport={false} cardSize="card-9">
       <div className={styles.loading}>Loading...</div>
     </DashboardCard>;
   }
 
   if (error) {
-    return <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
+    return <DashboardCard title="카테고리별 월별 지출" showViewReport={false} cardSize="card-9">
       <div className={styles.error}>{error}</div>
     </DashboardCard>;
   }
 
   return (
-    <DashboardCard title="카테고리별 월별 지출" showViewReport={true} cardSize="card-9">
+    <DashboardCard title="카테고리별 월별 지출" showViewReport={false} cardSize="card-9">
       <div className={styles.revenueInfo}>
         <div className={styles.amount}>
           Total: {new Intl.NumberFormat('ko-KR').format(totalExpense)}원

@@ -286,21 +286,30 @@ const OrderCard = () => {
             style: 'decimal',
             maximumFractionDigits: 0
           }).format(summary.thisWeekTotal)}원
-        </div>
-        <div className={styles.change}>
-          <span className={`${styles.changeIcon} ${summary.changeRate >= 0 ? styles.increase : ''}`}>
-            {summary.changeRate >= 0 ? '↑' : '↓'}
+          <span style={{padding:'6px'}}>
+            <span className={`${styles.changeIcon} ${summary.changeRate >= 0 ? styles.increase : ''}`}>
+              {summary.changeRate >= 0 ? '↑' : '↓'}
+            </span>
+              <span className={styles.changeText}>
+              {Math.abs(summary.changeRate).toFixed(1)}%
+            </span>
           </span>
-          <span className={styles.changeText}>
-            {Math.abs(summary.changeRate).toFixed(1)}% vs 지난달 같은주
-          </span>
         </div>
+        {/*<div className={styles.change}>*/}
+        {/*  <span className={`${styles.changeIcon} ${summary.changeRate >= 0 ? styles.increase : ''}`}>*/}
+        {/*    {summary.changeRate >= 0 ? '↑' : '↓'}*/}
+        {/*  </span>*/}
+        {/*  <span className={styles.changeText}>*/}
+        {/*    {Math.abs(summary.changeRate).toFixed(1)}% vs 지난달 같은주*/}
+        {/*  </span>*/}
+        {/*</div>*/}
         <div className={styles.period}>
           {orderData.length > 0 && (
             <>
               {new Date(orderData[0].date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} ~ {new Date(orderData[orderData.length - 1].date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
             </>
           )}
+          &nbsp;vs 지난달 같은주
         </div>
       </div>
       

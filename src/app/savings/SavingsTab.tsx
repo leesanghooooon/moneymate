@@ -379,7 +379,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
                                   <div className={styles.requirementItem}>
                                     <span className={styles.requirementLabel}>월별 필요 납부 금액:</span>
                                     <span className={`${styles.requirementValue} ${styles.monthlyAmount}`}>
-                                  {formatKRW(monthlyReq.monthlyRequirement)}원/월
+                                  {formatKRW(monthlyReq.monthlyRequirement)}원
                                 </span>
                                   </div>
                                 </div>

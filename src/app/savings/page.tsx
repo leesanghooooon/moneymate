@@ -48,6 +48,7 @@ export default function SavingsPage() {
               <button
                 className={`${styles.tabButton} ${activeTab === 'loans' ? styles.active : ''}`}
                 onClick={() => setActiveTab('loans')}
+                disabled={true}
               >
                 <span className={styles.tabIcon}>🏦</span>
                 <span className={styles.tabLabel}>대출현황</span>
