@@ -108,22 +108,27 @@
   }
   
   .dashboardGrid > *:nth-child(1) {
+    grid-column: 1 / span 9;
     grid-row: 1;
   }
   
   .dashboardGrid > *:nth-child(2) {
+    grid-column: 1 / span 9;
     grid-row: 2;
   }
   
   .dashboardGrid > *:nth-child(3) {
+    grid-column: 1 / span 9;
     grid-row: 3;
   }
   
   .dashboardGrid > *:nth-child(4) {
+    grid-column: 1 / span 9;
     grid-row: 4;
   }
   
   .dashboardGrid > *:nth-child(5) {
+    grid-column: 1 / span 9;
     grid-row: 5;
   }
 }
