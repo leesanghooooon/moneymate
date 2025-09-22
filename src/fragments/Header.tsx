@@ -269,7 +269,7 @@ const Header = () => {
                         className={`${styles.menuItem} ${activeMenu === item.id ? styles.active : ''}`}
                         onClick={() => handleClick(item)}
                       >
-                        <IconComponent className={styles.menuIcon} />
+                        {/*<IconComponent className={styles.menuIcon} />*/}
                         <span className={styles.label}>{item.label}</span>
                       </button>
                     </li>

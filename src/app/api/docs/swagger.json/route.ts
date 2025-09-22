@@ -1337,6 +1337,108 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/loans': {
+        get: {
+          summary: '대출현황 목록 조회',
+          description: '사용자의 대출현황 목록을 조회합니다. goal_type_cd가 LOAN인 저축목표만 조회됩니다.',
+          tags: ['Loans'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '대출현황 목록 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/Loan' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: '대출 등록',
+          description: '새로운 대출을 등록합니다. goal_type_cd는 자동으로 LOAN으로 설정됩니다.',
+          tags: ['Loans'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/LoanCreateRequest' }
+              }
+            }
+          },
+          responses: {
+            '201': {
+              description: '대출 등록 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      message: { type: 'string', example: '대출이 등록되었습니다.' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          sav_goal_id: { type: 'string', description: '생성된 대출 ID' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/share-groups/invitations': {
       },
       "/expenses/template": {
@@ -2343,6 +2445,194 @@ export async function GET(request: NextRequest) {
             }
           },
           required: ['grp_id', 'usr_id', 'role', 'status', 'invited_at', 'grp_name', 'owner_usr_id', 'member_count']
+        },
+        Loan: {
+          type: 'object',
+          properties: {
+            sav_goal_id: {
+              type: 'string',
+              description: '대출 ID (저축목표 테이블의 ID 사용)'
+            },
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            wlt_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 지갑/계좌 ID'
+            },
+            goal_name: {
+              type: 'string',
+              description: '대출명'
+            },
+            goal_type_cd: {
+              type: 'string',
+              enum: ['LOAN'],
+              description: '목표 유형 (대출로 고정)'
+            },
+            purpose_cd: {
+              type: 'string',
+              nullable: true,
+              description: '대출 목적 코드'
+            },
+            target_amount: {
+              type: 'number',
+              description: '대출 원금'
+            },
+            start_date: {
+              type: 'string',
+              format: 'date',
+              description: '대출 시작일'
+            },
+            end_date: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: '대출 만료일'
+            },
+            deposit_cycle_cd: {
+              type: 'string',
+              nullable: true,
+              description: '상환 주기'
+            },
+            plan_amount: {
+              type: 'number',
+              nullable: true,
+              description: '월 상환액'
+            },
+            alarm_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '알림 사용 여부'
+            },
+            alarm_day: {
+              type: 'integer',
+              nullable: true,
+              description: '알림 기준일'
+            },
+            is_paused: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '일시중지 여부'
+            },
+            is_completed: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '상환 완료 여부'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            },
+            use_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              description: '사용 여부'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '생성 시각'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '수정 시각'
+            },
+            wlt_name: {
+              type: 'string',
+              nullable: true,
+              description: '연결된 지갑 이름'
+            },
+            goal_type_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '목표 유형명'
+            },
+            purpose_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '대출 목적 코드명'
+            },
+            deposit_cycle_cd_nm: {
+              type: 'string',
+              nullable: true,
+              description: '상환 주기명'
+            },
+            current_amount: {
+              type: 'number',
+              description: '누적 상환 금액'
+            }
+          },
+          required: ['sav_goal_id', 'usr_id', 'goal_name', 'target_amount', 'start_date', 'goal_type_cd']
+        },
+        LoanCreateRequest: {
+          type: 'object',
+          required: ['usr_id', 'goal_name', 'target_amount', 'start_date'],
+          properties: {
+            usr_id: {
+              type: 'string',
+              description: '사용자 ID'
+            },
+            wlt_id: {
+              type: 'string',
+              nullable: true,
+              description: '연결 지갑/계좌 ID'
+            },
+            goal_name: {
+              type: 'string',
+              description: '대출명',
+              example: '주택 담보 대출'
+            },
+            purpose_cd: {
+              type: 'string',
+              nullable: true,
+              description: '대출 목적 코드'
+            },
+            target_amount: {
+              type: 'number',
+              description: '대출 원금'
+            },
+            start_date: {
+              type: 'string',
+              format: 'date',
+              description: '대출 시작일'
+            },
+            end_date: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: '대출 만료일'
+            },
+            deposit_cycle_cd: {
+              type: 'string',
+              nullable: true,
+              description: '상환 주기 (DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY/IRREGULAR)'
+            },
+            plan_amount: {
+              type: 'number',
+              nullable: true,
+              description: '월 상환액'
+            },
+            alarm_yn: {
+              type: 'string',
+              enum: ['Y', 'N'],
+              default: 'N',
+              description: '알림 사용 여부'
+            },
+            alarm_day: {
+              type: 'integer',
+              nullable: true,
+              description: '알림 기준일'
+            },
+            memo: {
+              type: 'string',
+              nullable: true,
+              description: '메모'
+            }
+          }
         }
       };
 

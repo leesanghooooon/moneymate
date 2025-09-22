@@ -2,6 +2,8 @@
 
 import styles from '../../styles/css/savings.module.css';
 import { useEffect, useState } from 'react';
+import { get } from '../../lib/api/common';
+import LoanModal from '../../components/LoanModal';
 
 interface Loan {
   loan_id: string;
@@ -52,38 +54,74 @@ export default function LoansTab({ userId }: LoansTabProps) {
   const [payments, setPayments] = useState<LoanPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
 
   // 대출 목록 조회
   const fetchLoans = async () => {
     if (!userId) return;
 
     try {
-      const response = await fetch(`/api/loans?usr_id=${userId}`);
-      if (!response.ok) {
-        throw new Error('대출 조회 실패');
-      }
-      const result = await response.json();
-      setLoans(result.data || []);
+      const response = await get('/loans', {
+        params: { usr_id: userId }
+      });
+      
+      // API 응답을 Loan 인터페이스에 맞게 변환
+      const loansData: Loan[] = (response.data.data || []).map((loan: any) => ({
+        loan_id: loan.sav_goal_id,
+        usr_id: loan.usr_id,
+        wlt_id: loan.wlt_id,
+        loan_name: loan.goal_name,
+        loan_type_cd: loan.goal_type_cd,
+        purpose_cd: loan.purpose_cd,
+        loan_amount: loan.target_amount,
+        interest_rate: 0, // API에서 제공하지 않음
+        start_date: loan.start_date,
+        end_date: loan.end_date,
+        payment_cycle_cd: loan.deposit_cycle_cd,
+        monthly_payment: loan.plan_amount,
+        alarm_yn: loan.alarm_yn,
+        alarm_day: loan.alarm_day,
+        is_paused: loan.is_paused,
+        is_completed: loan.is_completed,
+        memo: loan.memo,
+        use_yn: loan.use_yn,
+        created_at: loan.created_at,
+        updated_at: loan.updated_at,
+        wlt_name: loan.wlt_name,
+        loan_type_cd_nm: loan.goal_type_cd_nm,
+        purpose_cd_nm: loan.purpose_cd_nm,
+        payment_cycle_cd_nm: loan.deposit_cycle_cd_nm,
+        current_balance: loan.target_amount - (loan.current_amount || 0),
+      }));
+      
+      setLoans(loansData);
     } catch (error) {
       console.error('대출 조회 오류:', error);
       setError('대출 조회 중 오류가 발생했습니다.');
     }
   };
 
-  // 대출 상환내역 조회
+  // 대출 상환내역 조회 (현재는 저축 납입내역 API 사용)
   const fetchPayments = async () => {
     if (!userId) return;
 
     try {
-      const response = await fetch(`/api/loan-payments?usr_id=${userId}`);
-      if (!response.ok) {
-        throw new Error('상환내역 조회 실패');
-      }
-      const result = await response.json();
-      setPayments(result.data || []);
+      // 현재 대출 상환내역 전용 API가 없으므로 저축 납입내역 API를 사용
+      // 추후 대출 상환내역 전용 API가 생성되면 변경 예정
+      const response = await get('/savings-contributions', {
+        params: { usr_id: userId }
+      });
+      setPayments(response.data.data || []);
     } catch (error) {
       console.error('상환내역 조회 오류:', error);
+      // 상환내역 조회 실패는 전체 기능에 영향을 주지 않도록 에러를 설정하지 않음
     }
+  };
+
+  // 대출 추가 성공 시 데이터 다시 불러오기
+  const handleLoanSuccess = () => {
+    fetchLoans();
+    fetchPayments();
   };
 
   // 데이터 로드
@@ -198,7 +236,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
           <div className={styles.emptyIcon}>🏦</div>
           <h3>대출이 없습니다</h3>
           <p>등록된 대출이 없습니다.</p>
-          <button className={styles.buttonPrimary} onClick={() => {/* 대출 추가 모달 */}}>대출 추가</button>
+          <button className={styles.buttonPrimary} onClick={() => setIsLoanModalOpen(true)}>대출 추가</button>
         </div>
       ) : (
         <>
@@ -252,7 +290,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
           <section className={styles.goalsSection}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>대출 목록</h2>
-              <button className={styles.buttonPrimary} onClick={() => {/* 대출 추가 모달 */}}>+ 대출 추가</button>
+              <button className={styles.buttonPrimary} onClick={() => setIsLoanModalOpen(true)}>+ 대출 추가</button>
             </div>
             <div className={styles.goalsList}>
               {loansWithProgress.map((loan) => (
@@ -419,6 +457,14 @@ export default function LoansTab({ userId }: LoansTabProps) {
           </section>
         </>
       )}
+
+      {/* 대출 추가 모달 */}
+      <LoanModal
+        isOpen={isLoanModalOpen}
+        onClose={() => setIsLoanModalOpen(false)}
+        onSuccess={handleLoanSuccess}
+        userId={userId}
+      />
     </>
   );
 }

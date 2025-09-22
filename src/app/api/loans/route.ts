@@ -13,54 +13,54 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 저축목표 조회 (지갑 정보와 누적 납입금액 포함)
-    const goals = await dbSelect({
-      table: 'MMT_SAV_GOL_MST sg',
+    // 대출현황 조회 (지갑 정보와 누적 상환금액 포함)
+    const loans = await dbSelect({
+      table: 'MMT_SAV_GOL_MST lg',
       columns: [
-        'sg.*',
+        'lg.*',
         'w.wlt_name',
         {
-          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'GOAL_TYPE\' AND cd = sg.goal_type_cd)',
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'TRX_TYPE\' AND cd = lg.goal_type_cd)',
           alias: 'goal_type_cd_nm'
         },
         {
-          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'GOAL_TYPE\' AND cd = sg.purpose_cd)',
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'GOAL_TYPE\' AND cd = lg.purpose_cd)',
           alias: 'purpose_cd_nm'
         },
         {
-          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'SAV_CYCLE\' AND cd = sg.deposit_cycle_cd)',
+          name: '(SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = \'SAV_CYCLE\' AND cd = lg.deposit_cycle_cd)',
           alias: 'deposit_cycle_cd_nm'
         },
         {
-          name: 'COALESCE((SELECT SUM(amount) FROM MMT_SAV_GOL_CONTRIB sc WHERE sc.sav_goal_id = sg.sav_goal_id), 0)',
+          name: 'COALESCE((SELECT SUM(amount) FROM MMT_SAV_GOL_CONTRIB sc WHERE sc.sav_goal_id = lg.sav_goal_id), 0)',
           alias: 'current_amount'
         }
       ],
       filters: {
-        'sg.usr_id': usr_id,
-        'sg.goal_type_cd': 'SAVINGS',
-        'sg.use_yn': 'Y'
+        'lg.usr_id': usr_id,
+        'lg.goal_type_cd': 'LOAN',
+        'lg.use_yn': 'Y'
       },
-      allowedFilterFields: ['sg.usr_id', 'sg.goal_type_cd', 'sg.use_yn'],
-      orderBy: 'sg.created_at DESC',
+      allowedFilterFields: ['lg.usr_id', 'lg.goal_type_cd', 'lg.use_yn'],
+      orderBy: 'lg.created_at DESC',
       joins: [
         {
           type: 'LEFT',
           table: 'MMT_WLT_MST w',
-          on: 'sg.wlt_id = w.wlt_id'
+          on: 'lg.wlt_id = w.wlt_id'
         }
       ]
     });
 
     return NextResponse.json({
       success: true,
-      data: goals
+      data: loans
     });
 
   } catch (error) {
-    console.error('저축목표 조회 오류:', error);
+    console.error('대출현황 조회 오류:', error);
     return NextResponse.json(
-      { success: false, message: '저축목표 조회 중 오류가 발생했습니다.' },
+      { success: false, message: '대출현황 조회 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }
@@ -73,13 +73,12 @@ export async function POST(request: NextRequest) {
       usr_id,
       wlt_id,
       goal_name,
-      goal_type_cd = 'SAVINGS',
       purpose_cd,
-      target_amount,
+      target_amount, // 대출 원금
       start_date,
       end_date,
-      deposit_cycle_cd,
-      plan_amount,
+      deposit_cycle_cd, // 상환 주기
+      plan_amount, // 월 상환액
       alarm_yn = 'N',
       alarm_day,
       memo
@@ -96,7 +95,7 @@ export async function POST(request: NextRequest) {
     // UUID 생성
     const sav_goal_id = crypto.randomUUID();
 
-    // 저축목표 등록
+    // 대출 등록 (goal_type_cd는 LOAN으로 고정)
     await dbInsert({
       table: 'MMT_SAV_GOL_MST',
       data: {
@@ -104,13 +103,13 @@ export async function POST(request: NextRequest) {
         usr_id,
         wlt_id,
         goal_name,
-        goal_type_cd,
+        goal_type_cd: 'LOAN', // 대출로 고정
         purpose_cd,
-        target_amount,
+        target_amount, // 대출 원금
         start_date,
         end_date,
-        deposit_cycle_cd,
-        plan_amount,
+        deposit_cycle_cd, // 상환 주기
+        plan_amount, // 월 상환액
         alarm_yn,
         alarm_day,
         memo,
@@ -120,14 +119,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '저축목표가 생성되었습니다.',
+      message: '대출이 등록되었습니다.',
       data: { sav_goal_id }
     });
 
   } catch (error) {
-    console.error('저축목표 생성 오류:', error);
+    console.error('대출 등록 오류:', error);
     return NextResponse.json(
-      { success: false, message: '저축목표 생성 중 오류가 발생했습니다.' },
+      { success: false, message: '대출 등록 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }
