@@ -132,8 +132,7 @@ export default function ExcelUploadModal({
 
       worksheet.eachRow((row, rowIndex) => {
         if (rowIndex === 1) return; // 헤더 건너뛰기
-      console.log('1')
-        
+
         // 먼저 행 데이터를 추출
         const rowData: ExcelRow = {
           rowNumber,
@@ -143,18 +142,15 @@ export default function ExcelUploadModal({
           메모: getCellValue(row.getCell(4).value) || '',
           카테고리: getCellValue(row.getCell(5).value)
         };
-        console.log('2', rowData)
-        
+
         // 빈 행 체크 - 모든 필수 필드가 비어있으면 건너뛰기
         const isEmptyRow = !rowData.거래유형 && !rowData.거래일자 && !rowData.금액 && !rowData.카테고리;
         if (isEmptyRow) {
-          console.log('3 - 빈 행 건너뛰기:', rowData)
           rowNumber++;
           return;
         }
         
         try {
-          console.log('3 - 데이터 검증 시작')
           // 데이터 검증
           if (!rowData.거래유형 || !rowData.거래일자 || !rowData.금액 || !rowData.카테고리) {
             throw new Error('필수 필드가 누락되었습니다.');
@@ -183,13 +179,11 @@ export default function ExcelUploadModal({
             throw new Error(`알 수 없는 카테고리입니다: ${rowData.카테고리}`);
           }
 
-          console.log('4 - 유효한 데이터, loadedRows에 추가')
           loadedRows.push({
             ...rowData,
             status: 'pending'
           });
         } catch (error: any) {
-          console.log('4 - 오류 발생, 오류 정보와 함께 loadedRows에 추가')
           loadedRows.push({
             ...rowData,
             status: 'error',
@@ -199,7 +193,6 @@ export default function ExcelUploadModal({
 
         rowNumber++;
       });
-      console.log('loadedRows',loadedRows)
       setRows(loadedRows);
       setCurrentStep('processing');
       setIsLoading(false);
