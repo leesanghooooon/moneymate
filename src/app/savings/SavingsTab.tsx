@@ -5,6 +5,13 @@ import { useEffect, useState } from 'react';
 import SavingsGoalModal from '@/components/SavingsGoalModal';
 import SavingsContributionModal from '@/components/SavingsContributionModal';
 import SavingsContributionListModal from '@/components/SavingsContributionListModal';
+import {
+  BanknotesIcon, BuildingLibraryIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
 
 interface SavingsGoal {
   sav_goal_id: string;
@@ -198,7 +205,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
         </div>
       ) : goalsWithProgress.length === 0 ? (
         <div className={styles.emptyMessage}>
-          <div className={styles.emptyIcon}>💰</div>
+          <BanknotesIcon className={styles.emptyIcon} />
           <h3>저축목표가 없습니다</h3>
           <p>첫 번째 저축목표를 만들어보세요!</p>
           <button className={styles.buttonPrimary} onClick={() => setIsModalOpen(true)}>저축목표 만들기</button>
@@ -209,7 +216,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
           <section className={styles.summarySection}>
             <div className={styles.summaryCards}>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>🎯</div>
+                <BuildingLibraryIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>총 목표 금액</div>
                   <div className={styles.summaryValue}>
@@ -218,7 +225,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>💰</div>
+                <BanknotesIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>현재 저축액</div>
                   <div className={styles.summaryValue}>
@@ -227,7 +234,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>📈</div>
+                <ChartBarIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>전체 진행률</div>
                   <div className={styles.summaryValue}>
@@ -240,7 +247,7 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>✅</div>
+                <CheckCircleIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>완료된 목표</div>
                   <div className={styles.summaryValue}>
@@ -345,12 +352,12 @@ export default function SavingsTab({ userId }: SavingsTabProps) {
                         <div className={styles.monthlyRequirement}>
                           {monthlyReq.isCompleted ? (
                               <div className={styles.completedMessage}>
-                                <span className={styles.completedIcon}>🎉</span>
+                                <SparklesIcon className={styles.completedIcon} />
                                 <span className={styles.completedText}>목표 달성 완료!</span>
                               </div>
                           ) : monthlyReq.isOverdue ? (
                               <div className={styles.overdueMessage}>
-                                <span className={styles.overdueIcon}>⚠️</span>
+                                <ExclamationTriangleIcon className={styles.overdueIcon} />
                                 <div className={styles.overdueContent}>
                                   <span className={styles.overdueText}>목표 기간이 지났습니다</span>
                                   <span className={styles.overdueAmount}>

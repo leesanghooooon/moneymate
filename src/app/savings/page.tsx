@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import SavingsTab from './SavingsTab';
 import LoansTab from './LoansTab';
+import { BanknotesIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 
 export default function SavingsPage() {
   const { data: session, status } = useSession();
@@ -42,14 +43,14 @@ export default function SavingsPage() {
                 className={`${styles.tabButton} ${activeTab === 'savings' ? styles.active : ''}`}
                 onClick={() => setActiveTab('savings')}
               >
-                <span className={styles.tabIcon}>💰</span>
+                <BanknotesIcon className={styles.tabIcon} />
                 <span className={styles.tabLabel}>저축현황</span>
               </button>
               <button
                 className={`${styles.tabButton} ${activeTab === 'loans' ? styles.active : ''}`}
                 onClick={() => setActiveTab('loans')}
               >
-                <span className={styles.tabIcon}>🏦</span>
+                <BuildingLibraryIcon className={styles.tabIcon} />
                 <span className={styles.tabLabel}>대출현황</span>
               </button>
             </div>

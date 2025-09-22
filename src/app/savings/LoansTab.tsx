@@ -4,6 +4,14 @@ import styles from '../../styles/css/savings.module.css';
 import { useEffect, useState } from 'react';
 import { get } from '../../lib/api/common';
 import LoanModal from '../../components/LoanModal';
+import { 
+  BuildingLibraryIcon, 
+  BanknotesIcon, 
+  ChartBarIcon, 
+  CheckCircleIcon, 
+  ExclamationTriangleIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
 
 interface Loan {
   loan_id: string;
@@ -233,7 +241,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
         </div>
       ) : loansWithProgress.length === 0 ? (
         <div className={styles.emptyMessage}>
-          <div className={styles.emptyIcon}>🏦</div>
+          <BuildingLibraryIcon className={styles.emptyIcon} />
           <h3>대출이 없습니다</h3>
           <p>등록된 대출이 없습니다.</p>
           <button className={styles.buttonPrimary} onClick={() => setIsLoanModalOpen(true)}>대출 추가</button>
@@ -244,7 +252,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
           <section className={styles.summarySection}>
             <div className={styles.summaryCards}>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>🏦</div>
+                <BuildingLibraryIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>총 대출 금액</div>
                   <div className={styles.summaryValue}>
@@ -253,7 +261,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>💰</div>
+                <BanknotesIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>현재 잔액</div>
                   <div className={styles.summaryValue}>
@@ -262,7 +270,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>📈</div>
+                <ChartBarIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>전체 상환률</div>
                   <div className={styles.summaryValue}>
@@ -275,7 +283,7 @@ export default function LoansTab({ userId }: LoansTabProps) {
                 </div>
               </div>
               <div className={styles.summaryCard}>
-                <div className={styles.summaryIcon}>✅</div>
+                <CheckCircleIcon className={styles.summaryIcon} />
                 <div className={styles.summaryContent}>
                   <div className={styles.summaryLabel}>완료된 대출</div>
                   <div className={styles.summaryValue}>
@@ -384,12 +392,12 @@ export default function LoansTab({ userId }: LoansTabProps) {
                         <div className={styles.monthlyRequirement}>
                           {monthlyReq.isCompleted ? (
                               <div className={styles.completedMessage}>
-                                <span className={styles.completedIcon}>🎉</span>
+                                <SparklesIcon className={styles.completedIcon} />
                                 <span className={styles.completedText}>상환 완료!</span>
                               </div>
                           ) : monthlyReq.isOverdue ? (
                               <div className={styles.overdueMessage}>
-                                <span className={styles.overdueIcon}>⚠️</span>
+                                <ExclamationTriangleIcon className={styles.overdueIcon} />
                                 <div className={styles.overdueContent}>
                                   <span className={styles.overdueText}>만료일이 지났습니다</span>
                                   <span className={styles.overdueAmount}>
