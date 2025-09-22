@@ -161,8 +161,19 @@ export async function GET(_req: NextRequest) {
     const memoCell = mainSheet.getRow(i).getCell(5); // E열 (메모)
     
     // 메모가 입력되면 자동으로 카테고리를 설정하는 수식
+    // categoryCell.value = {
+    //   formula: `=IF(E${i}<>"",VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),"")`
+    // };
     categoryCell.value = {
-      formula: `=IF(E${i}<>"",VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),"")`
+      formula: `=IF(E${i}<>"",
+        IFERROR(
+          VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),
+          IFERROR(
+            INDEX(카테고리매핑!B:B, MATCH(TRUE, ISNUMBER(SEARCH(카테고리매핑!A:A, E${i})), 0)),
+            "기타"
+          )
+        ),
+      "")`
     };
   }
 
