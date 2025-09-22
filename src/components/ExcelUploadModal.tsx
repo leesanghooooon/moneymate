@@ -69,6 +69,36 @@ export default function ExcelUploadModal({
     }
   }, [isOpen]);
 
+  // Excel 셀 값을 안전하게 문자열로 변환하는 함수
+  const getCellValue = (cellValue: any): string => {
+    // 1) 객체 형태인 경우 (수식 결과 등)
+    if (cellValue && typeof cellValue === 'object') {
+      // {formula, result} 형태인 경우 result 값 사용
+      if ('result' in cellValue) {
+        return getCellValue(cellValue.result);
+      }
+      // {text} 형태인 경우
+      if ('text' in cellValue) {
+        return String(cellValue.text || '');
+      }
+      // 기타 객체인 경우 빈 문자열 반환
+      return '';
+    }
+    // 2) null, undefined인 경우
+    if (cellValue == null) {
+      return '';
+    }
+    // 3) 문자열로 변환
+    return String(cellValue);
+  };
+
+  // Excel 셀 값을 안전하게 숫자로 변환하는 함수
+  const getCellNumberValue = (cellValue: any): number => {
+    const stringValue = getCellValue(cellValue);
+    const numValue = Number(stringValue);
+    return isNaN(numValue) ? 0 : numValue;
+  };
+
   const loadExcelData = async () => {
     setIsLoading(true);
     setCurrentStep('loading');
@@ -103,17 +133,28 @@ export default function ExcelUploadModal({
       worksheet.eachRow((row, rowIndex) => {
         if (rowIndex === 1) return; // 헤더 건너뛰기
       console.log('1')
+        
+        // 먼저 행 데이터를 추출
+        const rowData: ExcelRow = {
+          rowNumber,
+          거래유형: getCellValue(row.getCell(1).value),
+          거래일자: toYmd(row.getCell(2).value),
+          금액: getCellNumberValue(row.getCell(3).value),
+          메모: getCellValue(row.getCell(4).value) || '',
+          카테고리: getCellValue(row.getCell(5).value)
+        };
+        console.log('2', rowData)
+        
+        // 빈 행 체크 - 모든 필수 필드가 비어있으면 건너뛰기
+        const isEmptyRow = !rowData.거래유형 && !rowData.거래일자 && !rowData.금액 && !rowData.카테고리;
+        if (isEmptyRow) {
+          console.log('3 - 빈 행 건너뛰기:', rowData)
+          rowNumber++;
+          return;
+        }
+        
         try {
-          console.log('2')
-          const rowData: ExcelRow = {
-            rowNumber,
-            거래유형: row.getCell(1).value as string,
-            거래일자: toYmd(row.getCell(2).value),
-            금액: Number(row.getCell(3).value),
-            메모: row.getCell(4).value as string || '',
-            카테고리: row.getCell(5).value as string
-          };
-          console.log('3', rowData)
+          console.log('3 - 데이터 검증 시작')
           // 데이터 검증
           if (!rowData.거래유형 || !rowData.거래일자 || !rowData.금액 || !rowData.카테고리) {
             throw new Error('필수 필드가 누락되었습니다.');
@@ -142,18 +183,15 @@ export default function ExcelUploadModal({
             throw new Error(`알 수 없는 카테고리입니다: ${rowData.카테고리}`);
           }
 
+          console.log('4 - 유효한 데이터, loadedRows에 추가')
           loadedRows.push({
             ...rowData,
             status: 'pending'
           });
         } catch (error: any) {
+          console.log('4 - 오류 발생, 오류 정보와 함께 loadedRows에 추가')
           loadedRows.push({
-            rowNumber,
-            거래유형: row.getCell(1).value as string || '',
-            거래일자: toYmd(row.getCell(2).value) as string || '',
-            금액: Number(row.getCell(3).value) || 0,
-            메모: row.getCell(4).value as string || '',
-            카테고리: row.getCell(5).value as string || '',
+            ...rowData,
             status: 'error',
             errorMessage: error.message || '알 수 없는 오류'
           });
@@ -162,13 +200,13 @@ export default function ExcelUploadModal({
         rowNumber++;
       });
       console.log('loadedRows',loadedRows)
-      // setRows(loadedRows);
-      // setCurrentStep('processing');
-      // setIsLoading(false);
+      setRows(loadedRows);
+      setCurrentStep('processing');
+      setIsLoading(false);
       
       // 데이터 로드 완료 후 자동으로 처리 시작
       setTimeout(() => {
-        // processRows(loadedRows, mapping);
+        processRows(loadedRows, mapping);
       }, 1000);
     } catch (error: any) {
       console.error('엑셀 로드 오류:', error);
@@ -335,7 +373,20 @@ export default function ExcelUploadModal({
       const d = String(jsDate.getDate()).padStart(2, '0');
       return `${y}-${m}-${d}`;
     }
-    // 3) 문자열인 경우
+    // 3) 객체 형태인 경우 (수식 결과 등)
+    if (v && typeof v === 'object') {
+      // {formula, result} 형태인 경우 result 값 사용
+      if ('result' in v) {
+        return toYmd(v.result);
+      }
+      // {text} 형태인 경우
+      if ('text' in v) {
+        return String(v.text || '');
+      }
+      // 기타 객체인 경우 빈 문자열 반환
+      return '';
+    }
+    // 4) 문자열인 경우
     if (typeof v === 'string') {
       return v.trim();
     }
@@ -395,8 +446,8 @@ export default function ExcelUploadModal({
               <span>거래유형</span>
               <span>거래일자</span>
               <span>금액</span>
-              <span>카테고리</span>
               <span>메모</span>
+              <span>카테고리</span>
               <span>상태</span>
             </div>
             
@@ -417,8 +468,8 @@ export default function ExcelUploadModal({
                   <span className={styles.trxType}>{row.거래유형}</span>
                   <span className={styles.trxDate}>{row.거래일자}</span>
                   <span className={styles.amount}>{row.금액.toLocaleString()}원</span>
-                  <span className={styles.category}>{row.카테고리}</span>
                   <span className={styles.memo}>{row.메모 || '-'}</span>
+                  <span className={styles.category}>{row.카테고리}</span>
                   <span className={`${styles.status} ${styles[row.status]}`}>
                     {getStatusIcon(row.status)} {getStatusText(row.status)}
                   </span>
