@@ -102,17 +102,18 @@ export default function ExcelUploadModal({
 
       worksheet.eachRow((row, rowIndex) => {
         if (rowIndex === 1) return; // 헤더 건너뛰기
-
+      console.log('1')
         try {
+          console.log('2')
           const rowData: ExcelRow = {
             rowNumber,
             거래유형: row.getCell(1).value as string,
             거래일자: toYmd(row.getCell(2).value),
             금액: Number(row.getCell(3).value),
-            카테고리: row.getCell(4).value as string,
-            메모: row.getCell(5).value as string || ''
+            메모: row.getCell(4).value as string || '',
+            카테고리: row.getCell(5).value as string
           };
-
+          console.log('3', rowData)
           // 데이터 검증
           if (!rowData.거래유형 || !rowData.거래일자 || !rowData.금액 || !rowData.카테고리) {
             throw new Error('필수 필드가 누락되었습니다.');
@@ -149,10 +150,10 @@ export default function ExcelUploadModal({
           loadedRows.push({
             rowNumber,
             거래유형: row.getCell(1).value as string || '',
-            거래일자: row.getCell(2).value as string || '',
+            거래일자: toYmd(row.getCell(2).value) as string || '',
             금액: Number(row.getCell(3).value) || 0,
-            카테고리: row.getCell(4).value as string || '',
-            메모: row.getCell(5).value as string || '',
+            메모: row.getCell(4).value as string || '',
+            카테고리: row.getCell(5).value as string || '',
             status: 'error',
             errorMessage: error.message || '알 수 없는 오류'
           });
@@ -160,14 +161,14 @@ export default function ExcelUploadModal({
 
         rowNumber++;
       });
-
-      setRows(loadedRows);
-      setCurrentStep('processing');
-      setIsLoading(false);
+      console.log('loadedRows',loadedRows)
+      // setRows(loadedRows);
+      // setCurrentStep('processing');
+      // setIsLoading(false);
       
       // 데이터 로드 완료 후 자동으로 처리 시작
       setTimeout(() => {
-        processRows(loadedRows, mapping);
+        // processRows(loadedRows, mapping);
       }, 1000);
     } catch (error: any) {
       console.error('엑셀 로드 오류:', error);

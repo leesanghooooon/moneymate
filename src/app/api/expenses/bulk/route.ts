@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 헤더 검증
-    const expectedHeaders = ['거래유형', '거래일자', '금액', '카테고리', '메모'];
+    const expectedHeaders = ['거래유형', '거래일자', '금액', '메모', '카테고리'];
     const actualHeaders: string[] = [];
     worksheet.getRow(1).eachCell((cell, colNumber) => {
       actualHeaders[colNumber - 1] = cell.value as string;
@@ -176,8 +176,8 @@ export async function POST(request: NextRequest) {
           거래유형: row.getCell(1).value as string,
           거래일자: row.getCell(2).value as string,
           금액: Number(row.getCell(3).value),
-          카테고리: row.getCell(4).value as string,
-          메모: row.getCell(5).value as string || ''
+          메모: row.getCell(4).value as string || '',
+          카테고리: row.getCell(5).value as string
         };
 
         // 데이터 검증

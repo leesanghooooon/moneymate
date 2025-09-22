@@ -54,8 +54,8 @@ export async function GET(_req: NextRequest) {
     { header: '거래유형', key: 'trx_type', width: 12 },
     { header: '거래일자', key: 'trx_date', width: 14 },
     { header: '금액', key: 'amount', width: 12 },
-    { header: '카테고리', key: 'category_cd', width: 22 },
-    { header: '메모', key: 'memo', width: 40 }
+    { header: '메모', key: 'memo', width: 40 },
+    { header: '카테고리', key: 'category_cd', width: 22 }
   ];
   mainSheet.columns = columns;
 
@@ -148,7 +148,7 @@ export async function GET(_req: NextRequest) {
   // 카테고리 드롭다운: 카테고리 한글명 목록으로 구성
   const joined = categoryNames.join(',');
   const categoryFormula = joined.length > 255 ? '"' + categoryNames.slice(0, 20).join(',') + '"' : '"' + joined + '"';
-  ws.dataValidations.add('D2:D' + maxRows, {
+  ws.dataValidations.add('E2:E' + maxRows, {
     type: 'list',
     allowBlank: false,
     formulae: [categoryFormula]
@@ -157,19 +157,19 @@ export async function GET(_req: NextRequest) {
   // 카테고리 자동 매핑을 위한 수식 추가 (E열 메모 입력 시 D열 카테고리 자동 설정)
   // VLOOKUP 함수를 사용하여 메모에서 키워드를 찾아 카테고리 자동 설정
   for (let i = 2; i <= maxRows; i++) {
-    const categoryCell = mainSheet.getRow(i).getCell(4); // D열 (카테고리)
-    const memoCell = mainSheet.getRow(i).getCell(5); // E열 (메모)
+    const categoryCell = mainSheet.getRow(i).getCell(5); // E열 (카테고리)
+    const memoCell     = mainSheet.getRow(i).getCell(4); // D열 (메모)
     
     // 메모가 입력되면 자동으로 카테고리를 설정하는 수식
     // categoryCell.value = {
     //   formula: `=IF(E${i}<>"",VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),"")`
     // };
     categoryCell.value = {
-      formula: `=IF(E${i}<>"",
+      formula: `=IF(D${i}<>"",
         IFERROR(
-          VLOOKUP(E${i},카테고리매핑!A:B,2,FALSE),
+          VLOOKUP(D${i},카테고리매핑!A:B,2,FALSE),
           IFERROR(
-            INDEX(카테고리매핑!B:B, MATCH(TRUE, ISNUMBER(SEARCH(카테고리매핑!A:A, E${i})), 0)),
+            INDEX(카테고리매핑!B:B, MATCH(TRUE, ISNUMBER(SEARCH(카테고리매핑!A:A, D${i})), 0)),
             "기타"
           )
         ),
@@ -178,7 +178,7 @@ export async function GET(_req: NextRequest) {
   }
 
   // 주석 및 안내
-  headerRow.getCell(5).note = '메모 입력 시 카테고리가 자동으로 설정됩니다. 수동으로 변경도 가능합니다.';
+  headerRow.getCell(4).note = '메모 입력 시 카테고리가 자동으로 설정됩니다. 수동으로 변경도 가능합니다.';
 
   // 첫 행 고정 및 필터
   mainSheet.views = [{ state: 'frozen', ySplit: 1 }];
