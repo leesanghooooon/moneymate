@@ -52,7 +52,7 @@ const RatingCard = () => {
         const cardResponse = await get('/expenses', {
           params: {
             usr_id: session.user.id,
-            trx_type: 'EXPENSE',
+            // trx_type: 'EXPENSE',
             start_date: startDate,
             end_date: endDate,
             wlt_type: 'CREDIT_CARD'
@@ -61,18 +61,24 @@ const RatingCard = () => {
 
         // 지갑별 금액 집계 함수
         const aggregateWallets = (data: any[]) => {
-          const walletMap = new Map<string, { wlt_id: string; wlt_name: string; amount: number }>();
+          const walletMap = new Map<string, { wlt_id: string; wlt_name: string; amount: number, trx_type: string }>();
           
           data.forEach(item => {
             const amount = Number(item.amount);
+            const trx_type = item.trx_type
             if (walletMap.has(item.wlt_id)) {
               const wallet = walletMap.get(item.wlt_id)!;
-              wallet.amount += amount;
+              if(trx_type == 'INCOME'){
+                wallet.amount -= amount;
+              } else {
+                wallet.amount += amount;
+              }
             } else {
               walletMap.set(item.wlt_id, {
                 wlt_id: item.wlt_id,
                 wlt_name: item.wlt_name,
-                amount: amount
+                amount: amount,
+                trx_type : item.trx_type
               });
             }
           });

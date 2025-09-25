@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Chart as ChartJS,
@@ -81,14 +81,25 @@ const transformApiDataToChartData = (apiDatas: ApiMonthlyData[]) => {
 
   if (!apiData.length) return null;
 
-  // 첫 번째 데이터에서 카테고리 목록 추출 (month 키 제외)
-  const firstMonth = apiData[0];
-  const categories = Object.entries(firstMonth)
-    .filter(([key]) => key !== 'month')
-    .map(([code, value]) => ({
-      code,
-      name: (value as CategoryData).name
-    }));
+  // category key + value 모으기
+  const categoryEntries = apiData.flatMap(item =>
+      Object.entries(item).filter(([key]) => key !== "month")
+  );
+
+  // 중복 제거 (Set으로 key 기준)
+  const uniqueMap = new Map<string, CategoryData>();
+  categoryEntries.forEach(([code, value]) => {
+    if (!uniqueMap.has(code)) {
+      uniqueMap.set(code, value as CategoryData);
+    }
+  });
+
+  const uniqueCategories = Array.from(uniqueMap).map(([code, value]) => ({
+    code,
+    name: (value as CategoryData).name,
+  }));
+
+  const categories = uniqueCategories
 
   // 카테고리별 색상 매핑
   const categoryColors = [
@@ -119,15 +130,62 @@ const RevenueCard = () => {
   // 테스트 모드 설정 (true: 샘플 데이터 사용, false: API 데이터 사용)
   const useTestData = false;
 
+  const fetchedRef = useRef(false);
+
   useEffect(() => {
-    const fetchData = async () => {
+
+    if (!session?.user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    // 이미 호출했다면 재호출 방지 (StrictMode/리렌더 대응)
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    const ac = new AbortController();
+
+    // const fetchData = async () => {
+    //   if (useTestData) {
+    //     setChartData(sampleData);
+    //     setLoading(false);
+    //     return;
+    //   }
+    //
+    //   if (!session?.user?.id) {
+    //     setLoading(false);
+    //     return;
+    //   }
+    //
+    //   try {
+    //     setLoading(true);
+    //     const response = await get('/stats/monthly-expenses', {
+    //       params: {
+    //         usr_id: session.user.id,
+    //         year: new Date().getFullYear().toString()
+    //       }
+    //     });
+    //
+    //     console.log(response)
+    //     console.log(transformApiDataToChartData(response.data))
+    //     if (response.data.success && response.data) {
+    //       const transformedData = transformApiDataToChartData(response.data);
+    //       if (transformedData) {
+    //         setChartData(transformedData);
+    //       }
+    //     }
+    //   } catch (err) {
+    //     console.error('월간 지출 통계 조회 오류:', err);
+    //     setError('데이터를 불러오는 중 오류가 발생했습니다.');
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
+    (async () => {
+
       if (useTestData) {
         setChartData(sampleData);
-        setLoading(false);
-        return;
-      }
-
-      if (!session?.user?.id) {
         setLoading(false);
         return;
       }
@@ -135,29 +193,18 @@ const RevenueCard = () => {
       try {
         setLoading(true);
         const response = await get('/stats/monthly-expenses', {
-          params: {
-            usr_id: session.user.id,
-            year: new Date().getFullYear().toString()
-          }
+          params: { usr_id: session.user.id, year: String(new Date().getFullYear()) }
         });
-
-        console.log(response)
-        console.log(transformApiDataToChartData(response.data))
-        if (response.data.success && response.data) {
-          const transformedData = transformApiDataToChartData(response.data);
-          if (transformedData) {
-            setChartData(transformedData);
-          }
-        }
-      } catch (err) {
-        console.error('월간 지출 통계 조회 오류:', err);
+        const transformed = transformApiDataToChartData(response.data);
+        if (response.data?.success && transformed) setChartData(transformed);
+      } catch (e:any) {
+        console.error('월간 지출 통계 조회 오류:', e);
         setError('데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
+    })();
+    return () => ac.abort();
   }, [session?.user?.id, useTestData]);
 
   const options = {
