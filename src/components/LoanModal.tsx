@@ -156,7 +156,7 @@ export default function LoanModal({ isOpen, onClose, onSuccess, userId }: LoanMo
     // 월 상환액 검증 (decimal(14,2))
     if (formData.plan_amount) {
       const planAmountValue = Number(formData.plan_amount.replace(/,/g, ''));
-      if (planAmountValue <= 0) {
+      if (planAmountValue < 0) {
         errors.plan_amount = '유효한 월 상환액을 입력해주세요.';
       } else if (planAmountValue > 999999999999.99) {
         errors.plan_amount = '월 상환액이 너무 큽니다. (최대 999,999,999,999.99)';

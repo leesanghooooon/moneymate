@@ -93,6 +93,9 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
     memo: ''
   });
 
+  // 지갑 연결 여부 상태
+  const [isWalletLinked, setIsWalletLinked] = useState(false);
+
   // 공통 코드 및 지갑 정보 로드
   useEffect(() => {
     if (isOpen && userId) {
@@ -212,6 +215,7 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
       const response = await post('/savings-goals', {
           ...formData,
           usr_id: userId,
+          wlt_id: isWalletLinked ? formData.wlt_id : null,
           target_amount: Number(formData.target_amount.replace(/,/g, '')),
           plan_amount: formData.plan_amount ? Number(formData.plan_amount.replace(/,/g, '')) : null,
           alarm_day: formData.alarm_day ? Number(formData.alarm_day) : null
@@ -239,6 +243,7 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
   const handleClose = () => {
     setFieldErrors({});
     setError(null);
+    setIsWalletLinked(false);
     setFormData({
       goal_name: '',
       goal_type_cd: 'SAVINGS',
@@ -332,21 +337,47 @@ export default function SavingsGoalModal({ isOpen, onClose, onSuccess, userId }:
             </div>
 
             <div className={styles.formGroup}>
-              <label htmlFor="wlt_id" className={styles.label}>연결할 지갑</label>
-              <select
-                id="wlt_id"
-                name="wlt_id"
-                value={formData.wlt_id}
-                onChange={handleInputChange}
-                className={styles.select}
-              >
-                <option value="">선택하세요</option>
-                {wallets.map(wallet => (
-                  <option key={wallet.wlt_id} value={wallet.wlt_id}>
-                    {wallet.wlt_name}
-                  </option>
-                ))}
-              </select>
+              {/*<label htmlFor="wlt_id" className={styles.label}>연결할 지갑</label>*/}
+              <div className={styles.walletSelection}>
+                <div className={styles.walletToggle}>
+                  <button
+                    type="button"
+                    className={`${styles.walletToggleButton} ${isWalletLinked ? styles.active : ''}`}
+                    onClick={() => {
+                      setIsWalletLinked(true);
+                      setFormData(prev => ({ ...prev, wlt_id: '' }));
+                    }}
+                  >
+                    지갑 연결
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.walletToggleButton} ${!isWalletLinked ? styles.active : ''}`}
+                    onClick={() => {
+                      setIsWalletLinked(false);
+                      setFormData(prev => ({ ...prev, wlt_id: '' }));
+                    }}
+                  >
+                    선택안함
+                  </button>
+                </div>
+                {isWalletLinked && (
+                  <select
+                    id="wlt_id"
+                    name="wlt_id"
+                    value={formData.wlt_id}
+                    onChange={handleInputChange}
+                    className={styles.select}
+                  >
+                    <option value="">선택하세요</option>
+                    {wallets.map(wallet => (
+                      <option key={wallet.wlt_id} value={wallet.wlt_id}>
+                        {wallet.wlt_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
           </div>
 
