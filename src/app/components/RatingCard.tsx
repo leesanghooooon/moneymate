@@ -59,31 +59,50 @@ const RatingCard = () => {
           }
         });
 
+
+        type Row = {
+          wlt_id: string;
+          wlt_name: string;
+          amount: number | string;
+          trx_type: "INCOME" | "EXPENSE" | string;
+        };
+
+        type WalletAgg = {
+          wlt_id: string;
+          wlt_name: string;
+          amount: number;
+          trx_type: string;
+        };
+
         // 지갑별 금액 집계 함수
-        const aggregateWallets = (data: any[]) => {
-          const walletMap = new Map<string, { wlt_id: string; wlt_name: string; amount: number, trx_type: string }>();
-          
-          data.forEach(item => {
-            const amount = Number(item.amount);
-            const trx_type = item.trx_type
-            if (walletMap.has(item.wlt_id)) {
-              const wallet = walletMap.get(item.wlt_id)!;
-              if(trx_type == 'INCOME'){
-                wallet.amount -= amount;
-              } else {
-                wallet.amount += amount;
-              }
-            } else {
-              walletMap.set(item.wlt_id, {
+        const aggregateWallets = (data: Row[]): WalletAgg[] => {
+
+          const walletMap = data.reduce((map, item) => {
+            const amt = Number(item.amount) || 0;
+            const trxType = String(item.trx_type || "").toUpperCase();
+
+            let signedAmt = 0;
+            if (trxType === "EXPENSE") signedAmt = amt;
+            else if (trxType === "INCOME") signedAmt = -amt;
+
+            if (!map.has(item.wlt_id)) {
+              map.set(item.wlt_id, {
                 wlt_id: item.wlt_id,
                 wlt_name: item.wlt_name,
-                amount: amount,
-                trx_type : item.trx_type
+                amount: signedAmt,
+                trx_type: trxType, // 마지막 거래타입을 저장 (필요에 맞게 조정 가능)
               });
+            } else {
+              const wallet = map.get(item.wlt_id)!;
+              wallet.amount += signedAmt;
             }
-          });
 
+            return map;
+          }, new Map<string, WalletAgg>());
+
+          // 3. Array 형태로 변환
           return Array.from(walletMap.values());
+
         };
 
         // 현금성 지출 집계
