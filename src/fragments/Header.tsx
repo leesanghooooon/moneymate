@@ -156,6 +156,7 @@ const Header = () => {
     { 
       id: 'statistics', 
       label: 'Statistics', 
+      path: '/statistics',
       icon: ChartBarIcon,
       iconName: 'Statistics'
     },
