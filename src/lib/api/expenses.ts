@@ -1,4 +1,4 @@
-import { get } from './common';
+import { get, put, del } from './common';
 
 export interface Transaction {
   trx_id: string;
@@ -24,6 +24,14 @@ export interface ExpenseQueryParams {
   end_date?: string;
   wlt_type?: string;
   wlt_id?: string;
+}
+
+export interface ExpenseUpdateRequest {
+  trx_date: string;
+  amount: number;
+  category_cd: string;
+  wlt_id: string;
+  memo?: string;
 }
 
 /**
@@ -54,4 +62,23 @@ export async function getExpenses(params: ExpenseQueryParams): Promise<Transacti
   
   const response = await get<{ data: Transaction[] }>('/expenses', { params: queryParams });
   return response.data.data || [];
+}
+
+/**
+ * 거래 내역 수정
+ * @param transactionId 거래 ID
+ * @param data 수정할 거래 데이터
+ * @returns Promise<void>
+ */
+export async function updateExpense(transactionId: string, data: ExpenseUpdateRequest): Promise<void> {
+  await put<{ message: string; data: any }>(`/expenses/${transactionId}`, data);
+}
+
+/**
+ * 거래 내역 삭제
+ * @param transactionId 거래 ID
+ * @returns Promise<void>
+ */
+export async function deleteExpense(transactionId: string): Promise<void> {
+  await del<{ message: string; data: any }>(`/expenses/${transactionId}`);
 }

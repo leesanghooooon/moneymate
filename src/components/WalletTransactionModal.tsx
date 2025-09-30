@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Wallet } from '@/lib/api/wallets';
-import { getExpenses, Transaction } from '@/lib/api/expenses';
+import { getExpenses, updateExpense, deleteExpense, Transaction, ExpenseUpdateRequest } from '@/lib/api/expenses';
 import { getCategories, getCommonCodes, CommonCode } from '@/lib/api/commonCodes';
 import styles from '../styles/css/WalletTransactionModal.module.css';
 import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
@@ -187,18 +187,31 @@ export default function WalletTransactionModal({
     if (!confirm('수정사항을 저장하시겠습니까?')) return;
     
     try {
-      // TODO: API 호출로 거래 수정
-      console.log('수정할 데이터:', { transactionId, ...editForm });
+      // 금액에서 쉼표 제거하여 숫자로 변환
+      const amount = Number(editForm.amount.replace(/,/g, ''));
       
-      // 임시로 로컬 상태만 업데이트
+      // API 호출을 위한 데이터 준비
+      const updateData: ExpenseUpdateRequest = {
+        trx_date: editForm.trx_date,
+        amount: amount,
+        category_cd: editForm.category_cd,
+        wlt_id: wallet!.wlt_id,
+        memo: editForm.memo || undefined
+      };
+      
+      // API 호출로 거래 수정
+      await updateExpense(transactionId, updateData);
+      
+      // 성공 시 로컬 상태 업데이트
       setTransactions(prev => 
         prev.map(t => 
           t.trx_id === transactionId 
             ? { 
                 ...t, 
-                amount: Number(editForm.amount),
+                amount: amount,
                 memo: editForm.memo,
-                trx_date: editForm.trx_date
+                trx_date: editForm.trx_date,
+                category_cd: editForm.category_cd
               }
             : t
         )
@@ -224,10 +237,10 @@ export default function WalletTransactionModal({
     if (!confirm('정말로 이 거래를 삭제하시겠습니까?')) return;
     
     try {
-      // TODO: API 호출로 거래 삭제
-      console.log('삭제할 거래 ID:', transactionId);
+      // API 호출로 거래 삭제
+      await deleteExpense(transactionId);
       
-      // 임시로 로컬 상태만 업데이트
+      // 성공 시 로컬 상태에서 제거
       setTransactions(prev => prev.filter(t => t.trx_id !== transactionId));
       alert('삭제가 완료되었습니다.');
     } catch (error) {
@@ -266,6 +279,9 @@ export default function WalletTransactionModal({
               <span className={styles.walletType}>{getWalletTypeLabel(wallet.wlt_type)}</span>
               {wallet.is_default === 'Y' && (
                 <span className={styles.defaultBadge}>기본</span>
+              )}
+              {wallet.share_yn === 'Y' && (
+                  <span className={styles.shareBadge}>공유</span>
               )}
             </div>
           </div>
@@ -442,7 +458,7 @@ export default function WalletTransactionModal({
                       ) : (
                         // 일반 보기 모드
                         <>
-                          <div className={styles.transactionInfo}>
+                          <div className={`${styles.transactionInfo} ${wallet.share_yn === 'Y' ? styles.noActions : ''}`}>
                             <div className={styles.categoryInfo}>
                               <span className={styles.categoryName}>{transaction.category_name}</span>
                               {transaction.is_installment === 'Y' && (
@@ -470,22 +486,24 @@ export default function WalletTransactionModal({
                               </span>
                             </div>
                           </div>
-                          <div className={styles.actionButtons}>
-                            <button 
-                              className={styles.editButton}
-                              onClick={() => handleEdit(transaction)}
-                              disabled={editingTransaction !== null}
-                            >
-                              수정
-                            </button>
-                            <button 
-                              className={styles.deleteButton}
-                              onClick={() => handleDelete(transaction.trx_id)}
-                              disabled={editingTransaction !== null}
-                            >
-                              삭제
-                            </button>
-                          </div>
+                          {wallet.share_yn !== 'Y' && (
+                            <div className={styles.actionButtons}>
+                              <button 
+                                className={styles.editButton}
+                                onClick={() => handleEdit(transaction)}
+                                disabled={editingTransaction !== null}
+                              >
+                                수정
+                              </button>
+                              <button 
+                                className={styles.deleteButton}
+                                onClick={() => handleDelete(transaction.trx_id)}
+                                disabled={editingTransaction !== null}
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
