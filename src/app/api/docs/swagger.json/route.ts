@@ -1339,8 +1339,8 @@ export async function GET(request: NextRequest) {
       },
       '/stats/wallet-expenses': {
         get: {
-          summary: '지갑별 카드지출 통계 조회',
-          description: '내지갑과 공유지갑의 당월 카드지출을 지갑별로 조회합니다. 공유지갑은 공유그룹에 등록된 멤버의 공유지갑을 기준으로 표시됩니다.',
+          summary: '지갑별 거래 통계 조회',
+          description: '내지갑과 공유지갑의 당월 거래 통계를 지갑별로 조회합니다. 공유지갑은 공유그룹에 등록된 멤버의 공유지갑을 기준으로 표시됩니다. total_amount는 지출 합계에서 수입 합계를 뺀 값입니다.',
           tags: ['Stats'],
           parameters: [
             {

@@ -15,14 +15,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 지갑별 당월 카드지출 통계 조회 SQL (공유지갑 포함)
+    // 지갑별 당월 거래 통계 조회 SQL (공유지갑 포함, 모든 지갑타입, 지출-수입 계산)
     const sql = `
       SELECT 
         combined_wallets.wlt_id,
         combined_wallets.wlt_name,
         combined_wallets.wlt_type,
         combined_wallets.is_shared,
-        COALESCE(SUM(combined_trx.amount), 0) as total_amount,
+        COALESCE(
+          SUM(CASE WHEN combined_trx.trx_type = 'EXPENSE' THEN combined_trx.amount ELSE 0 END) - 
+          SUM(CASE WHEN combined_trx.trx_type = 'INCOME' THEN combined_trx.amount ELSE 0 END), 
+          0
+        ) as total_amount,
         COUNT(combined_trx.trx_id) as transaction_count
       FROM (
         -- 본인의 모든 지갑
@@ -34,7 +38,7 @@ export async function GET(request: NextRequest) {
         FROM moneymate.MMT_WLT_MST w
         WHERE w.usr_id = ? 
           AND w.use_yn = 'Y'
-          AND w.wlt_type = 'CREDIT_CARD'
+--           AND w.wlt_type = 'CREDIT_CARD'
         
         UNION ALL
         
@@ -49,35 +53,35 @@ export async function GET(request: NextRequest) {
         INNER JOIN moneymate.MMT_USR_SHARE_MEMBER m2 ON m1.grp_id = m2.grp_id AND m2.usr_id = ? AND m2.status = 'ACCEPTED'
         WHERE w.share_yn = 'Y'
           AND w.use_yn = 'Y'
-          AND w.wlt_type = 'CREDIT_CARD'
+--           AND w.wlt_type = 'CREDIT_CARD'
           AND w.usr_id != ?
       ) combined_wallets
       LEFT JOIN (
-        -- 본인의 모든 거래
+        -- 본인의 모든 거래 (지출과 수입 모두)
         SELECT 
           t.wlt_id,
           t.amount,
-          t.trx_id
+          t.trx_id,
+          t.trx_type
         FROM moneymate.MMT_TRX_TRN t
         WHERE t.usr_id = ?
-          AND t.trx_type = 'EXPENSE'
           AND t.use_yn = 'Y'
           AND YEAR(t.trx_date) = ?
           AND MONTH(t.trx_date) = ?
         
         UNION ALL
         
-        -- 공유 그룹 멤버들의 공유 지갑 거래 (본인 제외)
+        -- 공유 그룹 멤버들의 공유 지갑 거래 (본인 제외, 지출과 수입 모두)
         SELECT 
           t.wlt_id,
           t.amount,
-          t.trx_id
+          t.trx_id,
+          t.trx_type
         FROM moneymate.MMT_TRX_TRN t
         INNER JOIN moneymate.MMT_WLT_MST w ON t.wlt_id = w.wlt_id AND w.share_yn = 'Y'
         INNER JOIN moneymate.MMT_USR_SHARE_MEMBER m1 ON t.usr_id = m1.usr_id AND m1.status = 'ACCEPTED'
         INNER JOIN moneymate.MMT_USR_SHARE_MEMBER m2 ON m1.grp_id = m2.grp_id AND m2.usr_id = ? AND m2.status = 'ACCEPTED'
         WHERE t.usr_id != ?
-          AND t.trx_type = 'EXPENSE'
           AND t.use_yn = 'Y'
           AND YEAR(t.trx_date) = ?
           AND MONTH(t.trx_date) = ?
