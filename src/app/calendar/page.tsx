@@ -199,8 +199,10 @@ export default function CalendarPage() {
                       >
                         {day.isCurrentMonth && (
                           <>
-                            <div className={styles.dayNumber}>
-                              {day.dayNumber}
+                            <div className={styles.dayHeader}>
+                              <div className={`${styles.dayNumber} ${day.data?.is_holiday === 'Y' ? styles.holidayNumber : ''}`}>
+                                {day.dayNumber}
+                              </div>
                               {day.data?.holiday_name && (
                                 <span className={styles.holidayName}>
                                   {day.data.holiday_name}
