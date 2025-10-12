@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { getWallets, Wallet } from '@/lib/api/wallets';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import WalletTransactionModal from '@/components/WalletTransactionModal';
+import WalletStatsCard from '../components/WalletStatsCard';
 import { ChevronRightIcon, EyeIcon } from '@heroicons/react/24/outline';
 import styles from '../../styles/css/statistics.module.css';
 
@@ -171,11 +172,7 @@ export default function Statistics() {
       </div>
 
       <div className={styles.statsSection}>
-        <h2 className={styles.sectionTitle}>통계 영역</h2>
-        <div className={styles.statsPlaceholder}>
-          <p>지출/수익 통계 차트가 여기에 표시됩니다.</p>
-          <p>향후 차트 및 그래프 기능이 추가될 예정입니다.</p>
-        </div>
+        <WalletStatsCard />
       </div>
 
       {/* 지갑 거래 내역 모달 */}

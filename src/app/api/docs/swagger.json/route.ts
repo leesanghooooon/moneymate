@@ -1337,6 +1337,123 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      '/stats/wallet-expenses': {
+        get: {
+          summary: '지갑별 카드지출 통계 조회',
+          description: '내지갑과 공유지갑의 당월 카드지출을 지갑별로 조회합니다. 공유지갑은 공유그룹에 등록된 멤버의 공유지갑을 기준으로 표시됩니다.',
+          tags: ['Stats'],
+          parameters: [
+            {
+              in: 'query',
+              name: 'usr_id',
+              required: true,
+              schema: { type: 'string' },
+              description: '사용자 ID'
+            },
+            {
+              in: 'query',
+              name: 'year',
+              required: false,
+              schema: { type: 'string' },
+              description: '조회 연도 (기본값: 현재 연도)'
+            },
+            {
+              in: 'query',
+              name: 'month',
+              required: false,
+              schema: { type: 'string' },
+              description: '조회 월 (기본값: 현재 월)'
+            }
+          ],
+          responses: {
+            '200': {
+              description: '지갑별 카드지출 통계 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          period: {
+                            type: 'object',
+                            properties: {
+                              year: { type: 'number' },
+                              month: { type: 'number' },
+                              display: { type: 'string' }
+                            }
+                          },
+                          myWallets: {
+                            type: 'object',
+                            properties: {
+                              wallets: {
+                                type: 'array',
+                                items: {
+                                  type: 'object',
+                                  properties: {
+                                    wlt_id: { type: 'string' },
+                                    wlt_name: { type: 'string' },
+                                    wlt_type: { type: 'string' },
+                                    is_shared: { type: 'string' },
+                                    total_amount: { type: 'number' },
+                                    transaction_count: { type: 'number' }
+                                  }
+                                }
+                              },
+                              totalAmount: { type: 'number' },
+                              totalTransactions: { type: 'number' }
+                            }
+                          },
+                          sharedWallets: {
+                            type: 'object',
+                            properties: {
+                              wallets: {
+                                type: 'array',
+                                items: {
+                                  type: 'object',
+                                  properties: {
+                                    wlt_id: { type: 'string' },
+                                    wlt_name: { type: 'string' },
+                                    wlt_type: { type: 'string' },
+                                    is_shared: { type: 'string' },
+                                    total_amount: { type: 'number' },
+                                    transaction_count: { type: 'number' }
+                                  }
+                                }
+                              },
+                              totalAmount: { type: 'number' },
+                              totalTransactions: { type: 'number' }
+                            }
+                          },
+                          grandTotal: { type: 'number' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: '잘못된 요청',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            },
+            '500': {
+              description: '서버 오류',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Error' }
+                }
+              }
+            }
+          }
+        }
+      },
       '/loans': {
         get: {
           summary: '대출현황 목록 조회',
