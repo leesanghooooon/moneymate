@@ -10,7 +10,8 @@ import {
   CurrencyDollarIcon,
   BanknotesIcon,
   CalendarDaysIcon, 
-  ChartBarIcon 
+  ChartBarIcon,
+  BuildingLibraryIcon
 } from '@heroicons/react/24/outline';
 
 interface Notification {
@@ -138,6 +139,13 @@ const Header = () => {
       path: '/expenses', 
       icon: CurrencyDollarIcon,
       iconName: 'Expenses'
+    },
+    { 
+      id: 'assets', 
+      label: 'Assets', 
+      path: '/assets', 
+      icon: BuildingLibraryIcon,
+      iconName: 'Assets'
     },
     { 
       id: 'savings', 

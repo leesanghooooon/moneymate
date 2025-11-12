@@ -295,6 +295,8 @@
 .amountInfo {
   min-width: 100px;
   text-align: right;
+  display: flex;
+  gap: 8px;
 }
 
 /* 공유 지갑일 때 레이아웃 조정 */

@@ -486,7 +486,7 @@ export default function WalletTransactionModal({
                               </span>
                             </div>
                           </div>
-                          {wallet.share_yn !== 'Y' && (
+                          {wallet.share_yn && (
                             <div className={styles.actionButtons}>
                               <button 
                                 className={styles.editButton}
