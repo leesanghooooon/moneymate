@@ -2,7 +2,7 @@
 
 import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/expenses.module.css';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
 import BulkExpenseModal from '../components/BulkExpenseModal';
 import { get, post, ApiError } from '../../lib/api/common';
@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { useToast } from '../../components/Toast';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
 
@@ -25,7 +26,7 @@ const PAYMENT_TYPES: Record<PaymentType, { code: PaymentType; label: string }> =
 };
 
 interface ExpenseData {
-  trx_id: number;
+  trx_id: string;
   wlt_name: string;
   trx_date: string;
   amount: number;
@@ -40,6 +41,7 @@ interface ExpenseData {
 export default function ExpensesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { show } = useToast();
 
   // 오늘의 지출 데이터를 가져오는 함수
   const fetchTodayExpenses = async () => {
@@ -129,6 +131,7 @@ export default function ExpensesPage() {
     item: string;
     category: string;
     amount: string;
+    trx_id: string;
   }>>>({});
   // 엑셀 테이블에 표시할 지갑 목록 (API 응답 기준)
   const [excelWallets, setExcelWallets] = useState<Array<{ wlt_id: string; wlt_name: string }>>([]);
@@ -138,6 +141,8 @@ export default function ExpensesPage() {
   const [excelPeriod, setExcelPeriod] = useState<{ year: number; month: number } | null>(null);
   // 자동등록 중복 방지 (지갑별/행별)
   const [submittedRows, setSubmittedRows] = useState<Record<string, Record<number, boolean>>>({});
+  // 각 행의 기존 trx_id 보관 (지갑별 인덱스 정렬)
+  const [excelRowIds, setExcelRowIds] = useState<Record<string, Array<string | null>>>({});
 
   const isCardSelected = (() => {
     const v = (selectedPayMethod || '').toLowerCase();
@@ -203,8 +208,7 @@ export default function ExpensesPage() {
   }, [session?.user?.id]);
 
   // 월별 지갑별 지출 목록 API 호출하여 엑셀 테이블 데이터 구성
-  useEffect(() => {
-    const fetchMonthlyExpenses = async () => {
+  const fetchMonthlyExpenses = useCallback(async () => {
       if (!session?.user?.id) return;
       try {
         const now = new Date();
@@ -215,7 +219,7 @@ export default function ExpensesPage() {
           setExcelWallets([]);
           return;
         }
-        const list: Array<{ wlt_id: string; wlt_name: string; transactions: Array<{ date: number; item: string; category: string; amount: number }> }> = payload.data || [];
+        const list: Array<{ wlt_id: string; wlt_name: string; transactions: Array<{ date: number; item: string; category_cd: string; amount: number; trx_id?: string }> }> = payload.data || [];
 
         // 렌더용 지갑 목록
         setExcelWallets(list.map(item => ({ wlt_id: item.wlt_id, wlt_name: item.wlt_name })));
@@ -233,7 +237,8 @@ export default function ExpensesPage() {
         setExcelMaxRows(maxRows);
 
         // maxRows로 패딩하여 상태 구성
-        const nextData: Record<string, Array<{ date: string; item: string; category: string; amount: string }>> = {};
+        const nextData: Record<string, Array<{ date: string; item: string; category: string; amount: string; trx_id: string; }>> = {};
+        const nextIds: Record<string, Array<string | null>> = {};
         list.forEach(item => {
           const rows = Array.from({ length: maxRows }, (_, idx) => {
             const t = item.transactions[idx];
@@ -241,22 +246,32 @@ export default function ExpensesPage() {
               return {
                 date: String(t.date ?? ''),
                 item: t.item ?? '',
-                category: t.category ?? '',
-                amount: t.amount != null ? new Intl.NumberFormat('ko-KR').format(Number(t.amount)) : ''
+                // category에는 코드 저장 (레이블은 select 옵션으로 표시)
+                category: (t as any).category_cd ? String((t as any).category_cd) : '',
+                amount: t.amount != null ? new Intl.NumberFormat('ko-KR').format(Number(t.amount)) : '',
+                trx_id: String(t.trx_id)
               };
             }
-            return { date: '', item: '', category: '', amount: '' };
+            return { date: '', item: '', category: '', amount: '', trx_id: '' };
           });
           nextData[item.wlt_id] = rows;
+          const ids = Array.from({ length: maxRows }, (_, idx) => {
+            const t = item.transactions[idx] as any;
+            return t && t.trx_id ? String(t.trx_id) : null;
+          });
+          nextIds[item.wlt_id] = ids;
         });
         setExcelTableData(nextData);
+        setExcelRowIds(nextIds);
       } catch (e) {
         console.error('월별 지갑별 지출 API 호출 오류:', e);
         setExcelWallets([]);
       }
-    };
-    fetchMonthlyExpenses();
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    fetchMonthlyExpenses();
+  }, [fetchMonthlyExpenses]);
 
   // 결제수단이 변경될 때 지갑 목록 필터링
   const filteredWallets = useMemo(() => {
@@ -435,17 +450,36 @@ export default function ExpensesPage() {
       const walletData = prev[walletId] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
       const updated = [...walletData];
       updated[rowIndex] = { ...updated[rowIndex], [field]: value };
+      console.log('updateExcelTableData:',updated)
       return { ...prev, [walletId]: updated };
+    });
+    // 동일 행 재수정 가능하도록 제출 플래그 해제
+    setSubmittedRows(prev => {
+      const walletFlags = prev[walletId] ? { ...prev[walletId] } : {};
+      if (walletFlags[rowIndex]) {
+        walletFlags[rowIndex] = false;
+      }
+      return { ...prev, [walletId]: walletFlags };
     });
   };
 
-  // 자동 등록: 포커스아웃 시 해당 행 데이터가 모두 채워지면 등록 호출
-  const maybeRegisterRow = async (walletId: string, rowIndex: number) => {
+  // 자동 등록: 포커스아웃 시 해당 행 데이터가 모두 채워지면 등록/수정 호출
+  // overrides를 통해 blur 시점의 최신 값(예: select의 선택값)을 직접 반영
+  const maybeRegisterRow = async (
+    walletId: string,
+    rowIndex: number,
+    trxId: string,
+    overrides?: Partial<{ date: string; item: string; category: string; amount: string }>
+  ) => {
     try {
+
+      console.log(walletId , "<>" , trxId)
+
       const userId = session?.user?.id ? String(session.user.id) : '';
       if (!userId) return;
       const rows = excelTableData[walletId] || [];
-      const row = rows[rowIndex];
+      const baseRow = rows[rowIndex];
+      const row = { ...baseRow, ...(overrides || {}) };
       if (!row) return;
       const day = (row.date || '').trim();
       const memo = (row.item || '').trim();
@@ -472,13 +506,25 @@ export default function ExpensesPage() {
         category_cd: categoryCd,
         memo
       };
-      await post('/expenses', body);
+      console.log(trxId)
+      show(trxId ? '자동 수정 중...' : '자동 등록 중...', { type: 'info', durationMs: 1500 });
+      if (trxId) {
+        // 수정
+        await (await import('../../lib/api/common')).put(`/expenses/${trxId}`, body);
+      } else {
+        // 신규 등록
+        await post('/expenses', body);
+      }
       setSubmittedRows(prev => ({
         ...prev,
         [walletId]: { ...(prev[walletId] || {}), [rowIndex]: true }
       }));
+      show(trxId ? '수정 완료' : '등록 완료', { type: 'success', durationMs: 1800 });
+      // 갱신하여 trx_id 반영
+      fetchMonthlyExpenses();
     } catch (err) {
       console.error('자동 등록 실패:', err);
+      show('등록/수정 실패', { type: 'error', durationMs: 2200 });
     }
   };
 
@@ -486,7 +532,7 @@ export default function ExpensesPage() {
   const addExcelTableRow = (walletId: string) => {
     setExcelTableData(prev => {
       const walletData = prev[walletId] || [];
-      const newRow = { date: '', item: '', category: '', amount: '' };
+      const newRow = { date: '', item: '', category: '', amount: '', trx_id: '' };
       return { ...prev, [walletId]: [...walletData, newRow] };
     });
   };
@@ -950,8 +996,11 @@ export default function ExpensesPage() {
                                             defaultValue={row.date}
                                             onBlur={(e) => {
                                               const v = e.target.value;
-                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'date', v);
-                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
+                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.date || '';
+                                              if (prev !== v) {
+                                                updateExcelTableData(wallet.wlt_id, rowIndex, 'date', v);
+                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { date: v });
+                                              }
                                             }}
                                             placeholder="일"
                                           />
@@ -963,8 +1012,11 @@ export default function ExpensesPage() {
                                             defaultValue={row.item}
                                             onBlur={(e) => {
                                               const v = e.target.value;
-                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'item', v);
-                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
+          const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.item || '';
+          if (prev !== v) {
+            updateExcelTableData(wallet.wlt_id, rowIndex, 'item', v);
+            maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { item: v });
+          }
                                             }}
                                             placeholder="항목명"
                                           />
@@ -974,7 +1026,14 @@ export default function ExpensesPage() {
                                             className={styles.excelSelect}
                                             defaultValue={row.category}
                                             onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'category', e.target.value)}
-                                            onBlur={() => maybeRegisterRow(wallet.wlt_id, rowIndex)}
+                                            onBlur={(e) => {
+                                              const v = (e.target as HTMLSelectElement).value;
+                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.category || '';
+                                              // onChange로 이미 상태 반영되지만, 최종 비교 후 변경시에만 저장
+                                              if (prev !== v) {
+                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { category: v });
+                                              }
+                                            }}
                                           >
                                             <option value="">선택</option>
                                             {categories.map((cat) => (
@@ -989,9 +1048,12 @@ export default function ExpensesPage() {
                                             defaultValue={row.amount}
                                             onBlur={(e) => {
                                               const formattedValue = formatAmountInput(e.target.value);
-                                              e.target.value = formattedValue;
-                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'amount', formattedValue);
-                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
+                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.amount || '';
+                                              if (prev !== formattedValue) {
+                                                e.target.value = formattedValue;
+                                                updateExcelTableData(wallet.wlt_id, rowIndex, 'amount', formattedValue);
+                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { amount: formattedValue });
+                                              }
                                             }}
                                             placeholder="0"
                                           />

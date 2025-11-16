@@ -2,6 +2,7 @@
 
 import HeaderWrapper from "../components/HeaderWrapper";
 import { SessionProvider } from "next-auth/react";
+import { ToastProvider } from "../components/Toast";
 
 export default function ClientLayout({
   children,
@@ -10,8 +11,10 @@ export default function ClientLayout({
 }) {
   return (
     <SessionProvider>
-      <HeaderWrapper />
-      {children}
+      <ToastProvider>
+        <HeaderWrapper />
+        {children}
+      </ToastProvider>
     </SessionProvider>
   );
 }

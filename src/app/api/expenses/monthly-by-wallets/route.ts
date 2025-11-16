@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
 type TxRow = {
+  trx_id: string;
   wlt_id: string;
   wlt_name: string;
   trx_date: string;
   memo: string | null;
   category_name: string;
+  category_cd: string | null;
   amount: number;
 };
 
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
     const inPlaceholders = wltIds.map(() => '?').join(',');
     const txSql = `
       SELECT
+        t1.trx_id,
         t2.wlt_id,
         t2.wlt_name,
         t1.trx_date,
@@ -75,6 +78,7 @@ export async function GET(request: NextRequest) {
           WHEN t1.trx_type = 'INCOME' THEN (SELECT cd_nm FROM MMT_CMM_CD_MST WHERE grp_cd = 'INCOME' AND cd = t1.category_cd)
           ELSE ''
         END) AS category_name,
+        t1.category_cd,
         t1.amount
       FROM MMT_TRX_TRN t1
       JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
@@ -90,7 +94,7 @@ export async function GET(request: NextRequest) {
     const rows = (await query(txSql, txParams)) as TxRow[];
 
     // 3) 지갑 기준으로 그룹화 (없어도 빈 transactions로 한 로우 생성)
-    const map = new Map<string, { wlt_id: string; wlt_name: string; transactions: Array<{ date: number; item: string; category: string; amount: number }> }>();
+    const map = new Map<string, { wlt_id: string; wlt_name: string; transactions: Array<{ trx_id: string; date: number; item: string; category_cd: string; amount: number }> }>();
     // 먼저 모든 지갑 엔트리 생성
     for (const w of wallets) {
       map.set(String(w.wlt_id), { wlt_id: String(w.wlt_id), wlt_name: String(w.wlt_name), transactions: [] });
@@ -102,9 +106,10 @@ export async function GET(request: NextRequest) {
       const entry = map.get(key);
       if (!entry) continue;
       entry.transactions.push({
+        trx_id: r.trx_id,
         date: day,
         item: r.memo || '',
-        category: r.category_name || '',
+        category_cd: r.category_cd ? String(r.category_cd) : '',
         amount: Number(r.amount) || 0
       });
     }
