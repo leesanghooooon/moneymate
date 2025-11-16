@@ -134,6 +134,10 @@ export default function ExpensesPage() {
   const [excelWallets, setExcelWallets] = useState<Array<{ wlt_id: string; wlt_name: string }>>([]);
   // 지갑들 중 가장 많은 행 수 (기본 30)
   const [excelMaxRows, setExcelMaxRows] = useState<number>(30);
+  // 월별 표기 기간 (API 응답 기준)
+  const [excelPeriod, setExcelPeriod] = useState<{ year: number; month: number } | null>(null);
+  // 자동등록 중복 방지 (지갑별/행별)
+  const [submittedRows, setSubmittedRows] = useState<Record<string, Record<number, boolean>>>({});
 
   const isCardSelected = (() => {
     const v = (selectedPayMethod || '').toLowerCase();
@@ -204,7 +208,7 @@ export default function ExpensesPage() {
       if (!session?.user?.id) return;
       try {
         const now = new Date();
-        const res = await get('/expenses/monthly-by-wallets', { params: { usr_id: String(session.user.id), year: String(now.getFullYear()), month: String(now.getMonth()) } });
+        const res = await get('/expenses/monthly-by-wallets', { params: { usr_id: String(session.user.id), year: String(now.getFullYear()), month: String(now.getMonth() + 1) } });
         const payload = res?.data;
         if (!payload?.success || !Array.isArray(payload?.data)) {
           console.warn('월별 지갑별 지출 API 실패:', payload?.message);
@@ -215,6 +219,11 @@ export default function ExpensesPage() {
 
         // 렌더용 지갑 목록
         setExcelWallets(list.map(item => ({ wlt_id: item.wlt_id, wlt_name: item.wlt_name })));
+        if (payload?.period?.year && payload?.period?.month) {
+          setExcelPeriod({ year: Number(payload.period.year), month: Number(payload.period.month) });
+        } else {
+          setExcelPeriod({ year: now.getFullYear(), month: now.getMonth() + 1 });
+        }
 
         // 행 수 결정: 카드별 지출내역 중 최대 카운트와 30 중 큰 값
         const maxRows = Math.max(
@@ -428,6 +437,49 @@ export default function ExpensesPage() {
       updated[rowIndex] = { ...updated[rowIndex], [field]: value };
       return { ...prev, [walletId]: updated };
     });
+  };
+
+  // 자동 등록: 포커스아웃 시 해당 행 데이터가 모두 채워지면 등록 호출
+  const maybeRegisterRow = async (walletId: string, rowIndex: number) => {
+    try {
+      const userId = session?.user?.id ? String(session.user.id) : '';
+      if (!userId) return;
+      const rows = excelTableData[walletId] || [];
+      const row = rows[rowIndex];
+      if (!row) return;
+      const day = (row.date || '').trim();
+      const memo = (row.item || '').trim();
+      const categoryCd = (row.category || '').trim(); // 코드 사용
+      const amountStr = (row.amount || '').replace(/,/g, '').trim();
+      const amountNum = Number(amountStr);
+      if (!day || !memo || !categoryCd || !amountNum || isNaN(amountNum) || amountNum <= 0) {
+        return;
+      }
+      const submittedMap = submittedRows[walletId] || {};
+      if (submittedMap[rowIndex]) return;
+      const year = excelPeriod?.year ?? new Date().getFullYear();
+      const month = excelPeriod?.month ?? (new Date().getMonth() + 1);
+      const yyyy = String(year);
+      const mm = String(month).padStart(2, '0');
+      const dd = String(Number(day)).padStart(2, '0');
+      const trx_date = `${yyyy}-${mm}-${dd}`;
+      const body = {
+        usr_id: userId,
+        wlt_id: walletId,
+        trx_type: 'EXPENSE',
+        trx_date,
+        amount: amountNum,
+        category_cd: categoryCd,
+        memo
+      };
+      await post('/expenses', body);
+      setSubmittedRows(prev => ({
+        ...prev,
+        [walletId]: { ...(prev[walletId] || {}), [rowIndex]: true }
+      }));
+    } catch (err) {
+      console.error('자동 등록 실패:', err);
+    }
   };
 
   // 엑셀 테이블 행 추가 함수
@@ -895,8 +947,12 @@ export default function ExpensesPage() {
                                           <input
                                             type="text"
                                             className={styles.excelInput}
-                                            value={row.date}
-                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'date', e.target.value)}
+                                            defaultValue={row.date}
+                                            onBlur={(e) => {
+                                              const v = e.target.value;
+                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'date', v);
+                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
+                                            }}
                                             placeholder="일"
                                           />
                                         </td>
@@ -904,20 +960,25 @@ export default function ExpensesPage() {
                                           <input
                                             type="text"
                                             className={styles.excelInput}
-                                            value={row.item}
-                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'item', e.target.value)}
+                                            defaultValue={row.item}
+                                            onBlur={(e) => {
+                                              const v = e.target.value;
+                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'item', v);
+                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
+                                            }}
                                             placeholder="항목명"
                                           />
                                         </td>
                                         <td className={styles.excelTd}>
                                           <select
                                             className={styles.excelSelect}
-                                            value={row.category}
+                                            defaultValue={row.category}
                                             onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'category', e.target.value)}
+                                            onBlur={() => maybeRegisterRow(wallet.wlt_id, rowIndex)}
                                           >
                                             <option value="">선택</option>
                                             {categories.map((cat) => (
-                                              <option key={cat.cd} value={cat.cd_nm}>{cat.cd_nm}</option>
+                                              <option key={cat.cd} value={cat.cd}>{cat.cd_nm}</option>
                                             ))}
                                           </select>
                                         </td>
@@ -925,10 +986,12 @@ export default function ExpensesPage() {
                                           <input
                                             type="text"
                                             className={styles.excelInput}
-                                            value={row.amount}
-                                            onChange={(e) => {
+                                            defaultValue={row.amount}
+                                            onBlur={(e) => {
                                               const formattedValue = formatAmountInput(e.target.value);
+                                              e.target.value = formattedValue;
                                               updateExcelTableData(wallet.wlt_id, rowIndex, 'amount', formattedValue);
+                                              maybeRegisterRow(wallet.wlt_id, rowIndex);
                                             }}
                                             placeholder="0"
                                           />
