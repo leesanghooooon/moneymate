@@ -1,7 +1,119 @@
+/* 슬라이드 컨테이너 */
+.slideContainer {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+/* 슬라이드 버튼 */
+.slideButton {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 80px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  border: none;
+  border-radius: 12px 0 0 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.slideButton:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  box-shadow: -6px 0 16px rgba(0, 0, 0, 0.2);
+  width: 52px;
+}
+
+/* 슬라이드 버튼은 항상 오른쪽 끝에 고정 */
+
+.slideButtonIcon {
+  width: 24px;
+  height: 24px;
+  color: white;
+  stroke-width: 2.5;
+}
+
+/* 슬라이드 페이지 */
+.slidePage {
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  will-change: transform;
+}
+
+/* 첫 번째 슬라이드 페이지 - 기본 상태 (닫힘) */
+.slidePageLeft {
+  position: relative;
+  transform: translateX(0);
+  z-index: 10;
+  background: #f9fafb;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* 첫 번째 슬라이드 페이지 - 열림 상태 */
+.slidePageLeft.slidePageLeftOpen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateX(-100%);
+  z-index: 1;
+}
+
+/* 두 번째 슬라이드 페이지 - 기본 상태 (닫힘) */
+.slidePageRight {
+  /*position: absolute;*/
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  transform: translateX(100%);
+  z-index: 1;
+  /*background: #ffffff;*/
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 두 번째 슬라이드 페이지 - 열림 상태 */
+.slidePageRight.slidePageRightOpen {
+  transform: translateX(0%);
+  z-index: 10;
+}
+
+.slidePageContent {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 .expensesPage {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
+  min-height: 100%;
 }
 
 .header {
@@ -522,6 +634,30 @@
   }
   .modalPanel {
     max-width: 100%;
+  }
+  
+  /* 모바일 슬라이드 버튼 */
+  .slideButton {
+    width: 40px;
+    height: 60px;
+    right: 0;
+  }
+  
+  .slideButton:hover {
+    width: 42px;
+  }
+  
+  /* 모바일 슬라이드 버튼은 항상 오른쪽 끝에 고정 */
+  
+  .slideButtonIcon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* 모바일 슬라이드 페이지 */
+  .slidePageContent {
+    padding: 16px;
+    min-height: calc(100vh - var(--header-height) - var(--mobile-bottom-nav-height));
   }
 }
 
@@ -1102,5 +1238,333 @@
 @media (max-width: 768px) {
   .excelCallout {
     align-items: flex-start;
+  }
+}
+
+/* 엑셀 스타일 테이블 */
+.excelTableContainer {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+  gap: 16px;
+}
+
+.excelCardSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  height: calc((100vh - var(--header-height)) / 2 - 40px);
+  min-height: 300px;
+  max-height: calc((100vh - var(--header-height)) / 2 - 40px);
+  overflow: hidden;
+}
+
+.excelCardHeader {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.excelCardName {
+  font-size: 14px;
+  color: #111827;
+}
+
+.excelCardTotal {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.excelTableWrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.excelTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 12px;
+  margin: 0;
+}
+
+.excelTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f3f4f6;
+}
+
+.excelTh {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 11px;
+}
+
+.excelTr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.excelTr:hover {
+  background: #f9fafb;
+}
+
+.excelTd {
+  border: 1px solid #e5e7eb;
+  padding: 2px;
+  color: #111827;
+  font-size: 12px;
+  position: relative;
+}
+
+.excelTh:first-child,
+.excelTd:first-child {
+  text-align: center;
+  width: 50px;
+  /*min-width: 50px;*/
+}
+
+.excelTh:first-child {
+  color: #374151;
+}
+
+.excelTd:first-child {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.excelTh:nth-child(2),
+.excelTd:nth-child(2) {
+  width: auto;
+  min-width: 120px;
+}
+
+.excelTd:nth-child(2) {
+  color: #111827;
+  font-weight: 500;
+}
+
+.excelTh:nth-child(3),
+.excelTd:nth-child(3) {
+  width: 80px;
+  min-width: 60px;
+}
+
+.excelTd:nth-child(3) {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.excelTh:last-child,
+.excelTd:last-child {
+  text-align: right;
+  width: 100px;
+  min-width: 100px;
+}
+
+.excelTd:last-child {
+  color: #111827;
+  font-weight: 600;
+}
+
+.excelEmptyTable {
+  width: 100%;
+}
+
+.excelTdEmpty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+}
+
+/* 엑셀 테이블 input/select 스타일 */
+.excelInput,
+.excelSelect {
+  width: 100%;
+  min-height: 24px;
+  padding: 4px 6px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: inherit;
+  color: inherit;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.excelInput:focus,
+.excelSelect:focus {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #3b82f6;
+  border-radius: 2px;
+}
+
+.excelInput::placeholder {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.excelSelect {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 12px;
+  padding-right: 20px;
+}
+
+.excelSelect:focus {
+  background-color: #ffffff;
+}
+
+.excelSelect option {
+  padding: 4px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.excelTd:first-child .excelInput {
+  text-align: center;
+  width: 100%;
+}
+
+.excelTd:last-child .excelInput {
+  text-align: right;
+  width: 100%;
+}
+
+/* 엑셀 테이블 행 추가 버튼 */
+.excelAddRowButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 4px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.excelAddRowButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.excelAddRowButton:active {
+  background: #e5e7eb;
+  border-color: #6b7280;
+}
+
+.excelAddRowIcon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .excelTableContainer {
+    grid-template-columns: repeat(var(--grid-columns, 1), 1fr) !important;
+  }
+
+  .excelCardSection {
+    height: calc((100vh - var(--header-height)) / 4 - 20px);
+    min-height: 250px;
+    max-height: calc((100vh - var(--header-height)) / 4 - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .excelTableContainer {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .excelCardSection {
+    height: calc((100vh - var(--header-height) - var(--mobile-bottom-nav-height)) / 4 - 15px);
+    min-height: 200px;
+    max-height: calc((100vh - var(--header-height) - var(--mobile-bottom-nav-height)) / 4 - 15px);
+    padding: 10px;
+  }
+
+  .excelCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .excelCardName {
+    font-size: 13px;
+  }
+
+  .excelCardTotal {
+    font-size: 11px;
+  }
+
+  .excelTable {
+    font-size: 11px;
+  }
+
+  .excelTh,
+  .excelTd {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .excelTh:first-child,
+  .excelTd:first-child {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .excelTh:nth-child(2),
+  .excelTd:nth-child(2) {
+    min-width: 100px;
+  }
+
+  .excelTh:nth-child(3),
+  .excelTd:nth-child(3) {
+    width: 60px;
+    min-width: 60px;
+  }
+
+  .excelTh:last-child,
+  .excelTd:last-child {
+    width: 80px;
+    min-width: 80px;
   }
 }

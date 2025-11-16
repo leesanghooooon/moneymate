@@ -9,6 +9,7 @@ import { post, ApiError } from '../../lib/api/common';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
 
@@ -119,6 +120,17 @@ export default function ExpensesPage() {
   const [todayExpenses, setTodayExpenses] = useState<ExpenseData[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
 
+  // 슬라이드 상태 관리
+  const [isSlideOpen, setIsSlideOpen] = useState(false);
+
+  // 엑셀 테이블 데이터 상태 관리 (지갑별 30개 행)
+  const [excelTableData, setExcelTableData] = useState<Record<string, Array<{
+    date: string;
+    item: string;
+    category: string;
+    amount: string;
+  }>>>({});
+
   const isCardSelected = (() => {
     const v = (selectedPayMethod || '').toLowerCase();
     return v === 'card' || v === '카드';
@@ -175,6 +187,63 @@ export default function ExpensesPage() {
     getWallets(session.user.id)
       .then(walletList => {
         setWallets(walletList);
+        
+        // 각 지갑별로 30개 행의 초기 데이터 설정
+        const initialData: Record<string, Array<{
+          date: string;
+          item: string;
+          category: string;
+          amount: string;
+        }>> = {};
+        
+        walletList.forEach((wallet, walletIndex) => {
+          // 샘플 데이터로 초기화 (향후 API로 교체)
+          const sampleData = [
+            { date: '4', item: '땡구비어', category: '기타', amount: '34,000' },
+            { date: '10', item: '통신비', category: '통신비', amount: '38,500' },
+            { date: '12', item: '맥날', category: '기타', amount: '22,300' },
+            { date: '12', item: '편의점', category: '식비', amount: '2,200' },
+            { date: '12', item: '아이스크림', category: '식비', amount: '10,300' },
+            { date: '18', item: '쿠팡구독', category: '구독', amount: '7,890' },
+            { date: '18', item: '백일도', category: '기타', amount: '105,000' },
+            { date: '18', item: '베라', category: '기타', amount: '2,500' },
+            { date: '18', item: '파리바게트', category: '기타', amount: '14,200' },
+            { date: '19', item: '골프존', category: '여가', amount: '4,900' },
+            { date: '19', item: '밍스낵', category: '기타', amount: '18,000' },
+            { date: '19', item: '속옷', category: '쇼핑', amount: '9,800' },
+            { date: '25', item: '배달', category: '식비', amount: '31,000' },
+            { date: '28', item: '웨이브', category: '기타', amount: '10,900' },
+            { date: '28', item: '길씨(무릎보)', category: '기타', amount: '13,800' },
+            { date: '30', item: '쿠팡', category: '생활비', amount: '11,800' },
+            { date: '31', item: '버스', category: '교통비', amount: '45,000' },
+            { date: '31', item: '편의점', category: '식비', amount: '10,400' },
+            { date: '31', item: '카페', category: '식비', amount: '3,200' }
+          ];
+          
+          // 30개 행으로 채우기 (빈 행 포함)
+          initialData[wallet.wlt_id] = Array.from({ length: 30 }, (_, index) => {
+            // 첫 번째 지갑은 19개 샘플 데이터, 두 번째는 10개, 세 번째는 16개
+            if (walletIndex === 0 && index < sampleData.length) {
+              return sampleData[index];
+            } else if (walletIndex === 1 && index < 10) {
+              return sampleData[index];
+            } else if (walletIndex === 2 && index < 16) {
+              return sampleData[index];
+            }
+            return { date: '', item: '', category: '', amount: '' };
+          });
+        });
+        
+        setExcelTableData(prev => {
+          // 기존 데이터 유지하고 새로운 지갑만 추가
+          const updated = { ...prev };
+          walletList.forEach(wallet => {
+            if (!updated[wallet.wlt_id]) {
+              updated[wallet.wlt_id] = initialData[wallet.wlt_id];
+            }
+          });
+          return updated;
+        });
       })
       .catch(error => {
         console.error('지갑 목록 조회 실패:', error);
@@ -353,23 +422,70 @@ export default function ExpensesPage() {
     router.push('/expenses/excel');
   };
 
+  // 엑셀 테이블 데이터 업데이트 함수
+  const updateExcelTableData = (walletId: string, rowIndex: number, field: 'date' | 'item' | 'category' | 'amount', value: string) => {
+    setExcelTableData(prev => {
+      const walletData = prev[walletId] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
+      const updated = [...walletData];
+      updated[rowIndex] = { ...updated[rowIndex], [field]: value };
+      return { ...prev, [walletId]: updated };
+    });
+  };
+
+  // 엑셀 테이블 행 추가 함수
+  const addExcelTableRow = (walletId: string) => {
+    setExcelTableData(prev => {
+      const walletData = prev[walletId] || [];
+      const newRow = { date: '', item: '', category: '', amount: '' };
+      return { ...prev, [walletId]: [...walletData, newRow] };
+    });
+  };
+
   return (
       <div className={layoutStyles.dashboard}>
         <main className={layoutStyles.dashboardBody}>
-          <div className={styles.expensesPage}>
-            <div className="container">
-              <header className={styles.header}>
-                <div className={styles.headerTop}>
-                  <div className={styles.headerLeft}>
-                    <h1 className={styles.title}>거래 등록</h1>
-                    <p className={styles.subtitle}>수입과 지출을 빠르게 기록하세요.</p>
-                  </div>
-                  <div className={styles.headerRight}>
-                    <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
-                    <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
-                  </div>
-                </div>
-              </header>
+          <div className={styles.slideContainer}>
+            {/* 슬라이드 버튼 */}
+            <button 
+              className={styles.slideButton}
+              onClick={() => setIsSlideOpen(!isSlideOpen)}
+              aria-label={isSlideOpen ? '슬라이드 닫기' : '슬라이드 열기'}
+              style={{
+                right: 0
+              }}
+            >
+              {isSlideOpen ? (
+                <ChevronLeftIcon className={styles.slideButtonIcon} />
+              ) : (
+                <ChevronRightIcon className={styles.slideButtonIcon} />
+              )}
+            </button>
+
+            {/* 첫 번째 슬라이드 페이지: 거래 등록 */}
+            <div 
+              className={`${styles.slidePage} ${styles.slidePageLeft} ${isSlideOpen ? styles.slidePageLeftOpen : ''}`}
+              style={{
+                position: isSlideOpen ? 'absolute' : 'relative',
+                transform: isSlideOpen ? 'translateX(-100%)' : 'translateX(0)',
+                zIndex: isSlideOpen ? 1 : 10,
+                top: isSlideOpen ? 0 : 'auto',
+                left: isSlideOpen ? 0 : 'auto'
+              }}
+            >
+              <div className={styles.expensesPage}>
+                <div className="container">
+                  <header className={styles.header}>
+                    <div className={styles.headerTop}>
+                      <div className={styles.headerLeft}>
+                        <h1 className={styles.title}>거래 등록</h1>
+                        <p className={styles.subtitle}>수입과 지출을 빠르게 기록하세요.</p>
+                      </div>
+                      <div className={styles.headerRight}>
+                        <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
+                        <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
+                      </div>
+                    </div>
+                  </header>
 
               {/* 엑셀 간편등록 콜투액션 카드 */}
               <div
@@ -711,6 +827,151 @@ export default function ExpensesPage() {
                   )}
                 </div>
               </section>
+                </div>
+              </div>
+            </div>
+
+            {/* 두 번째 슬라이드 페이지: 추가 기능 (향후 확장 가능) */}
+            <div 
+              className={`${styles.slidePage} ${styles.slidePageRight} ${isSlideOpen ? styles.slidePageRightOpen : ''}`}
+              style={{
+                transform: isSlideOpen ? 'translateX(0%)' : 'translateX(100%)',
+                zIndex: isSlideOpen ? 10 : 1
+              }}
+            >
+              <div className={styles.expensesPage}>
+                <div className="container">
+                  <header className={styles.header}>
+                    <div className={styles.headerTop}>
+                      <div className={styles.headerLeft}>
+                        <h1 className={styles.title}>추가 기능</h1>
+                        <p className={styles.subtitle}>다양한 기능을 확인하고 활용하세요.</p>
+                      </div>
+                      <div className={styles.headerRight}>
+                        <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 1</button>&nbsp;
+                        <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 2</button>
+                      </div>
+                    </div>
+                  </header>
+
+                  {/* 정보 카드 */}
+                  <div className={styles.excelCallout}>
+                    <div className={styles.excelCalloutIcon}>📋</div>
+                    <div className={styles.excelCalloutContent}>
+                      <div className={styles.excelCalloutTitle}>새로운 기능을 준비 중입니다</div>
+                      <div className={styles.excelCalloutDesc}>곧 더 많은 유용한 기능들을 만나보실 수 있어요.</div>
+                    </div>
+                    <div className={styles.excelCalloutCta}>준비중 →</div>
+                  </div>
+
+                  <section className={styles.formSection}>
+                    <div 
+                      className={styles.excelTableContainer}
+                      style={{
+                        '--grid-columns': String(wallets.length > 0 ? Math.min(wallets.length, 4) : 1)
+                      } as React.CSSProperties}
+                    >
+                      {wallets.length > 0 ? (
+                        wallets.map((wallet) => {
+                          const walletData = excelTableData[wallet.wlt_id] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
+
+                          return (
+                            <div key={wallet.wlt_id} className={styles.excelCardSection}>
+                              <div className={styles.excelCardHeader}>
+                                <span className={styles.excelCardName}>{wallet.wlt_name}</span>
+                              </div>
+                              <div className={styles.excelTableWrapper}>
+                                <table className={styles.excelTable}>
+                                  <thead>
+                                    <tr>
+                                      <th className={styles.excelTh}></th>
+                                      <th className={styles.excelTh}>항목</th>
+                                      <th className={styles.excelTh}>분류</th>
+                                      <th className={styles.excelTh}>금액</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {walletData.map((row, rowIndex) => (
+                                      <tr key={rowIndex} className={styles.excelTr}>
+                                        <td className={styles.excelTd}>
+                                          <input
+                                            type="text"
+                                            className={styles.excelInput}
+                                            value={row.date}
+                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'date', e.target.value)}
+                                            placeholder="일"
+                                          />
+                                        </td>
+                                        <td className={styles.excelTd}>
+                                          <input
+                                            type="text"
+                                            className={styles.excelInput}
+                                            value={row.item}
+                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'item', e.target.value)}
+                                            placeholder="항목명"
+                                          />
+                                        </td>
+                                        <td className={styles.excelTd}>
+                                          <select
+                                            className={styles.excelSelect}
+                                            value={row.category}
+                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'category', e.target.value)}
+                                          >
+                                            <option value="">선택</option>
+                                            {categories.map((cat) => (
+                                              <option key={cat.cd} value={cat.cd_nm}>{cat.cd_nm}</option>
+                                            ))}
+                                          </select>
+                                        </td>
+                                        <td className={styles.excelTd}>
+                                          <input
+                                            type="text"
+                                            className={styles.excelInput}
+                                            value={row.amount}
+                                            onChange={(e) => {
+                                              const formattedValue = formatAmountInput(e.target.value);
+                                              updateExcelTableData(wallet.wlt_id, rowIndex, 'amount', formattedValue);
+                                            }}
+                                            placeholder="0"
+                                          />
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                              <button
+                                type="button"
+                                className={styles.excelAddRowButton}
+                                onClick={() => addExcelTableRow(wallet.wlt_id)}
+                              >
+                                <PlusIcon className={styles.excelAddRowIcon} />
+                                <span>행 추가</span>
+                              </button>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className={styles.emptyState}>
+                          <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6' }}>
+                            등록된 지갑이 없습니다.<br/>
+                            지갑을 등록하면 거래 내역을 확인할 수 있습니다.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className={styles.listSection}>
+                    <h2 className={styles.sectionTitle}>샘플 리스트</h2>
+                    <div className={styles.ledgerList}>
+                      <div className={styles.ledgerMessage}>
+                        샘플 데이터가 표시됩니다.
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
             </div>
           </div>
         </main>
