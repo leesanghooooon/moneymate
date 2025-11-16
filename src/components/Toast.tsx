@@ -23,7 +23,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const show = useCallback((message: string, options?: { type?: ToastType; durationMs?: number }) => {
     const id = Date.now() + Math.floor(Math.random() * 1000);
     const type: ToastType = options?.type ?? 'info';
-    const durationMs = options?.durationMs ?? 2200;
+    // 고정 유지시간 약 2초
+    const durationMs = 2000;
     const toast: ToastItem = { id, message, type, durationMs };
     setToasts(prev => [...prev, toast]);
     // 자동 제거

@@ -450,7 +450,6 @@ export default function ExpensesPage() {
       const walletData = prev[walletId] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
       const updated = [...walletData];
       updated[rowIndex] = { ...updated[rowIndex], [field]: value };
-      console.log('updateExcelTableData:',updated)
       return { ...prev, [walletId]: updated };
     });
     // 동일 행 재수정 가능하도록 제출 플래그 해제
@@ -472,9 +471,6 @@ export default function ExpensesPage() {
     overrides?: Partial<{ date: string; item: string; category: string; amount: string }>
   ) => {
     try {
-
-      console.log(walletId , "<>" , trxId)
-
       const userId = session?.user?.id ? String(session.user.id) : '';
       if (!userId) return;
       const rows = excelTableData[walletId] || [];
@@ -506,8 +502,7 @@ export default function ExpensesPage() {
         category_cd: categoryCd,
         memo
       };
-      console.log(trxId)
-      show(trxId ? '자동 수정 중...' : '자동 등록 중...', { type: 'info', durationMs: 1500 });
+      show(trxId ? '자동 수정 중...' : '자동 등록 중...', { type: 'info' });
       if (trxId) {
         // 수정
         await (await import('../../lib/api/common')).put(`/expenses/${trxId}`, body);
@@ -519,12 +514,12 @@ export default function ExpensesPage() {
         ...prev,
         [walletId]: { ...(prev[walletId] || {}), [rowIndex]: true }
       }));
-      show(trxId ? '수정 완료' : '등록 완료', { type: 'success', durationMs: 1800 });
+      show(trxId ? '수정 완료' : '등록 완료', { type: 'success' });
       // 갱신하여 trx_id 반영
       fetchMonthlyExpenses();
     } catch (err) {
       console.error('자동 등록 실패:', err);
-      show('등록/수정 실패', { type: 'error', durationMs: 2200 });
+      show('등록/수정 실패', { type: 'error' });
     }
   };
 
