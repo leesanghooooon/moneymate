@@ -5,7 +5,7 @@ import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState, useMemo } from 'react';
 import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
 import BulkExpenseModal from '../components/BulkExpenseModal';
-import { post, ApiError } from '../../lib/api/common';
+import { get, post, ApiError } from '../../lib/api/common';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
@@ -130,6 +130,10 @@ export default function ExpensesPage() {
     category: string;
     amount: string;
   }>>>({});
+  // 엑셀 테이블에 표시할 지갑 목록 (API 응답 기준)
+  const [excelWallets, setExcelWallets] = useState<Array<{ wlt_id: string; wlt_name: string }>>([]);
+  // 지갑들 중 가장 많은 행 수 (기본 30)
+  const [excelMaxRows, setExcelMaxRows] = useState<number>(30);
 
   const isCardSelected = (() => {
     const v = (selectedPayMethod || '').toLowerCase();
@@ -187,68 +191,62 @@ export default function ExpensesPage() {
     getWallets(session.user.id)
       .then(walletList => {
         setWallets(walletList);
-        
-        // 각 지갑별로 30개 행의 초기 데이터 설정
-        const initialData: Record<string, Array<{
-          date: string;
-          item: string;
-          category: string;
-          amount: string;
-        }>> = {};
-        
-        walletList.forEach((wallet, walletIndex) => {
-          // 샘플 데이터로 초기화 (향후 API로 교체)
-          const sampleData = [
-            { date: '4', item: '땡구비어', category: '기타', amount: '34,000' },
-            { date: '10', item: '통신비', category: '통신비', amount: '38,500' },
-            { date: '12', item: '맥날', category: '기타', amount: '22,300' },
-            { date: '12', item: '편의점', category: '식비', amount: '2,200' },
-            { date: '12', item: '아이스크림', category: '식비', amount: '10,300' },
-            { date: '18', item: '쿠팡구독', category: '구독', amount: '7,890' },
-            { date: '18', item: '백일도', category: '기타', amount: '105,000' },
-            { date: '18', item: '베라', category: '기타', amount: '2,500' },
-            { date: '18', item: '파리바게트', category: '기타', amount: '14,200' },
-            { date: '19', item: '골프존', category: '여가', amount: '4,900' },
-            { date: '19', item: '밍스낵', category: '기타', amount: '18,000' },
-            { date: '19', item: '속옷', category: '쇼핑', amount: '9,800' },
-            { date: '25', item: '배달', category: '식비', amount: '31,000' },
-            { date: '28', item: '웨이브', category: '기타', amount: '10,900' },
-            { date: '28', item: '길씨(무릎보)', category: '기타', amount: '13,800' },
-            { date: '30', item: '쿠팡', category: '생활비', amount: '11,800' },
-            { date: '31', item: '버스', category: '교통비', amount: '45,000' },
-            { date: '31', item: '편의점', category: '식비', amount: '10,400' },
-            { date: '31', item: '카페', category: '식비', amount: '3,200' }
-          ];
-          
-          // 30개 행으로 채우기 (빈 행 포함)
-          initialData[wallet.wlt_id] = Array.from({ length: 30 }, (_, index) => {
-            // 첫 번째 지갑은 19개 샘플 데이터, 두 번째는 10개, 세 번째는 16개
-            if (walletIndex === 0 && index < sampleData.length) {
-              return sampleData[index];
-            } else if (walletIndex === 1 && index < 10) {
-              return sampleData[index];
-            } else if (walletIndex === 2 && index < 16) {
-              return sampleData[index];
-            }
-            return { date: '', item: '', category: '', amount: '' };
-          });
-        });
-        
-        setExcelTableData(prev => {
-          // 기존 데이터 유지하고 새로운 지갑만 추가
-          const updated = { ...prev };
-          walletList.forEach(wallet => {
-            if (!updated[wallet.wlt_id]) {
-              updated[wallet.wlt_id] = initialData[wallet.wlt_id];
-            }
-          });
-          return updated;
-        });
       })
       .catch(error => {
         console.error('지갑 목록 조회 실패:', error);
         setWallets([]);
       });
+  }, [session?.user?.id]);
+
+  // 월별 지갑별 지출 목록 API 호출하여 엑셀 테이블 데이터 구성
+  useEffect(() => {
+    const fetchMonthlyExpenses = async () => {
+      if (!session?.user?.id) return;
+      try {
+        const now = new Date();
+        const res = await get('/expenses/monthly-by-wallets', { params: { usr_id: String(session.user.id), year: String(now.getFullYear()), month: String(now.getMonth()) } });
+        const payload = res?.data;
+        if (!payload?.success || !Array.isArray(payload?.data)) {
+          console.warn('월별 지갑별 지출 API 실패:', payload?.message);
+          setExcelWallets([]);
+          return;
+        }
+        const list: Array<{ wlt_id: string; wlt_name: string; transactions: Array<{ date: number; item: string; category: string; amount: number }> }> = payload.data || [];
+
+        // 렌더용 지갑 목록
+        setExcelWallets(list.map(item => ({ wlt_id: item.wlt_id, wlt_name: item.wlt_name })));
+
+        // 행 수 결정: 카드별 지출내역 중 최대 카운트와 30 중 큰 값
+        const maxRows = Math.max(
+          30,
+          ...list.map(item => (Array.isArray(item.transactions) ? item.transactions.length : 0))
+        );
+        setExcelMaxRows(maxRows);
+
+        // maxRows로 패딩하여 상태 구성
+        const nextData: Record<string, Array<{ date: string; item: string; category: string; amount: string }>> = {};
+        list.forEach(item => {
+          const rows = Array.from({ length: maxRows }, (_, idx) => {
+            const t = item.transactions[idx];
+            if (t) {
+              return {
+                date: String(t.date ?? ''),
+                item: t.item ?? '',
+                category: t.category ?? '',
+                amount: t.amount != null ? new Intl.NumberFormat('ko-KR').format(Number(t.amount)) : ''
+              };
+            }
+            return { date: '', item: '', category: '', amount: '' };
+          });
+          nextData[item.wlt_id] = rows;
+        });
+        setExcelTableData(nextData);
+      } catch (e) {
+        console.error('월별 지갑별 지출 API 호출 오류:', e);
+        setExcelWallets([]);
+      }
+    };
+    fetchMonthlyExpenses();
   }, [session?.user?.id]);
 
   // 결제수단이 변경될 때 지갑 목록 필터링
@@ -868,11 +866,11 @@ export default function ExpensesPage() {
                     <div 
                       className={styles.excelTableContainer}
                       style={{
-                        '--grid-columns': String(wallets.length > 0 ? Math.min(wallets.length, 4) : 1)
+                        '--grid-columns': String(excelWallets.length > 0 ? Math.min(excelWallets.length, 4) : 1)
                       } as React.CSSProperties}
                     >
-                      {wallets.length > 0 ? (
-                        wallets.map((wallet) => {
+                      {excelWallets.length > 0 ? (
+                        excelWallets.map((wallet) => {
                           const walletData = excelTableData[wallet.wlt_id] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
 
                           return (

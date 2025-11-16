@@ -15,6 +15,66 @@ export async function GET(request: NextRequest) {
       },
     ],
     paths: {
+      '/expenses/monthly-by-wallets': {
+        get: {
+          summary: '월별 지갑별 지출 조회',
+          description: '지정한 연/월 기준으로 지갑별(월별) 지출 내역을 조회합니다. 각 지갑에 대해 날짜/항목(메모)/분류/금액 목록을 반환합니다.',
+          tags: ['Expenses'],
+          parameters: [
+            { in: 'query', name: 'usr_id', required: true, schema: { type: 'string' }, description: '사용자 ID' },
+            { in: 'query', name: 'year', required: false, schema: { type: 'string' }, description: '조회 연도 (기본값: 현재 연도)' },
+            { in: 'query', name: 'month', required: false, schema: { type: 'string' }, description: '조회 월 (1-12, 기본값: 현재 월)' },
+            { in: 'query', name: 'wlt_type', required: false, schema: { type: 'string', enum: ['CASH','CHECK_CARD','CREDIT_CARD'] }, description: '지갑 유형(선택)' }
+          ],
+          responses: {
+            '200': {
+              description: '월별 지갑별 지출 조회 성공',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean' },
+                      period: {
+                        type: 'object',
+                        properties: {
+                          year: { type: 'number' },
+                          month: { type: 'number' },
+                          display: { type: 'string' }
+                        }
+                      },
+                      data: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            wlt_id: { type: 'string' },
+                            wlt_name: { type: 'string' },
+                            transactions: {
+                              type: 'array',
+                              items: {
+                                type: 'object',
+                                properties: {
+                                  date: { type: 'number', description: '일(1~31)' },
+                                  item: { type: 'string', description: '항목(메모)' },
+                                  category: { type: 'string', description: '카테고리명' },
+                                  amount: { type: 'number', description: '금액' }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': { description: '잘못된 요청', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+            '500': { description: '서버 오류', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+          }
+        }
+      },
       '/expenses/{id}': {
         get: {
           summary: '지출 상세 조회',
