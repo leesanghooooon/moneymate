@@ -19,22 +19,48 @@ import { v4 as uuidv4 } from 'uuid';
  *         description: 사용자 ID
  *       - name: trx_type
  *         in: query
+ *         required: false
  *         schema:
  *           type: string
  *           enum: [INCOME, EXPENSE]
  *         description: 거래 유형 (수입/지출)
  *       - name: start_date
  *         in: query
+ *         required: false
  *         schema:
  *           type: string
  *           format: date
  *         description: 조회 시작일 (YYYY-MM-DD)
  *       - name: end_date
  *         in: query
+ *         required: false
  *         schema:
  *           type: string
  *           format: date
  *         description: 조회 종료일 (YYYY-MM-DD)
+ *       - name: wlt_type
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [CASH, CHECK_CARD, CREDIT_CARD]
+ *         description: 지갑 유형 (CASH: 현금/체크카드 포함, CHECK_CARD: 체크카드, CREDIT_CARD: 신용카드)
+ *       - name: wlt_id
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: 지갑 ID (특정 지갑의 거래만 조회)
+ *       - name: is_fixed
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [Y, N]
+ *         description: |
+ *           고정 거래 여부 (Y: 고정 거래만, N: 일반 거래만)
+ *           - 지출(EXPENSE)의 경우: 카테고리 코드가 BILL, FINANCE, RENT, SUBSCRIPTION인 경우 고정 거래로 간주
+ *           - 수입(INCOME)의 경우: 카테고리 코드가 SALARY, RENTAL_INCOME인 경우 고정 거래로 간주
  *     responses:
  *       200:
  *         description: 지출 목록 조회 성공
@@ -174,6 +200,7 @@ export async function GET(request: NextRequest) {
     const end_date = searchParams.get('end_date');
     const wlt_type = searchParams.get('wlt_type');
     const wlt_id = searchParams.get('wlt_id');
+    const is_fixed = searchParams.get('is_fixed');
 
     if (!usr_id) {
       return NextResponse.json(
@@ -198,6 +225,7 @@ export async function GET(request: NextRequest) {
         , t1.category_cd
         , t1.memo
         , t1.is_installment
+        , t1.is_fixed
         , CASE 
             WHEN t1.is_installment = 'Y' 
             THEN CONCAT(t1.installment_seq, '/', t1.installment_months)
@@ -240,6 +268,41 @@ export async function GET(request: NextRequest) {
     if (wlt_id) {
       sql += ' AND t1.wlt_id = ?';
       params.push(wlt_id);
+    }
+
+    if (is_fixed) {
+      // 고정 거래 여부를 카테고리 코드 기반으로 필터링
+      if (is_fixed === 'Y') {
+        // 고정 거래만 조회
+        if (trx_type === 'EXPENSE') {
+          // 지출: BILL, FINANCE, RENT, SUBSCRIPTION
+          sql += ' AND t1.category_cd IN (\'BILL\', \'FINANCE\', \'RENT\', \'SUBSCRIPTION\')';
+        } else if (trx_type === 'INCOME') {
+          // 수입: SALARY, RENTAL_INCOME
+          sql += ' AND t1.category_cd IN (\'SALARY\', \'RENTAL_INCOME\')';
+        } else {
+          // trx_type이 지정되지 않은 경우, 지출과 수입 모두 고려
+          sql += ' AND (';
+          sql += '   (t1.trx_type = \'EXPENSE\' AND t1.category_cd IN (\'BILL\', \'FINANCE\', \'RENT\', \'SUBSCRIPTION\'))';
+          sql += '   OR (t1.trx_type = \'INCOME\' AND t1.category_cd IN (\'SALARY\', \'RENTAL_INCOME\'))';
+          sql += ' )';
+        }
+      } else if (is_fixed === 'N') {
+        // 일반 거래만 조회 (고정 거래 제외)
+        if (trx_type === 'EXPENSE') {
+          // 지출: BILL, FINANCE, RENT, SUBSCRIPTION 제외
+          sql += ' AND t1.category_cd NOT IN (\'BILL\', \'FINANCE\', \'RENT\', \'SUBSCRIPTION\')';
+        } else if (trx_type === 'INCOME') {
+          // 수입: SALARY, RENTAL_INCOME 제외
+          sql += ' AND t1.category_cd NOT IN (\'SALARY\', \'RENTAL_INCOME\')';
+        } else {
+          // trx_type이 지정되지 않은 경우, 지출과 수입 모두 고려
+          sql += ' AND NOT (';
+          sql += '   (t1.trx_type = \'EXPENSE\' AND t1.category_cd IN (\'BILL\', \'FINANCE\', \'RENT\', \'SUBSCRIPTION\'))';
+          sql += '   OR (t1.trx_type = \'INCOME\' AND t1.category_cd IN (\'SALARY\', \'RENTAL_INCOME\'))';
+          sql += ' )';
+        }
+      }
     }
 
     sql += ' ORDER BY t1.trx_date DESC, t1.trx_id DESC';

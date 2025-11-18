@@ -9,8 +9,11 @@ import { get, post, ApiError } from '../../lib/api/common';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useToast } from '../../components/Toast';
+// import TransactionRegistrationSlide from './TransactionRegistrationSlide';
+import FinancialOverviewSlide from './FinancialOverviewSlide';
+import ExcelTableSlide from './ExcelTableSlide';
 
 type PaymentType = 'ONETIME' | 'INSTALLMENT' | 'SUBSCRIPTION';
 
@@ -552,545 +555,72 @@ export default function ExpensesPage() {
               )}
             </button>
 
-            {/* 첫 번째 슬라이드 페이지: 거래 등록 */}
-            <div 
-              className={`${styles.slidePage} ${styles.slidePageLeft} ${isSlideOpen ? styles.slidePageLeftOpen : ''}`}
-              style={{
-                position: isSlideOpen ? 'absolute' : 'relative',
-                transform: isSlideOpen ? 'translateX(-100%)' : 'translateX(0)',
-                zIndex: isSlideOpen ? 1 : 10,
-                top: isSlideOpen ? 0 : 'auto',
-                left: isSlideOpen ? 0 : 'auto'
+            {/* 첫 번째 슬라이드 페이지: 재무 현황 */}
+            <FinancialOverviewSlide
+              isOpen={isSlideOpen}
+            />
+
+            {/* 첫 번째 슬라이드 페이지: 거래 등록 (주석처리) */}
+            {/* <TransactionRegistrationSlide
+              isOpen={isSlideOpen}
+              categories={categories}
+              payMethods={payMethods}
+              banks={banks}
+              cards={cards}
+              wallets={wallets}
+              loading={loading}
+              error={error}
+              selectedPayMethod={selectedPayMethod}
+              selectedTrxType={selectedTrxType}
+              selectedWallet={selectedWallet}
+              expenseForm={expenseForm}
+              walletForm={walletForm}
+              openWalletModal={openWalletModal}
+              openBulkModal={openBulkModal}
+              savingWallet={savingWallet}
+              todayExpenses={todayExpenses}
+              loadingExpenses={loadingExpenses}
+              filteredWallets={filteredWallets}
+              onPayMethodChange={setSelectedPayMethod}
+              onTrxTypeChange={setSelectedTrxType}
+              onWalletChange={setSelectedWallet}
+              onExpenseFormChange={(updates) => setExpenseForm(prev => ({ ...prev, ...updates }))}
+              onWalletFormChange={(updates) => setWalletForm(prev => ({ ...prev, ...updates }))}
+              onSubmitExpense={submitExpense}
+              onSubmitWallet={submitWallet}
+              onCloseWalletModal={() => setOpenWalletModal(false)}
+              onOpenWalletModal={() => setOpenWalletModal(true)}
+              onCloseBulkModal={() => setOpenBulkModal(false)}
+              onOpenBulkModal={() => setOpenBulkModal(true)}
+              onBulkModalSuccess={fetchTodayExpenses}
+              onExcelRegistration={handleExcelRegistration}
+              onWalletButtonClick={(wallet) => {
+                Promise.resolve().then(() => {
+                  setSelectedPayMethod(wallet.wlt_type);
+                  setSelectedWallet(wallet.wlt_id);
+                });
               }}
-            >
-              <div className={styles.expensesPage}>
-                <div className="container">
-                  <header className={styles.header}>
-                    <div className={styles.headerTop}>
-                      <div className={styles.headerLeft}>
-                        <h1 className={styles.title}>거래 등록</h1>
-                        <p className={styles.subtitle}>수입과 지출을 빠르게 기록하세요.</p>
-                      </div>
-                      <div className={styles.headerRight}>
-                        <button className={styles.buttonSecondary} onClick={() => setOpenWalletModal(true)}>지갑 등록</button>&nbsp;
-                        <button className={styles.buttonSecondary} onClick={() => setOpenBulkModal(true)}>다건 등록</button>
-                      </div>
-                    </div>
-                  </header>
+              formatAmountInput={formatAmountInput}
+              formatKRW={formatKRW}
+              formatDate={formatDate}
+              renderAmount={renderAmount}
+              getWalletCardType={getWalletCardType}
+              isWalletCardSelected={isWalletCardSelected}
+              sessionUserId={session?.user?.id || ''}
+            /> */}
 
-              {/* 엑셀 간편등록 콜투액션 카드 */}
-              <div
-                className={styles.excelCallout}
-                onClick={handleExcelRegistration}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleExcelRegistration(); }}
-              >
-                <div className={styles.excelCalloutIcon}>📊</div>
-                <div className={styles.excelCalloutContent}>
-                  <div className={styles.excelCalloutTitle}>엑셀 간편등록으로 빠르게 등록</div>
-                  <div className={styles.excelCalloutDesc}>엑셀 파일을 업로드하여 여러 거래를 한 번에 등록할 수 있어요.</div>
-                </div>
-                <div className={styles.excelCalloutCta}>바로가기 →</div>
-              </div>
-
-              <section className={styles.formSection}>
-                {error && <div style={{ color: '#ef4444', marginBottom: 8 }}>{error}</div>}
-
-                {/* 지갑 바로가기 버튼 */}
-                <div className={styles.walletButtons}>
-                  {wallets.map((wallet) => (
-                      <button
-                          key={wallet.wlt_id}
-                          className={`${styles.walletButton} ${selectedWallet === wallet.wlt_id ? styles.active : ''}`}
-                    onClick={() => {
-                      // 상태 업데이트를 배치로 처리
-                      Promise.resolve().then(() => {
-                        setSelectedPayMethod(wallet.wlt_type);
-                        setSelectedWallet(wallet.wlt_id);
-                      });
-                    }}
-                          type="button"
-                      >
-                    <span className={styles.walletIcon}>
-                      {wallet.wlt_type === 'CASH' ? '💵' :
-                          wallet.wlt_type === 'CHECK_CARD' ? '💳' :
-                              wallet.wlt_type === 'CREDIT_CARD' ? '💳' : '💰'}
-                    </span>
-                        <span className={styles.walletName}>{wallet.wlt_name}</span>
-                      </button>
-                  ))}
-                </div>
-
-                <form className={styles.form} onSubmit={submitExpense}>
-                  <div className={styles.row}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>날짜</label>
-                      <input
-                          type="date"
-                          className={styles.input}
-                          value={expenseForm.trx_date}
-                          onChange={(e) => setExpenseForm({ ...expenseForm, trx_date: e.target.value })}
-                      />
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>거래유형</label>
-                      <select
-                          className={styles.select}
-                          value={selectedTrxType}
-                          disabled={loading}
-                          onChange={(e) => setSelectedTrxType(e.target.value)}
-                      >
-                        {TRX_TYPES.map((type) => (
-                            <option key={type.code} value={type.code}>{type.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>결제수단</label>
-                      <select
-                          className={styles.select}
-                          value={selectedPayMethod}
-                          disabled={loading}
-                          onChange={(e) => setSelectedPayMethod(e.target.value)}
-                      >
-                        <option value="" disabled>선택하세요</option>
-                        {payMethods.map((m) => (
-                            <option key={m.cd} value={m.cd}>{m.cd_nm}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>지갑 선택</label>
-                      <select
-                          className={styles.select}
-                          value={selectedWallet}
-                          disabled={loading || !selectedPayMethod || wallets.length === 0}
-                          onChange={(e) => setSelectedWallet(e.target.value)}
-                      >
-                        <option value="" disabled>선택하세요</option>
-                        {filteredWallets.map((w) => (
-                            <option key={w.wlt_id} value={w.wlt_id}>{w.wlt_name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className={styles.row}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>카테고리</label>
-                      <select
-                          className={styles.select}
-                          value={expenseForm.category_cd}
-                          disabled={loading}
-                          onChange={(e) => setExpenseForm({ ...expenseForm, category_cd: e.target.value })}
-                      >
-                        <option value="" disabled>선택하세요</option>
-                        {categories.map((c) => (
-                            <option key={c.cd} value={c.cd}>{c.cd_nm}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>금액</label>
-                      <input
-                          type="text"
-                          className={styles.input}
-                          placeholder="0"
-                          value={expenseForm.amount}
-                          onChange={(e) => {
-                            const formattedValue = formatAmountInput(e.target.value);
-                            setExpenseForm({ ...expenseForm, amount: formattedValue });
-                          }}
-                      />
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>가맹점/메모</label>
-                      <input
-                          type="text"
-                          className={styles.input}
-                          placeholder="예: 스타벅스, 점심"
-                          value={expenseForm.memo}
-                          onChange={(e) => setExpenseForm({ ...expenseForm, memo: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.row}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>지출 형태</label>
-                      <div className={styles.segmented}>
-                        {Object.values(PAYMENT_TYPES).map((type) => (
-                            <label key={type.code} className={styles.segmentedItem}>
-                              <input
-                                  type="radio"
-                                  name="paymentType"
-                                  checked={expenseForm.payment_type === type.code}
-                                  onChange={() => setExpenseForm({
-                                    ...expenseForm,
-                                    payment_type: type.code,
-                                    // 할부가 아닐 때는 할부 관련 필드 초기화
-                                    ...(type.code !== 'INSTALLMENT' && {
-                                      installment_months: '',
-                                      installment_seq: ''
-                                    })
-                                  })}
-                              />
-                              <span>{type.label}</span>
-                            </label>
-                        ))}
-                      </div>
-                    </div>
-                    {expenseForm.payment_type === 'INSTALLMENT' ? (
-                        <>
-                          <div className={styles.field}>
-                            <label className={styles.label}>할부 개월수</label>
-                            <input
-                                type="number"
-                                className={styles.input}
-                                min={2}
-                                max={60}
-                                placeholder="0"
-                                value={expenseForm.installment_months}
-                                onChange={(e) => setExpenseForm({ ...expenseForm, installment_months: e.target.value })}
-                            />
-                          </div>
-                          <div className={styles.field}>
-                            <label className={styles.label}>할부 회차</label>
-                            <input
-                                type="number"
-                                className={styles.input}
-                                min={1}
-                                max={expenseForm.installment_months || 60}
-                                placeholder="0"
-                                value={expenseForm.installment_seq}
-                                onChange={(e) => setExpenseForm({ ...expenseForm, installment_seq: e.target.value })}
-                            />
-                          </div>
-                        </>
-                    ) : (
-                        <>
-                          <div className={styles.field} />
-                          <div className={styles.field} />
-                        </>
-                    )}
-                  </div>
-
-                  <div className={styles.actions}>
-                    <button className={styles.buttonPrimary} type="submit" disabled={loading}>등록</button>
-                    <button className={styles.buttonGhost} type="reset">초기화</button>
-                  </div>
-                </form>
-              </section>
-
-              {openWalletModal && (
-                  <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-                    <div className={styles.modalPanel}>
-                      <div className={styles.modalHeader}>
-                        <div className={styles.modalTitle}>지갑 등록</div>
-                        <button className={styles.modalClose} onClick={() => setOpenWalletModal(false)}>✕</button>
-                      </div>
-                      <div className={styles.modalBody}>
-                        <div className={styles.modalForm}>
-                          <div className={styles.modalRow}>
-                            <div className={styles.field}>
-                              <label className={styles.label}>지갑 이름</label>
-                              <input
-                                  className={styles.input}
-                                  value={walletForm.wlt_name}
-                                  onChange={(e) => setWalletForm({ ...walletForm, wlt_name: e.target.value })}
-                                  placeholder="예: 국민은행 통장, 현대카드"
-                              />
-                            </div>
-                            <div className={styles.field}>
-                              <label className={styles.label}>지갑 유형</label>
-                              <select
-                                  className={styles.select}
-                                  value={walletForm.wlt_type}
-                                  disabled={loading}
-                                  onChange={(e) => setWalletForm({ ...walletForm, wlt_type: e.target.value })}
-                              >
-                                <option value="" disabled>선택</option>
-                                {payMethods.map((m) => (
-                                    <option key={m.cd} value={m.cd}>{m.cd_nm}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className={styles.field}>
-                              <label className={styles.label}>
-                                {getWalletCardType === 'check' ? '은행 코드' :
-                                    getWalletCardType === 'credit' ? '카드사 코드' :
-                                        '은행/카드사 코드'}
-                              </label>
-                              <select
-                                  className={styles.select}
-                                  value={walletForm.bank_cd}
-                                  disabled={loading || !isWalletCardSelected}
-                                  onChange={(e) => setWalletForm({ ...walletForm, bank_cd: e.target.value })}
-                              >
-                                <option value="">선택 없음</option>
-                                {getWalletCardType === 'check' && banks.map((b) => (
-                                    <option key={b.cd} value={b.cd}>{b.cd_nm}</option>
-                                ))}
-                                {getWalletCardType === 'credit' && cards.map((c) => (
-                                    <option key={c.cd} value={c.cd}>{c.cd_nm}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className={styles.field}>
-                              <label className={styles.label}>기본 지갑</label>
-                              <select
-                                  className={styles.select}
-                                  value={walletForm.is_default}
-                                  onChange={(e) => setWalletForm({ ...walletForm, is_default: e.target.value })}
-                              >
-                                <option value="N">아니오</option>
-                                <option value="Y">예</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className={styles.modalRow}>
-                            <div className={styles.field}>
-                              {/* 빈 공간을 위한 placeholder */}
-                            </div>
-                            <div className={styles.field}>
-                              {/* 빈 공간을 위한 placeholder */}
-                            </div>
-                            <div className={styles.field}>
-                              {/* 빈 공간을 위한 placeholder */}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={styles.modalActions}>
-                        <button className={styles.buttonGhost} onClick={() => setOpenWalletModal(false)}>취소</button>
-                        <button className={styles.buttonPrimary} onClick={submitWallet} disabled={savingWallet}>
-                          {savingWallet ? '저장 중...' : '저장'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-              )}
-
-              {openBulkModal && (
-                <BulkExpenseModal
-                  isOpen={openBulkModal}
-                  onClose={() => setOpenBulkModal(false)}
-                  onSuccess={() => {
-                    fetchTodayExpenses();
-                  }}
-                  userId={session?.user?.id || ''}
-                />
-              )}
-              <section className={styles.listSection}>
-                <h2 className={styles.sectionTitle}>오늘의 가계부</h2>
-                <div className={styles.ledgerList}>
-                  {loadingExpenses ? (
-                      <div className={styles.ledgerMessage}>
-                        지출 데이터를 불러오는 중...
-                      </div>
-                  ) : todayExpenses.length === 0 ? (
-                      <div className={styles.ledgerMessage}>
-                        오늘 등록된 지출이 없습니다.
-                      </div>
-                  ) : (
-                      todayExpenses.map((expense) => (
-                          <div key={expense.trx_id} className={styles.ledgerItem}>
-                            <div className={styles.ledgerLeft}>
-                              <div className={styles.ledgerDate}>{formatDate(expense.trx_date)}</div>
-                              <div className={styles.ledgerMerchant}>
-                                {expense.memo || '메모 없음'}
-                                {expense.installment_info && (
-                                    <span className={styles.ledgerInstallment}>
-                              ({expense.installment_info})
-                            </span>
-                                )}
-                              </div>
-                              <div className={styles.ledgerWallet}>{expense.wlt_name}</div>
-                            </div>
-                            <div className={styles.ledgerRight}>
-                              <span className={styles.ledgerCategory}>{expense.category_name}</span>
-                              {/*<span className={styles.ledgerAmount}>-{formatKRW(expense.amount)}원</span>*/}
-                              {renderAmount(expense.trx_type, expense.amount)}
-                            </div>
-                          </div>
-                      ))
-                  )}
-                </div>
-              </section>
-                </div>
-              </div>
-            </div>
-
-            {/* 두 번째 슬라이드 페이지: 추가 기능 (향후 확장 가능) */}
-            <div 
-              className={`${styles.slidePage} ${styles.slidePageRight} ${isSlideOpen ? styles.slidePageRightOpen : ''}`}
-              style={{
-                transform: isSlideOpen ? 'translateX(0%)' : 'translateX(100%)',
-                zIndex: isSlideOpen ? 10 : 1
-              }}
-            >
-              <div className={styles.expensesPage}>
-                <div className="container">
-                  <header className={styles.header}>
-                    <div className={styles.headerTop}>
-                      <div className={styles.headerLeft}>
-                        <h1 className={styles.title}>추가 기능</h1>
-                        <p className={styles.subtitle}>다양한 기능을 확인하고 활용하세요.</p>
-                      </div>
-                      <div className={styles.headerRight}>
-                        <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 1</button>&nbsp;
-                        <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 2</button>
-                      </div>
-                    </div>
-                  </header>
-
-                  {/* 정보 카드 */}
-                  <div className={styles.excelCallout}>
-                    <div className={styles.excelCalloutIcon}>📋</div>
-                    <div className={styles.excelCalloutContent}>
-                      <div className={styles.excelCalloutTitle}>새로운 기능을 준비 중입니다</div>
-                      <div className={styles.excelCalloutDesc}>곧 더 많은 유용한 기능들을 만나보실 수 있어요.</div>
-                    </div>
-                    <div className={styles.excelCalloutCta}>준비중 →</div>
-                  </div>
-
-                  <section className={styles.formSection}>
-                    <div 
-                      className={styles.excelTableContainer}
-                      style={{
-                        '--grid-columns': String(excelWallets.length > 0 ? Math.min(excelWallets.length, 4) : 1)
-                      } as React.CSSProperties}
-                    >
-                      {excelWallets.length > 0 ? (
-                        excelWallets.map((wallet) => {
-                          const walletData = excelTableData[wallet.wlt_id] || Array.from({ length: 30 }, () => ({ date: '', item: '', category: '', amount: '' }));
-
-                          return (
-                            <div key={wallet.wlt_id} className={styles.excelCardSection}>
-                              <div className={styles.excelCardHeader}>
-                                <span className={styles.excelCardName}>{wallet.wlt_name}</span>
-                              </div>
-                              <div className={styles.excelTableWrapper}>
-                                <table className={styles.excelTable}>
-                                  <thead>
-                                    <tr>
-                                      <th className={styles.excelTh}></th>
-                                      <th className={styles.excelTh}>항목</th>
-                                      <th className={styles.excelTh}>분류</th>
-                                      <th className={styles.excelTh}>금액</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {walletData.map((row, rowIndex) => (
-                                      <tr key={rowIndex} className={styles.excelTr}>
-                                        <td className={styles.excelTd}>
-                                          <input
-                                            type="text"
-                                            className={styles.excelInput}
-                                            defaultValue={row.date}
-                                            onBlur={(e) => {
-                                              const v = e.target.value;
-                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.date || '';
-                                              if (prev !== v) {
-                                                updateExcelTableData(wallet.wlt_id, rowIndex, 'date', v);
-                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { date: v });
-                                              }
-                                            }}
-                                            placeholder="일"
-                                          />
-                                        </td>
-                                        <td className={styles.excelTd}>
-                                          <input
-                                            type="text"
-                                            className={styles.excelInput}
-                                            defaultValue={row.item}
-                                            onBlur={(e) => {
-                                              const v = e.target.value;
-          const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.item || '';
-          if (prev !== v) {
-            updateExcelTableData(wallet.wlt_id, rowIndex, 'item', v);
-            maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { item: v });
-          }
-                                            }}
-                                            placeholder="항목명"
-                                          />
-                                        </td>
-                                        <td className={styles.excelTd}>
-                                          <select
-                                            className={styles.excelSelect}
-                                            defaultValue={row.category}
-                                            onChange={(e) => updateExcelTableData(wallet.wlt_id, rowIndex, 'category', e.target.value)}
-                                            onBlur={(e) => {
-                                              const v = (e.target as HTMLSelectElement).value;
-                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.category || '';
-                                              // onChange로 이미 상태 반영되지만, 최종 비교 후 변경시에만 저장
-                                              if (prev !== v) {
-                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { category: v });
-                                              }
-                                            }}
-                                          >
-                                            <option value="">선택</option>
-                                            {categories.map((cat) => (
-                                              <option key={cat.cd} value={cat.cd}>{cat.cd_nm}</option>
-                                            ))}
-                                          </select>
-                                        </td>
-                                        <td className={styles.excelTd}>
-                                          <input
-                                            type="text"
-                                            className={styles.excelInput}
-                                            defaultValue={row.amount}
-                                            onBlur={(e) => {
-                                              const formattedValue = formatAmountInput(e.target.value);
-                                              const prev = (excelTableData[wallet.wlt_id] || [])[rowIndex]?.amount || '';
-                                              if (prev !== formattedValue) {
-                                                e.target.value = formattedValue;
-                                                updateExcelTableData(wallet.wlt_id, rowIndex, 'amount', formattedValue);
-                                                maybeRegisterRow(wallet.wlt_id, rowIndex, row.trx_id, { amount: formattedValue });
-                                              }
-                                            }}
-                                            placeholder="0"
-                                          />
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              <button
-                                type="button"
-                                className={styles.excelAddRowButton}
-                                onClick={() => addExcelTableRow(wallet.wlt_id)}
-                              >
-                                <PlusIcon className={styles.excelAddRowIcon} />
-                                <span>행 추가</span>
-                              </button>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className={styles.emptyState}>
-                          <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6' }}>
-                            등록된 지갑이 없습니다.<br/>
-                            지갑을 등록하면 거래 내역을 확인할 수 있습니다.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-
-                  <section className={styles.listSection}>
-                    <h2 className={styles.sectionTitle}>샘플 리스트</h2>
-                    <div className={styles.ledgerList}>
-                      <div className={styles.ledgerMessage}>
-                        샘플 데이터가 표시됩니다.
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-            </div>
+            {/* 두 번째 슬라이드 페이지: 엑셀 테이블 */}
+            <ExcelTableSlide
+              isOpen={isSlideOpen}
+              excelWallets={excelWallets}
+              excelTableData={excelTableData}
+              excelMaxRows={excelMaxRows}
+              categories={categories}
+              formatAmountInput={formatAmountInput}
+              updateExcelTableData={updateExcelTableData}
+              maybeRegisterRow={maybeRegisterRow}
+              addExcelTableRow={addExcelTableRow}
+            />
           </div>
         </main>
       </div>

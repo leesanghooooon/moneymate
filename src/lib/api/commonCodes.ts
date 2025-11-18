@@ -43,12 +43,31 @@ export interface Wallet {
   wlt_type: string;
   bank_cd: string | null;
   is_default: string;
+  share_yn?: string;
+  usr_id?: string;
+  role?: 'OWNER' | 'PARTNER'; // include_shared=true일 때 포함
 }
 
-export async function getWallets(usr_id: string, wlt_type?: string): Promise<Wallet[]> {
+/**
+ * 지갑 목록을 조회하는 API
+ * @param usr_id 사용자 ID
+ * @param wlt_type 지갑 유형 (CASH, CHECK_CARD, CREDIT_CARD) - 선택사항
+ * @param include_shared 공유 지갑 포함 여부 (true/Y: 포함, false/N: 미포함) - 선택사항
+ * @returns Promise<Wallet[]> 지갑 목록
+ */
+export async function getWallets(
+  usr_id: string,
+  wlt_type?: string,
+  include_shared?: boolean | string
+): Promise<Wallet[]> {
   const params: Record<string, string> = { usr_id };
   if (wlt_type) {
     params.wlt_type = wlt_type;
+  }
+  if (include_shared !== undefined) {
+    params.include_shared = typeof include_shared === 'boolean' 
+      ? (include_shared ? 'true' : 'false')
+      : include_shared;
   }
   const response = await get<{ data: Wallet[] }>('/wallets', { params });
   return response.data.data;

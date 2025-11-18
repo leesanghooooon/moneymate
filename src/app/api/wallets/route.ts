@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const usr_id = searchParams.get('usr_id');
     const wlt_type = searchParams.get('wlt_type');
+    const include_shared = searchParams.get('include_shared'); // 공유 지갑 포함 여부
 
     if (!usr_id) {
       return NextResponse.json(
@@ -104,25 +105,106 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const filters: Record<string, any> = {
-      usr_id,
-      use_yn: 'Y'
-    };
+    // 공유 지갑 포함 여부에 따라 다른 쿼리 실행
+    let sql: string;
+    let params: any[];
 
-    if (wlt_type) {
-      filters.wlt_type = wlt_type;
+    if (include_shared === 'true' || include_shared === 'Y') {
+      // 사용자 지갑 + 공유 그룹 파트너 지갑 조회
+      let wltTypeCondition1 = '';
+      let wltTypeCondition2 = '';
+      if (wlt_type) {
+        wltTypeCondition1 = ' AND A.wlt_type = ?';
+        wltTypeCondition2 = ' AND C.wlt_type = ?';
+      }
+
+      sql = `
+        SELECT
+          A.wlt_id
+          , A.usr_id
+          , A.role
+          , A.wlt_name
+          , A.wlt_type
+          , A.bank_cd
+          , A.is_default
+          , A.share_yn
+        FROM (
+          SELECT
+            A.wlt_id
+            , A.usr_id
+            , 'OWNER' AS role
+            , A.wlt_name
+            , A.wlt_type
+            , A.bank_cd
+            , A.is_default
+            , A.share_yn
+          FROM MMT_WLT_MST A
+          WHERE A.usr_id = ?
+            AND A.use_yn = 'Y'
+            ${wltTypeCondition1}
+          
+          UNION ALL
+          
+          SELECT
+            C.wlt_id
+            , C.usr_id
+            , B.role
+            , C.wlt_name
+            , C.wlt_type
+            , C.bank_cd
+            , C.is_default
+            , C.share_yn
+          FROM MMT_USR_SHARE_GRP A
+            , MMT_USR_SHARE_MEMBER B
+            , MMT_WLT_MST C
+          WHERE A.grp_id = B.grp_id
+            AND A.owner_usr_id = ?
+            AND B.role = 'PARTNER'
+            AND B.status = 'ACCEPTED'
+            AND C.usr_id = B.usr_id
+            AND C.use_yn = 'Y'
+            ${wltTypeCondition2}
+        ) A
+        ORDER BY A.wlt_id
+      `;
+      
+      params = [usr_id];
+      if (wlt_type) {
+        params.push(wlt_type);
+      }
+      params.push(usr_id);
+      if (wlt_type) {
+        params.push(wlt_type);
+      }
+    } else {
+      // 기존 방식: 사용자 본인 지갑만 조회
+      const filters: Record<string, any> = {
+        usr_id,
+        use_yn: 'Y'
+      };
+
+      if (wlt_type) {
+        filters.wlt_type = wlt_type;
+      }
+
+      const rows = await dbSelect({
+        table: 'MMT_WLT_MST',
+        columns: ['wlt_id', 'wlt_name', 'wlt_type', 'bank_cd', 'is_default', 'share_yn'],
+        filters,
+        allowedFilterFields: ['usr_id', 'wlt_type', 'use_yn'],
+        orderBy: 'wlt_id'
+      });
+
+      return NextResponse.json({ data: rows });
     }
 
-    const rows = await dbSelect({
-      table: 'MMT_WLT_MST',
-      columns: ['wlt_id', 'wlt_name', 'wlt_type', 'bank_cd', 'is_default', 'share_yn'],
-      filters,
-      allowedFilterFields: ['usr_id', 'wlt_type', 'use_yn'],
-      orderBy: 'wlt_id'
-    });
+    // UNION ALL 쿼리 실행
+    const { query } = await import('../../../lib/db');
+    const rows = await query(sql, params);
 
     return NextResponse.json({ data: rows });
   } catch (error: any) {
+    console.error('지갑 목록 조회 오류:', error);
     return NextResponse.json(
       { message: error?.message || '지갑 목록 조회 중 오류가 발생했습니다.' },
       { status: 500 }

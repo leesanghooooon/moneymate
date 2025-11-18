@@ -2,7 +2,8 @@
 .slideContainer {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height) - 100px - 30px);
+  min-height: calc(100vh - var(--header-height) - 100px - 30px);
   overflow: hidden;
   background: #f9fafb;
 }
@@ -44,41 +45,32 @@
 
 /* 슬라이드 페이지 */
 .slidePage {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  min-height: calc(100vh - var(--header-height));
+  height: 100%;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
   overflow-x: hidden;
   will-change: transform;
+  background: #f9fafb;
 }
 
 /* 첫 번째 슬라이드 페이지 - 기본 상태 (닫힘) */
 .slidePageLeft {
-  position: relative;
   transform: translateX(0);
   z-index: 10;
-  background: #f9fafb;
-  width: 100%;
-  min-height: calc(100vh - var(--header-height));
 }
 
 /* 첫 번째 슬라이드 페이지 - 열림 상태 */
 .slidePageLeft.slidePageLeftOpen {
-  position: absolute;
-  top: 0;
-  left: 0;
   transform: translateX(-100%);
   z-index: 1;
 }
 
 /* 두 번째 슬라이드 페이지 - 기본 상태 (닫힘) */
 .slidePageRight {
-  /*position: absolute;*/
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  min-height: calc(100vh - var(--header-height));
   transform: translateX(100%);
   z-index: 1;
   /*background: #ffffff;*/
@@ -113,6 +105,7 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  height: 100%;
   min-height: 100%;
 }
 
@@ -139,6 +132,29 @@
 .headerRight {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.currentPeriod {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.periodLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.periodValue {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
 }
 
 .title {
@@ -1566,5 +1582,388 @@
   .excelTd:last-child {
     width: 80px;
     min-width: 80px;
+  }
+}
+
+/* 재무 현황 슬라이드 스타일 */
+.financialOverviewContainer {
+  display: grid;
+  grid-template-columns: 2.5fr 2.5fr 5fr;
+  gap: 0;
+  padding: 0;
+  height: calc(100vh - var(--header-height) - 160px);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.fixedTransactionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  border-right: 1px solid #e5e7eb;
+}
+
+.placeholderSection {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid #e5e7eb;
+}
+
+.walletsSection {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.sectionIcon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* 섹션 콘텐츠 */
+.sectionContent {
+  flex: 1;
+  padding: 12px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.fixedIncomeSection,
+.fixedExpenseSection,
+.savingsSection {
+  display: flex;
+  flex-direction: column;
+  /*height: 33.333%;*/
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fixedIncomeSection:last-child,
+.fixedExpenseSection:last-child,
+.savingsSection:last-child {
+  border-bottom: none;
+}
+
+/* 거래 리스트 */
+.transactionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.transactionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.transactionItem:last-child {
+  border-bottom: none;
+}
+
+.transactionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.transactionCategory {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transactionMemo {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transactionAmount {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+/* 저축 현황 */
+.savingsSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.savingsPeriod {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.savingsAmount {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* 빈 상태 메시지 */
+.loadingMessage,
+.emptyMessage {
+  text-align: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* 지갑 리스트 컨테이너 */
+.walletColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: 100%;
+}
+
+.walletGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.walletColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.walletColumnTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 8px 0 4px 0;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 지갑 리스트 */
+.walletList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.walletListItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.walletListItem:hover {
+  background-color: #f9fafb;
+}
+
+.walletListItem:last-child {
+  border-bottom: none;
+}
+
+.walletItemIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.walletItemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.walletItemNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.walletItemName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.walletItemType {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* 배지 */
+.sharedBadge {
+  background: #8b5cf6;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.defaultBadge {
+  display: inline-block;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .financialOverviewContainer {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - var(--header-height) - 160px);
+  }
+
+  .fixedTransactionsSection {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    height: auto;
+    min-height: 400px;
+  }
+
+  .fixedIncomeSection,
+  .fixedExpenseSection,
+  .savingsSection {
+    height: auto;
+    min-height: 180px;
+  }
+
+  .placeholderSection {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    height: auto;
+    min-height: 200px;
+  }
+
+  .walletsSection {
+    height: auto;
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .financialOverviewContainer {
+    height: auto;
+    min-height: calc(100vh - var(--header-height) - 120px);
+  }
+
+  .fixedTransactionsSection {
+    flex-direction: column;
+  }
+
+  .fixedIncomeSection,
+  .fixedExpenseSection,
+  .savingsSection {
+    min-height: 150px;
+  }
+
+  .savingsAmount {
+    font-size: 16px;
+  }
+
+  .sectionHeader {
+    padding: 10px 12px;
+  }
+
+  .sectionContent {
+    padding: 10px 12px;
+  }
+
+  .sectionTitle {
+    font-size: 12px;
+  }
+
+  .transactionCategory {
+    font-size: 11px;
+  }
+
+  .transactionMemo {
+    font-size: 10px;
+  }
+
+  .transactionAmount {
+    font-size: 12px;
+  }
+
+  .walletItemName {
+    font-size: 12px;
+  }
+
+  .walletItemType {
+    font-size: 10px;
+  }
+
+  .walletColumns {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .walletGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .walletColumnTitle {
+    font-size: 11px;
+    padding: 6px 0 3px 0;
   }
 }

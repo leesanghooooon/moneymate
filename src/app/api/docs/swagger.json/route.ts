@@ -138,6 +138,7 @@ export async function GET(request: NextRequest) {
             {
               in: 'query',
               name: 'trx_type',
+              required: false,
               schema: {
                 type: 'string',
                 enum: ['INCOME', 'EXPENSE']
@@ -147,6 +148,7 @@ export async function GET(request: NextRequest) {
             {
               in: 'query',
               name: 'start_date',
+              required: false,
               schema: {
                 type: 'string',
                 format: 'date'
@@ -156,11 +158,39 @@ export async function GET(request: NextRequest) {
             {
               in: 'query',
               name: 'end_date',
+              required: false,
               schema: {
                 type: 'string',
                 format: 'date'
               },
               description: '조회 종료일 (YYYY-MM-DD)'
+            },
+            {
+              in: 'query',
+              name: 'wlt_type',
+              required: false,
+              schema: {
+                type: 'string',
+                enum: ['CASH', 'CHECK_CARD', 'CREDIT_CARD']
+              },
+              description: '지갑 유형 (CASH: 현금/체크카드 포함, CHECK_CARD: 체크카드, CREDIT_CARD: 신용카드)'
+            },
+            {
+              in: 'query',
+              name: 'wlt_id',
+              required: false,
+              schema: { type: 'string' },
+              description: '지갑 ID (특정 지갑의 거래만 조회)'
+            },
+            {
+              in: 'query',
+              name: 'is_fixed',
+              required: false,
+              schema: {
+                type: 'string',
+                enum: ['Y', 'N']
+              },
+              description: '고정 거래 여부 (Y: 고정 거래만, N: 일반 거래만). 지출(EXPENSE)의 경우 카테고리 코드가 BILL, FINANCE, RENT, SUBSCRIPTION인 경우 고정 거래로 간주합니다. 수입(INCOME)의 경우 카테고리 코드가 SALARY, RENTAL_INCOME인 경우 고정 거래로 간주합니다.'
             }
           ],
           responses: {
@@ -718,7 +748,7 @@ export async function GET(request: NextRequest) {
       '/wallets': {
         get: {
           summary: '지갑 목록 조회',
-          description: '사용자의 지갑 목록을 조회합니다. 지갑 유형을 지정하면 해당 유형의 지갑만 조회됩니다.',
+          description: '사용자의 지갑 목록을 조회합니다. 지갑 유형을 지정하면 해당 유형의 지갑만 조회됩니다. include_shared 파라미터를 true로 설정하면 사용자 지갑과 가계부 공유 사용자의 지갑을 모두 조회합니다.',
           tags: ['Wallets'],
           parameters: [
             {
@@ -737,6 +767,17 @@ export async function GET(request: NextRequest) {
                 enum: ['CASH', 'CHECK_CARD', 'CREDIT_CARD']
               },
               description: '지갑 유형 (현금, 체크카드, 신용카드)'
+            },
+            {
+              in: 'query',
+              name: 'include_shared',
+              required: false,
+              schema: {
+                type: 'string',
+                enum: ['true', 'Y', 'false', 'N'],
+                default: 'false'
+              },
+              description: '공유 지갑 포함 여부 (true/Y: 포함, false/N: 미포함). true로 설정 시 사용자 지갑(role=OWNER)과 가계부 공유 그룹의 파트너(role=PARTNER) 지갑을 모두 조회합니다.'
             }
           ],
           responses: {
@@ -749,7 +790,21 @@ export async function GET(request: NextRequest) {
                     properties: {
                       data: {
                         type: 'array',
-                        items: { $ref: '#/components/schemas/Wallet' }
+                        items: { 
+                          allOf: [
+                            { $ref: '#/components/schemas/Wallet' },
+                            {
+                              type: 'object',
+                              properties: {
+                                role: {
+                                  type: 'string',
+                                  enum: ['OWNER', 'PARTNER'],
+                                  description: '지갑 소유자 역할 (include_shared=true일 때만 포함). OWNER: 본인 지갑, PARTNER: 공유 그룹 파트너 지갑'
+                                }
+                              }
+                            }
+                          ]
+                        }
                       }
                     }
                   }

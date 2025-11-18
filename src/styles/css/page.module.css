@@ -8,7 +8,7 @@
 .dashboardBody {
   flex: 1;
   /*padding: var(--header-height, 80px) 30px 30px 30px;*/
-  /*display: flex;*/
+  display: flex;
   /*flex-direction: column;*/
   /*gap: 20px;*/
   padding: 100px 30px 30px 30px;
