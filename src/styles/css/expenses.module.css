@@ -1720,16 +1720,47 @@
 
 /* 거래 리스트 */
 .transactionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+/* 거래 그룹 (카테고리별) */
+.transactionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.transactionGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 4px;
+}
+
+.transactionGroupCategory {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.transactionGroupTotal {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .transactionItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -1818,23 +1849,30 @@
   gap: 8px;
 }
 
-.walletColumnTitle {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 8px 0 4px 0;
-  border-bottom: 1px solid #e5e7eb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
 
 /* 지갑 리스트 */
 .walletList {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 16px;
   flex: 1;
   overflow-y: auto;
+}
+
+/* 지갑 타입별 그룹 */
+.walletTypeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.walletTypeGroupHeader {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 4px;
 }
 
 .walletListItem {
@@ -1881,12 +1919,20 @@
 }
 
 .walletItemName {
-  font-size: 13px;
-  font-weight: 500;
-  color: #111827;
+  font-size: 11px;
+  color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 지갑 타입 그룹 내 아이템은 border-bottom 제거 (마지막 항목만 유지) */
+.walletTypeGroup .walletListItem {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.walletTypeGroup .walletListItem:last-child {
+  border-bottom: none;
 }
 
 .walletItemType {
@@ -2012,11 +2058,6 @@
   .walletGrid {
     grid-template-columns: 1fr;
     gap: 8px;
-  }
-
-  .walletColumnTitle {
-    font-size: 11px;
-    padding: 6px 0 3px 0;
   }
 
   .headerRight {

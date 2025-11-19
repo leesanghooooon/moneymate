@@ -199,6 +199,32 @@ export default function FinancialOverviewSlide({
     }
   };
 
+  // 고정수입/고정지출을 카테고리별로 그룹화
+  const groupTransactionsByCategory = (transactions: FixedTransaction[]) => {
+    const grouped: Record<string, FixedTransaction[]> = {};
+    transactions.forEach(item => {
+      const category = item.category_name || '기타';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(item);
+    });
+    return grouped;
+  };
+
+  // 지갑을 타입별로 그룹화
+  const groupWalletsByType = (wallets: SharedWallet[]) => {
+    const grouped: Record<string, SharedWallet[]> = {};
+    wallets.forEach(wallet => {
+      const type = wallet.wlt_type || '기타';
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(wallet);
+    });
+    return grouped;
+  };
+
   return (
     <div 
       className={`${styles.slidePage} ${styles.slidePageLeft} ${isOpen ? styles.slidePageLeftOpen : ''}`}
@@ -235,19 +261,31 @@ export default function FinancialOverviewSlide({
                   ) : fixedIncome.length === 0 ? (
                     <div className={styles.emptyMessage}>고정수입이 없습니다.</div>
                   ) : (
-                    <ul className={styles.transactionList}>
-                      {fixedIncome.map((item) => (
-                        <li key={item.trx_id} className={styles.transactionItem}>
-                          <div className={styles.transactionInfo}>
-                            <span className={styles.transactionCategory}>{item.category_name}</span>
-                            <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                    <div className={styles.transactionList}>
+                      {Object.entries(groupTransactionsByCategory(fixedIncome)).map(([category, items]) => {
+                        const totalAmount = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+                        return (
+                          <div key={category} className={styles.transactionGroup}>
+                            <div className={styles.transactionGroupHeader}>
+                              <span className={styles.transactionGroupCategory}>{category}</span>
+                              <span className={styles.transactionGroupTotal} style={{ color: '#10b981' }}>
+                                +{formatKRW(totalAmount)}원
+                              </span>
+                            </div>
+                            {items.map((item) => (
+                              <div key={item.trx_id} className={styles.transactionItem}>
+                                <div className={styles.transactionInfo}>
+                                  <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                                </div>
+                                <span className={styles.transactionAmount} style={{ color: '#10b981' }}>
+                                  +{formatKRW(item.amount)}원
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                          <span className={styles.transactionAmount} style={{ color: '#10b981' }}>
-                            +{formatKRW(item.amount)}원
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>
@@ -288,19 +326,31 @@ export default function FinancialOverviewSlide({
                 ) : fixedExpense.length === 0 ? (
                   <div className={styles.emptyMessage}>고정지출이 없습니다.</div>
                 ) : (
-                  <ul className={styles.transactionList}>
-                    {fixedExpense.map((item) => (
-                      <li key={item.trx_id} className={styles.transactionItem}>
-                        <div className={styles.transactionInfo}>
-                          <span className={styles.transactionCategory}>{item.category_name}</span>
-                          <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                  <div className={styles.transactionList}>
+                    {Object.entries(groupTransactionsByCategory(fixedExpense)).map(([category, items]) => {
+                      const totalAmount = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+                      return (
+                        <div key={category} className={styles.transactionGroup}>
+                          <div className={styles.transactionGroupHeader}>
+                            <span className={styles.transactionGroupCategory}>{category}</span>
+                            <span className={styles.transactionGroupTotal} style={{ color: '#ef4444' }}>
+                              -{formatKRW(totalAmount)}원
+                            </span>
+                          </div>
+                          {items.map((item) => (
+                            <div key={item.trx_id} className={styles.transactionItem}>
+                              <div className={styles.transactionInfo}>
+                                <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                              </div>
+                              <span className={styles.transactionAmount} style={{ color: '#ef4444' }}>
+                                -{formatKRW(item.amount)}원
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <span className={styles.transactionAmount} style={{ color: '#ef4444' }}>
-                          -{formatKRW(item.amount)}원
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>
@@ -322,33 +372,40 @@ export default function FinancialOverviewSlide({
                   const partnerWallets = wallets.filter(w => w.role === 'PARTNER');
                   const hasPartnerWallets = partnerWallets.length > 0;
 
+                  // 지갑 타입별로 그룹화
+                  const myWalletsByType = groupWalletsByType(myWallets);
+                  const partnerWalletsByType = groupWalletsByType(partnerWallets);
+
                   // 파트너 지갑이 있을 경우: 두 컬럼으로 표시
                   // 파트너 지갑이 없을 경우: 본인 지갑을 한 줄에 두 개씩 표시
                   return (
                     <div className={hasPartnerWallets ? styles.walletColumns : styles.walletGrid}>
                       {/* 본인 지갑 */}
                       <div className={styles.walletColumn}>
-                        {hasPartnerWallets && (
-                          <div className={styles.walletColumnTitle}>내 지갑</div>
-                        )}
                         <div className={styles.walletList}>
                           {myWallets.length === 0 ? (
                             <div className={styles.emptyMessage}>등록된 지갑이 없습니다.</div>
                           ) : (
-                            myWallets.map((wallet) => (
-                              <div key={wallet.wlt_id} className={styles.walletListItem}>
-                                <div className={styles.walletItemIcon}>
-                                  <span>{getWalletIcon(wallet.wlt_type)}</span>
+                            Object.entries(myWalletsByType).map(([type, typeWallets]) => (
+                              <div key={type} className={styles.walletTypeGroup}>
+                                <div className={styles.walletTypeGroupHeader}>
+                                  {getWalletTypeName(type)}
                                 </div>
-                                <div className={styles.walletItemInfo}>
-                                  <div className={styles.walletItemNameRow}>
-                                    <span className={styles.walletItemName}>{wallet.wlt_name}</span>
-                                    {wallet.is_default === 'Y' && (
-                                      <span className={styles.defaultBadge}>기본</span>
-                                    )}
+                                {typeWallets.map((wallet) => (
+                                  <div key={wallet.wlt_id} className={styles.walletListItem}>
+                                    <div className={styles.walletItemIcon}>
+                                      <span>{getWalletIcon(wallet.wlt_type)}</span>
+                                    </div>
+                                    <div className={styles.walletItemInfo}>
+                                      <div className={styles.walletItemNameRow}>
+                                        <span className={styles.walletItemName}>{wallet.wlt_name}</span>
+                                        {wallet.is_default === 'Y' && (
+                                          <span className={styles.defaultBadge}>기본</span>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <span className={styles.walletItemType}>{getWalletTypeName(wallet.wlt_type)}</span>
-                                </div>
+                                ))}
                               </div>
                             ))
                           )}
@@ -358,26 +415,31 @@ export default function FinancialOverviewSlide({
                       {/* 파트너 지갑 */}
                       {hasPartnerWallets && (
                         <div className={styles.walletColumn}>
-                          <div className={styles.walletColumnTitle}>공유 지갑</div>
                           <div className={styles.walletList}>
                             {partnerWallets.length === 0 ? (
                               <div className={styles.emptyMessage}>공유 지갑이 없습니다.</div>
                             ) : (
-                              partnerWallets.map((wallet) => (
-                                <div key={wallet.wlt_id} className={styles.walletListItem}>
-                                  <div className={styles.walletItemIcon}>
-                                    <span>{getWalletIcon(wallet.wlt_type)}</span>
+                              Object.entries(partnerWalletsByType).map(([type, typeWallets]) => (
+                                <div key={type} className={styles.walletTypeGroup}>
+                                  <div className={styles.walletTypeGroupHeader}>
+                                    {getWalletTypeName(type)}
                                   </div>
-                                  <div className={styles.walletItemInfo}>
-                                    <div className={styles.walletItemNameRow}>
-                                      <span className={styles.walletItemName}>{wallet.wlt_name}</span>
-                                      <span className={styles.sharedBadge}>공유</span>
-                                      {wallet.is_default === 'Y' && (
-                                        <span className={styles.defaultBadge}>기본</span>
-                                      )}
+                                  {typeWallets.map((wallet) => (
+                                    <div key={wallet.wlt_id} className={styles.walletListItem}>
+                                      <div className={styles.walletItemIcon}>
+                                        <span>{getWalletIcon(wallet.wlt_type)}</span>
+                                      </div>
+                                      <div className={styles.walletItemInfo}>
+                                        <div className={styles.walletItemNameRow}>
+                                          <span className={styles.walletItemName}>{wallet.wlt_name}</span>
+                                          <span className={styles.sharedBadge}>공유</span>
+                                          {wallet.is_default === 'Y' && (
+                                            <span className={styles.defaultBadge}>기본</span>
+                                          )}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <span className={styles.walletItemType}>{getWalletTypeName(wallet.wlt_type)}</span>
-                                  </div>
+                                  ))}
                                 </div>
                               ))
                             )}
