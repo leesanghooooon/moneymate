@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const yearParam = searchParams.get('year');
     const monthParam = searchParams.get('month');
     const wlt_type = searchParams.get('wlt_type'); // optional
+    const trx_type = searchParams.get('trx_type') || 'EXPENSE'; // optional, default: EXPENSE
 
     if (!usr_id) {
       return NextResponse.json({ success: false, message: 'usr_id가 필요합니다.' }, { status: 400 });
@@ -84,13 +85,13 @@ export async function GET(request: NextRequest) {
       JOIN MMT_WLT_MST t2 ON t1.wlt_id = t2.wlt_id
       WHERE t1.usr_id = ?
         AND t1.use_yn = 'Y'
-        AND t1.trx_type = 'EXPENSE'
+        AND t1.trx_type = ?
         AND t1.trx_date >= ?
         AND t1.trx_date <= ?
         AND t1.wlt_id IN (${inPlaceholders})
       ORDER BY t2.wlt_name ASC, t1.trx_date ASC, t1.trx_id ASC
     `;
-    const txParams: any[] = [usr_id, startDate, endDate, ...wltIds];
+    const txParams: any[] = [usr_id, trx_type, startDate, endDate, ...wltIds];
     const rows = (await query(txSql, txParams)) as TxRow[];
 
     // 3) 지갑 기준으로 그룹화 (없어도 빈 transactions로 한 로우 생성)

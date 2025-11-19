@@ -27,6 +27,10 @@ interface ExcelTableSlideProps {
   updateExcelTableData: (walletId: string, rowIndex: number, field: 'date' | 'item' | 'category' | 'amount', value: string) => void;
   maybeRegisterRow: (walletId: string, rowIndex: number, trxId: string, overrides?: Partial<ExcelTableRow>) => Promise<void>;
   addExcelTableRow: (walletId: string) => void;
+  isIncomeMode?: boolean;
+  onIncomeModeToggle?: () => void;
+  walletTypeFilter?: string;
+  onWalletTypeFilterChange?: (wltType: string) => void;
 }
 
 export default function ExcelTableSlide({
@@ -39,6 +43,10 @@ export default function ExcelTableSlide({
   updateExcelTableData,
   maybeRegisterRow,
   addExcelTableRow,
+  isIncomeMode = false,
+  onIncomeModeToggle,
+  walletTypeFilter = 'CREDIT_CARD',
+  onWalletTypeFilterChange,
 }: ExcelTableSlideProps) {
   return (
     <div 
@@ -49,25 +57,66 @@ export default function ExcelTableSlide({
           <header className={styles.header}>
             <div className={styles.headerTop}>
               <div className={styles.headerLeft}>
-                <h1 className={styles.title}>추가 기능</h1>
-                <p className={styles.subtitle}>다양한 기능을 확인하고 활용하세요.</p>
+                <h1 className={styles.title}>{isIncomeMode ? '수입 등록' : '추가 기능'}</h1>
+                <p className={styles.subtitle}>{isIncomeMode ? '수입 내역을 등록하고 관리하세요.' : '다양한 기능을 확인하고 활용하세요.'}</p>
               </div>
               <div className={styles.headerRight}>
-                <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 1</button>&nbsp;
-                <button className={styles.buttonSecondary} onClick={() => alert('기능 준비 중입니다.')}>기능 2</button>
+                <button 
+                  className={`${styles.buttonSecondary} ${isIncomeMode ? styles.buttonActive : ''}`}
+                  onClick={onIncomeModeToggle}
+                >
+                  수입 등록
+                </button>
+                <div className={styles.walletTypeRadioGroup}>
+                  {/*<label className={styles.radioLabel}>*/}
+                  {/*  <input*/}
+                  {/*    type="radio"*/}
+                  {/*    name="walletType"*/}
+                  {/*    value=""*/}
+                  {/*    checked={walletTypeFilter === ''}*/}
+                  {/*    onChange={(e) => onWalletTypeFilterChange?.(e.target.value)}*/}
+                  {/*    className={styles.radioInput}*/}
+                  {/*  />*/}
+                  {/*  <span className={styles.radioText}>전체</span>*/}
+                  {/*</label>*/}
+                  <label className={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="walletType"
+                      value="CREDIT_CARD"
+                      checked={walletTypeFilter === 'CREDIT_CARD'}
+                      onChange={(e) => onWalletTypeFilterChange?.(e.target.value)}
+                      className={styles.radioInput}
+                    />
+                    <span className={styles.radioText}>신용카드</span>
+                  </label>
+                  <label className={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="walletType"
+                      value="CHECK_CARD"
+                      checked={walletTypeFilter === 'CHECK_CARD'}
+                      onChange={(e) => onWalletTypeFilterChange?.(e.target.value)}
+                      className={styles.radioInput}
+                    />
+                    <span className={styles.radioText}>체크카드</span>
+                  </label>
+                </div>
               </div>
             </div>
           </header>
 
           {/* 정보 카드 */}
-          <div className={styles.excelCallout}>
-            <div className={styles.excelCalloutIcon}>📋</div>
-            <div className={styles.excelCalloutContent}>
-              <div className={styles.excelCalloutTitle}>새로운 기능을 준비 중입니다</div>
-              <div className={styles.excelCalloutDesc}>곧 더 많은 유용한 기능들을 만나보실 수 있어요.</div>
+          {!isIncomeMode && (
+            <div className={styles.excelCallout}>
+              <div className={styles.excelCalloutIcon}>📋</div>
+              <div className={styles.excelCalloutContent}>
+                <div className={styles.excelCalloutTitle}>새로운 기능을 준비 중입니다</div>
+                <div className={styles.excelCalloutDesc}>곧 더 많은 유용한 기능들을 만나보실 수 있어요.</div>
+              </div>
+              <div className={styles.excelCalloutCta}>준비중 →</div>
             </div>
-            <div className={styles.excelCalloutCta}>준비중 →</div>
-          </div>
+          )}
 
           <section className={styles.formSection}>
             <div 

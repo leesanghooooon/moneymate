@@ -78,11 +78,18 @@ export default function ExpensesPage() {
   }, [session?.user?.id]);
 
   const [categories, setCategories] = useState<CommonCode[]>([]);
+  const [incomeCategories, setIncomeCategories] = useState<CommonCode[]>([]);
   const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
   const [banks, setBanks] = useState<CommonCode[]>([]);
   const [cards, setCards] = useState<CommonCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 수입 등록 모드 상태
+  const [isIncomeMode, setIsIncomeMode] = useState<boolean>(false);
+  
+  // 지갑 타입 필터 (신용카드/체크카드 선택)
+  const [walletTypeFilter, setWalletTypeFilter] = useState<string>(''); // '' = 전체, 'CREDIT_CARD' = 신용카드, 'CHECK_CARD' = 체크카드
 
   const [selectedPayMethod, setSelectedPayMethod] = useState<string>('');
   const [selectedTrxType, setSelectedTrxType] = useState<string>('EXPENSE');
@@ -210,15 +217,24 @@ export default function ExpensesPage() {
       });
   }, [session?.user?.id]);
 
-  // 월별 지갑별 지출 목록 API 호출하여 엑셀 테이블 데이터 구성
-  const fetchMonthlyExpenses = useCallback(async () => {
+  // 월별 지갑별 지출/수입 목록 API 호출하여 엑셀 테이블 데이터 구성
+  const fetchMonthlyExpenses = useCallback(async (trxType: 'EXPENSE' | 'INCOME' = 'EXPENSE', wltType?: string) => {
       if (!session?.user?.id) return;
       try {
         const now = new Date();
-        const res = await get('/expenses/monthly-by-wallets', { params: { usr_id: String(session.user.id), year: String(now.getFullYear()), month: String(now.getMonth() + 1) } });
+        const params: Record<string, string> = { 
+          usr_id: String(session.user.id), 
+          year: String(now.getFullYear()), 
+          month: String(now.getMonth() + 1),
+          trx_type: trxType
+        };
+        if (wltType) {
+          params.wlt_type = wltType;
+        }
+        const res = await get('/expenses/monthly-by-wallets', { params });
         const payload = res?.data;
         if (!payload?.success || !Array.isArray(payload?.data)) {
-          console.warn('월별 지갑별 지출 API 실패:', payload?.message);
+          console.warn('월별 지갑별 거래 API 실패:', payload?.message);
           setExcelWallets([]);
           return;
         }
@@ -232,7 +248,7 @@ export default function ExpensesPage() {
           setExcelPeriod({ year: now.getFullYear(), month: now.getMonth() + 1 });
         }
 
-        // 행 수 결정: 카드별 지출내역 중 최대 카운트와 30 중 큰 값
+        // 행 수 결정: 카드별 거래내역 중 최대 카운트와 30 중 큰 값
         const maxRows = Math.max(
           30,
           ...list.map(item => (Array.isArray(item.transactions) ? item.transactions.length : 0))
@@ -267,14 +283,69 @@ export default function ExpensesPage() {
         setExcelTableData(nextData);
         setExcelRowIds(nextIds);
       } catch (e) {
-        console.error('월별 지갑별 지출 API 호출 오류:', e);
+        console.error('월별 지갑별 거래 API 호출 오류:', e);
         setExcelWallets([]);
       }
   }, [session?.user?.id]);
 
+  // 지출 모드일 때만 자동으로 데이터 조회
   useEffect(() => {
-    fetchMonthlyExpenses();
-  }, [fetchMonthlyExpenses]);
+    if (!isIncomeMode) {
+      fetchMonthlyExpenses('EXPENSE', walletTypeFilter || undefined);
+    }
+  }, [fetchMonthlyExpenses, isIncomeMode, walletTypeFilter]);
+  
+  // 수입 모드 활성화 및 수입 데이터 조회
+  const handleIncomeModeToggle = async () => {
+    if (!isIncomeMode) {
+      // 수입 모드 활성화
+      setIsIncomeMode(true);
+      
+      // 기존 데이터 초기화
+      setExcelTableData({});
+      setExcelWallets([]);
+      setExcelRowIds({});
+      setSubmittedRows({});
+      
+      // 수입 카테고리 로드
+      try {
+        const incomeData = await getIncome();
+        setIncomeCategories(incomeData);
+      } catch (error) {
+        console.error('수입 카테고리 조회 실패:', error);
+      }
+      
+      // 수입 데이터 조회 및 ExcelTableData 재구성
+      await fetchMonthlyExpenses('INCOME', walletTypeFilter || undefined);
+    } else {
+      // 지출 모드로 전환
+      setIsIncomeMode(false);
+      
+      // 기존 데이터 초기화
+      setExcelTableData({});
+      setExcelWallets([]);
+      setExcelRowIds({});
+      setSubmittedRows({});
+      
+      // 지출 데이터 조회 및 ExcelTableData 재구성
+      await fetchMonthlyExpenses('EXPENSE', walletTypeFilter || undefined);
+    }
+  };
+  
+  // 지갑 타입 필터 변경 핸들러
+  const handleWalletTypeFilterChange = async (wltType: string) => {
+    setWalletTypeFilter(wltType);
+    
+    // 기존 데이터 초기화
+    setExcelTableData({});
+    setExcelWallets([]);
+    setExcelRowIds({});
+    setSubmittedRows({});
+    
+    // 필터링된 데이터 조회
+    const trxType = isIncomeMode ? 'INCOME' : 'EXPENSE';
+    await fetchMonthlyExpenses(trxType, wltType || undefined);
+  };
 
   // 결제수단이 변경될 때 지갑 목록 필터링
   const filteredWallets = useMemo(() => {
@@ -471,7 +542,8 @@ export default function ExpensesPage() {
     walletId: string,
     rowIndex: number,
     trxId: string,
-    overrides?: Partial<{ date: string; item: string; category: string; amount: string }>
+    overrides?: Partial<{ date: string; item: string; category: string; amount: string }>,
+    trxType: 'EXPENSE' | 'INCOME' = 'EXPENSE'
   ) => {
     try {
       const userId = session?.user?.id ? String(session.user.id) : '';
@@ -499,7 +571,7 @@ export default function ExpensesPage() {
       const body = {
         usr_id: userId,
         wlt_id: walletId,
-        trx_type: 'EXPENSE',
+        trx_type: trxType,
         trx_date,
         amount: amountNum,
         category_cd: categoryCd,
@@ -519,7 +591,7 @@ export default function ExpensesPage() {
       }));
       show(trxId ? '수정 완료' : '등록 완료', { type: 'success' });
       // 갱신하여 trx_id 반영
-      fetchMonthlyExpenses();
+      fetchMonthlyExpenses(trxType, walletTypeFilter || undefined);
     } catch (err) {
       console.error('자동 등록 실패:', err);
       show('등록/수정 실패', { type: 'error' });
@@ -540,7 +612,7 @@ export default function ExpensesPage() {
         <main className={layoutStyles.dashboardBody}>
           <div className={styles.slideContainer}>
             {/* 슬라이드 버튼 */}
-            <button 
+                      <button
               className={styles.slideButton}
               onClick={() => setIsSlideOpen(!isSlideOpen)}
               aria-label={isSlideOpen ? '슬라이드 닫기' : '슬라이드 열기'}
@@ -595,11 +667,11 @@ export default function ExpensesPage() {
               onBulkModalSuccess={fetchTodayExpenses}
               onExcelRegistration={handleExcelRegistration}
               onWalletButtonClick={(wallet) => {
-                Promise.resolve().then(() => {
-                  setSelectedPayMethod(wallet.wlt_type);
-                  setSelectedWallet(wallet.wlt_id);
-                });
-              }}
+                      Promise.resolve().then(() => {
+                        setSelectedPayMethod(wallet.wlt_type);
+                        setSelectedWallet(wallet.wlt_id);
+                      });
+                    }}
               formatAmountInput={formatAmountInput}
               formatKRW={formatKRW}
               formatDate={formatDate}
@@ -615,11 +687,17 @@ export default function ExpensesPage() {
               excelWallets={excelWallets}
               excelTableData={excelTableData}
               excelMaxRows={excelMaxRows}
-              categories={categories}
+              categories={isIncomeMode ? incomeCategories : categories}
               formatAmountInput={formatAmountInput}
               updateExcelTableData={updateExcelTableData}
-              maybeRegisterRow={maybeRegisterRow}
+              maybeRegisterRow={(walletId, rowIndex, trxId, overrides) => 
+                maybeRegisterRow(walletId, rowIndex, trxId, overrides, isIncomeMode ? 'INCOME' : 'EXPENSE')
+              }
               addExcelTableRow={addExcelTableRow}
+              isIncomeMode={isIncomeMode}
+              onIncomeModeToggle={handleIncomeModeToggle}
+              walletTypeFilter={walletTypeFilter}
+              onWalletTypeFilterChange={handleWalletTypeFilterChange}
             />
           </div>
         </main>
