@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import styles from '../../styles/css/expenses.module.css';
 import { Wallet, getWallets } from '../../lib/api/commonCodes';
 import { get } from '../../lib/api/common';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 import { CurrencyDollarIcon, BanknotesIcon, WalletIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 interface FinancialOverviewSlideProps {
@@ -104,174 +105,99 @@ export default function FinancialOverviewSlide({
     return fixedExpenseList;
   };
 
-  // 고정수입/고정지출 조회 (캘린더 API 사용)
-  const fetchFixedTransactions = useCallback(async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      // 캘린더 API 호출
-      const calendarResponse = await get('/calendar', {
-        params: {
-          usr_id: session.user.id,
-          yyyy: String(currentYear),
-          mm: String(currentMonth).padStart(2, '0'),
-        },
-      });
-
-      // API 응답 구조: common.ts의 get은 { data, status, headers } 반환
-      // 실제 API 응답은 { data: [...] }
-      if (calendarResponse?.data?.data && Array.isArray(calendarResponse.data.data)) {
-        // 고정수입 추출
-        const incomeList = extractFixedIncome(calendarResponse.data.data);
-        setFixedIncome(incomeList);
-        
-        // 고정지출 추출
-        const expenseList = extractFixedExpense(calendarResponse.data.data);
-        setFixedExpense(expenseList);
-      } else {
-        setFixedIncome([]);
-        setFixedExpense([]);
-      }
-    } catch (error) {
-      console.error('고정 거래 조회 오류:', error);
-      setFixedIncome([]);
-      setFixedExpense([]);
-    }
-  }, [session?.user?.id, currentYear, currentMonth]);
-
-  // 월별 저축 금액 조회
-  const fetchMonthlySavings = useCallback(async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-      
-      // 해당 월의 첫날과 마지막날 계산
-      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      const lastDay = new Date(year, month, 0).getDate();
-      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-      // 저축 납입내역 조회
-      const response = await get('/savings-contributions', {
-        params: {
-          usr_id: session.user.id,
-        },
-      });
-
-      if (response?.data?.success && Array.isArray(response.data.data)) {
-        // 해당 월의 저축 금액 계산
-        const monthlyTotal = response.data.data
-          .filter((contrib: any) => {
-            const contribDate = new Date(contrib.contrib_date);
-            return contribDate >= new Date(startDate) && contribDate <= new Date(endDate);
-          })
-          .reduce((sum: number, contrib: any) => sum + (Number(contrib.amount) || 0), 0);
-
-        setMonthlySavings({
-          year,
-          month,
-          total_amount: monthlyTotal,
-        });
-      }
-    } catch (error) {
-      console.error('월별 저축 조회 오류:', error);
-      setMonthlySavings(null);
-    }
-  }, [session?.user?.id]);
-
-  // 지갑 목록 조회 (본인 + 공유 지갑)
-  const fetchWallets = useCallback(async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      // 본인 지갑 + 공유 지갑 조회 (include_shared=true)
-      const allWallets = await getWallets(session.user.id, '', true);
-      
-      const walletList: SharedWallet[] = allWallets.map(w => ({
-        ...w,
-        is_shared: w.role === 'PARTNER',
-      }));
-
-      setWallets(walletList);
-    } catch (error) {
-      console.error('지갑 조회 오류:', error);
-      setWallets([]);
-    }
-  }, [session?.user?.id]);
-
   // 로딩 상태 관리
   const [loading, setLoading] = useState(true);
-  const prevIsVisibleRef = useRef<boolean>(false);
-  const lastFetchedKeyRef = useRef<string>('');
   
-  // 슬라이드가 보일 때만 데이터 조회
+  // 슬라이드가 보일 때만 데이터 조회 (중복 호출 방지)
   // isOpen이 false일 때 보이므로, !isOpen일 때 API 호출
-  useEffect(() => {
-    const isVisible = !isOpen; // 슬라이드가 보이는지 여부
-    const wasVisible = prevIsVisibleRef.current;
-    
-    // 세션이 없으면 조회하지 않음
-    if (!session?.user?.id) {
-      setLoading(false);
-      return;
-    }
+  useFetchOnce({
+    dependencies: [!isOpen, session?.user?.id, currentYear, currentMonth],
+    fetchFn: async () => {
+      // 슬라이드가 보이지 않거나 세션이 없으면 조회하지 않음
+      if (isOpen || !session?.user?.id) {
+        setLoading(false);
+        return;
+      }
 
-    // 슬라이드가 보이는 상태가 아니면 조회하지 않음
-    if (!isVisible) {
-      setLoading(false);
-      prevIsVisibleRef.current = isVisible;
-      return;
-    }
-
-    // 슬라이드가 보이는 상태 (isVisible = true)
-    const fetchKey = `${session.user.id}-${currentYear}-${currentMonth}`;
-    const keyChanged = lastFetchedKeyRef.current !== fetchKey;
-    
-    // 호출 조건: 처음 보이게 되었거나 (wasVisible = false -> isVisible = true) OR 연도/월이 변경됨
-    const shouldFetch = !wasVisible || keyChanged;
-    
-    console.log('[FinancialOverviewSlide] API 호출 조건 확인:', {
-      isOpen,
-      isVisible,
-      wasVisible,
-      keyChanged,
-      shouldFetch,
-      fetchKey,
-      lastKey: lastFetchedKeyRef.current
-    });
-    
-    if (!shouldFetch) {
-      console.log('[FinancialOverviewSlide] API 호출 스킵');
-      prevIsVisibleRef.current = isVisible;
-      return;
-    }
-
-    // 데이터 조회
-    const fetchData = async () => {
-      console.log('[FinancialOverviewSlide] API 호출 시작');
-      setLoading(true);
-      lastFetchedKeyRef.current = fetchKey;
       try {
-        await Promise.all([
-          fetchFixedTransactions(),
-          fetchMonthlySavings(),
-          fetchWallets()
-        ]);
-        console.log('[FinancialOverviewSlide] API 호출 완료');
+        setLoading(true);
+        
+        // 고정수입/고정지출 조회 (캘린더 API 사용)
+        const calendarResponse = await get('/calendar', {
+          params: {
+            usr_id: session.user.id,
+            yyyy: String(currentYear),
+            mm: String(currentMonth).padStart(2, '0'),
+          },
+        });
+
+        // API 응답 구조: common.ts의 get은 { data, status, headers } 반환
+        // 실제 API 응답은 { data: [...] }
+        if (calendarResponse?.data?.data && Array.isArray(calendarResponse.data.data)) {
+          // 고정수입 추출
+          const incomeList = extractFixedIncome(calendarResponse.data.data);
+          setFixedIncome(incomeList);
+          
+          // 고정지출 추출
+          const expenseList = extractFixedExpense(calendarResponse.data.data);
+          setFixedExpense(expenseList);
+        } else {
+          setFixedIncome([]);
+          setFixedExpense([]);
+        }
+
+        // 월별 저축 금액 조회
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        
+        // 해당 월의 첫날과 마지막날 계산
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+        // 저축 납입내역 조회
+        const savingsResponse = await get('/savings-contributions', {
+          params: {
+            usr_id: session.user.id,
+          },
+        });
+
+        if (savingsResponse?.data?.success && Array.isArray(savingsResponse.data.data)) {
+          // 해당 월의 저축 금액 계산
+          const monthlyTotal = savingsResponse.data.data
+            .filter((contrib: any) => {
+              const contribDate = new Date(contrib.contrib_date);
+              return contribDate >= new Date(startDate) && contribDate <= new Date(endDate);
+            })
+            .reduce((sum: number, contrib: any) => sum + (Number(contrib.amount) || 0), 0);
+
+          setMonthlySavings({
+            year,
+            month,
+            total_amount: monthlyTotal,
+          });
+        }
+
+        // 지갑 목록 조회 (본인 + 공유 지갑)
+        const allWallets = await getWallets(session.user.id, '', true);
+        
+        const walletList: SharedWallet[] = allWallets.map(w => ({
+          ...w,
+          is_shared: w.role === 'PARTNER',
+        }));
+
+        setWallets(walletList);
       } catch (error) {
         console.error('[FinancialOverviewSlide] 데이터 로딩 오류:', error);
-        // 에러 발생 시 키 리셋하여 재시도 가능하도록
-        lastFetchedKeyRef.current = '';
       } finally {
         setLoading(false);
-        prevIsVisibleRef.current = isVisible;
       }
-    };
-
-    fetchData();
-  }, [isOpen, session?.user?.id, currentYear, currentMonth, fetchFixedTransactions, fetchMonthlySavings, fetchWallets]);
+    },
+    enabled: !isOpen && !!session?.user?.id,
+    manageLoading: false,
+    debug: true,
+  });
 
   // 금액 포맷팅
   const formatKRW = (amount: number) => {
