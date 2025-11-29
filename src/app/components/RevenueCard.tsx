@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Chart as ChartJS,
@@ -15,6 +15,7 @@ import { Bar } from 'react-chartjs-2';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/RevenueCard.module.css';
 import { get } from '@/lib/api/common';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 
 ChartJS.register(
   CategoryScale,
@@ -130,62 +131,17 @@ const RevenueCard = () => {
   // 테스트 모드 설정 (true: 샘플 데이터 사용, false: API 데이터 사용)
   const useTestData = false;
 
-  const fetchedRef = useRef(false);
-
-  useEffect(() => {
-
-    if (!session?.user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    // 이미 호출했다면 재호출 방지 (StrictMode/리렌더 대응)
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    const ac = new AbortController();
-
-    // const fetchData = async () => {
-    //   if (useTestData) {
-    //     setChartData(sampleData);
-    //     setLoading(false);
-    //     return;
-    //   }
-    //
-    //   if (!session?.user?.id) {
-    //     setLoading(false);
-    //     return;
-    //   }
-    //
-    //   try {
-    //     setLoading(true);
-    //     const response = await get('/stats/monthly-expenses', {
-    //       params: {
-    //         usr_id: session.user.id,
-    //         year: new Date().getFullYear().toString()
-    //       }
-    //     });
-    //
-    //     console.log(response)
-    //     console.log(transformApiDataToChartData(response.data))
-    //     if (response.data.success && response.data) {
-    //       const transformedData = transformApiDataToChartData(response.data);
-    //       if (transformedData) {
-    //         setChartData(transformedData);
-    //       }
-    //     }
-    //   } catch (err) {
-    //     console.error('월간 지출 통계 조회 오류:', err);
-    //     setError('데이터를 불러오는 중 오류가 발생했습니다.');
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
-    (async () => {
-
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id, new Date().getFullYear()],
+    fetchFn: async () => {
       if (useTestData) {
         setChartData(sampleData);
+        setLoading(false);
+        return;
+      }
+
+      if (!session?.user?.id) {
         setLoading(false);
         return;
       }
@@ -196,16 +152,20 @@ const RevenueCard = () => {
           params: { usr_id: session.user.id, year: String(new Date().getFullYear()) }
         });
         const transformed = transformApiDataToChartData(response.data);
-        if (response.data?.success && transformed) setChartData(transformed);
-      } catch (e:any) {
+        if (response.data?.success && transformed) {
+          setChartData(transformed);
+        }
+      } catch (e: any) {
         console.error('월간 지출 통계 조회 오류:', e);
         setError('데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
-    })();
-    return () => ac.abort();
-  }, [session?.user?.id, useTestData]);
+    },
+    enabled: !!session?.user?.id && !useTestData,
+    manageLoading: false,
+    debug: true,
+  });
 
   const options = {
     responsive: true,

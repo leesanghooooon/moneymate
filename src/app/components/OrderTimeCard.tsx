@@ -6,6 +6,7 @@ import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/MostOrderedCard.module.css';
 import { get } from '@/lib/api/common';
 import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 
 interface Expenditure {
   trx_id: string;
@@ -22,8 +23,14 @@ const OrderTimeCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [expenditures, setExpenditures] = useState<Expenditure[]>([]);
 
-  useEffect(() => {
-    const fetchTopExpenditures = async () => {
+  // 현재 월의 첫날과 마지막날 계산 (의존성 배열용)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id, currentYear, currentMonth],
+    fetchFn: async () => {
       if (!session?.user?.id) return;
 
       try {
@@ -54,10 +61,11 @@ const OrderTimeCard = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchTopExpenditures();
-  }, [session?.user?.id]);
+    },
+    enabled: !!session?.user?.id,
+    manageLoading: false,
+    debug: true,
+  });
 
   // KRW 포맷 함수 (3자리 콤마 + '원')
   const formatKRW = (value: number) => {

@@ -62,12 +62,6 @@ export async function dbSelect(options: SelectOptions) {
     sql += ` ORDER BY ${orderBy}`;
   }
 
-  // 쿼리 로깅
-  console.log('=== SELECT Query ===');
-  console.log('SQL:', sql);
-  console.log('Parameters:', params);
-  console.log('==================');
-
   return query(sql, params);
 }
 
@@ -83,12 +77,6 @@ export async function dbInsert(options: InsertOptions) {
   const placeholders = new Array(values.length).fill('?').join(', ');
 
   const sql = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
-
-  // 쿼리 로깅
-  console.log('=== INSERT Query ===');
-  console.log('SQL:', sql);
-  console.log('Parameters:', values);
-  console.log('==================');
 
   return query(sql, values);
 }
@@ -134,12 +122,6 @@ export async function dbUpdate(options: UpdateOptions) {
     throw new Error('WHERE 절이 필요합니다. (where 또는 filters를 제공해주세요)');
   }
 
-  // 쿼리 로깅
-  console.log('=== UPDATE Query ===');
-  console.log('SQL:', sql);
-  console.log('Parameters:', [...setValues, ...whereValues]);
-  console.log('==================');
-
   return query(sql, [...setValues, ...whereValues]);
 }
 
@@ -167,12 +149,6 @@ export async function dbDelete(options: DeleteOptions) {
   }
 
   const sql = `DELETE FROM ${table} WHERE ${whereConditions.join(' AND ')}`;
-
-  // 쿼리 로깅
-  console.log('=== DELETE Query ===');
-  console.log('SQL:', sql);
-  console.log('Parameters:', values);
-  console.log('==================');
 
   return query(sql, values);
 }

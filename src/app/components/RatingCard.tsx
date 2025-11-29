@@ -6,6 +6,7 @@ import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/RatingCard.module.css';
 import { get } from '@/lib/api/common';
 import { getFirstDayOfMonth, getLastDayOfMonth } from '@/lib/date-utils';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 
 interface WalletSummary {
   wlt_id: string;
@@ -27,8 +28,14 @@ const RatingCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [summaryData, setSummaryData] = useState<PaymentSummary[]>([]);
 
-  useEffect(() => {
-    const fetchPaymentSummary = async () => {
+  // 현재 월의 첫날과 마지막날 계산 (의존성 배열용)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id, currentYear, currentMonth],
+    fetchFn: async () => {
       if (!session?.user?.id) return;
 
       try {
@@ -148,10 +155,11 @@ const RatingCard = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchPaymentSummary();
-  }, [session?.user?.id]);
+    },
+    enabled: !!session?.user?.id,
+    manageLoading: false,
+    debug: true,
+  });
 
   // KRW 포맷 함수 (3자리 콤마 + '원')
   const formatKRW = (value: number) => {

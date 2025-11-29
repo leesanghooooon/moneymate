@@ -17,6 +17,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { get } from '@/lib/api/common';
 import { getWeekDateRanges } from '@/lib/date-utils';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 
 ChartJS.register(
   CategoryScale,
@@ -124,44 +125,36 @@ const OrderCard = () => {
     };
   };
 
-  useEffect(() => {
-    const fetchWeeklyExpenses = async () => {
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id],
+    fetchFn: async () => {
       if (!session?.user?.id) return;
 
       try {
         setLoading(true);
         
-        // 실제 API 호출 (현재는 주석 처리)
         const response = await get('/stats/weekly-expenses', {
           params: {
             usr_id: session.user.id
           }
         });
         
-        // 샘플 데이터 사용
-        // const sampleData = generateSampleData();
-        // console.log('샘플 데이터:', sampleData);
-        // console.log('샘플 데이터:', response.data.data);
-        
         if (response.data.success) {
           setOrderData(response.data.data.daily);
           setSummary(response.data.data.summary);
         }
-        
-        // 샘플 데이터 설정
-        // setOrderData(sampleData.daily);
-        // setSummary(sampleData.summary);
-        
       } catch (err) {
         console.error('주간 지출 통계 조회 오류:', err);
         setError('데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchWeeklyExpenses();
-  }, [session?.user?.id]);
+    },
+    enabled: !!session?.user?.id,
+    manageLoading: false,
+    debug: true,
+  });
 
   // 차트 데이터 설정
   const data = {

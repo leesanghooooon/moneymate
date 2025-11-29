@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import styles from '../../styles/css/expenses.module.css';
 import { Wallet, getWallets } from '../../lib/api/commonCodes';
 import { get } from '../../lib/api/common';
 import { CurrencyDollarIcon, BanknotesIcon, WalletIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { useFetchOnce } from '../../hooks/useFetchOnce';
 
 interface FinancialOverviewSlideProps {
   isOpen: boolean;
@@ -118,7 +117,6 @@ export default function FinancialOverviewSlide({
           mm: String(currentMonth).padStart(2, '0'),
         },
       });
-      console.log('calendarResponse 호출..', calendarResponse.data);
 
       // API 응답 구조: common.ts의 get은 { data, status, headers } 반환
       // 실제 API 응답은 { data: [...] }
@@ -126,12 +124,10 @@ export default function FinancialOverviewSlide({
         // 고정수입 추출
         const incomeList = extractFixedIncome(calendarResponse.data.data);
         setFixedIncome(incomeList);
-        console.log('setFixedIncome 호출 후 fixedIncome 상태:', incomeList);
         
         // 고정지출 추출
         const expenseList = extractFixedExpense(calendarResponse.data.data);
         setFixedExpense(expenseList);
-        console.log('setFixedExpense 호출 후 fixedExpense 상태:', expenseList);
       } else {
         setFixedIncome([]);
         setFixedExpense([]);
@@ -207,42 +203,75 @@ export default function FinancialOverviewSlide({
 
   // 로딩 상태 관리
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const prevIsVisibleRef = useRef<boolean>(false);
+  const lastFetchedKeyRef = useRef<string>('');
   
-  // 중복 호출 방지를 위한 커스텀 훅 사용
-  useFetchOnce({
-    dependencies: [session?.user?.id, currentYear, currentMonth],
-    fetchFn: async () => {
+  // 슬라이드가 보일 때만 데이터 조회
+  // isOpen이 false일 때 보이므로, !isOpen일 때 API 호출
+  useEffect(() => {
+    const isVisible = !isOpen; // 슬라이드가 보이는지 여부
+    const wasVisible = prevIsVisibleRef.current;
+    
+    // 세션이 없으면 조회하지 않음
+    if (!session?.user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    // 슬라이드가 보이는 상태가 아니면 조회하지 않음
+    if (!isVisible) {
+      setLoading(false);
+      prevIsVisibleRef.current = isVisible;
+      return;
+    }
+
+    // 슬라이드가 보이는 상태 (isVisible = true)
+    const fetchKey = `${session.user.id}-${currentYear}-${currentMonth}`;
+    const keyChanged = lastFetchedKeyRef.current !== fetchKey;
+    
+    // 호출 조건: 처음 보이게 되었거나 (wasVisible = false -> isVisible = true) OR 연도/월이 변경됨
+    const shouldFetch = !wasVisible || keyChanged;
+    
+    console.log('[FinancialOverviewSlide] API 호출 조건 확인:', {
+      isOpen,
+      isVisible,
+      wasVisible,
+      keyChanged,
+      shouldFetch,
+      fetchKey,
+      lastKey: lastFetchedKeyRef.current
+    });
+    
+    if (!shouldFetch) {
+      console.log('[FinancialOverviewSlide] API 호출 스킵');
+      prevIsVisibleRef.current = isVisible;
+      return;
+    }
+
+    // 데이터 조회
+    const fetchData = async () => {
+      console.log('[FinancialOverviewSlide] API 호출 시작');
       setLoading(true);
-      setIsInitialized(false);
+      lastFetchedKeyRef.current = fetchKey;
       try {
         await Promise.all([
           fetchFixedTransactions(),
           fetchMonthlySavings(),
           fetchWallets()
         ]);
-        // 상태 업데이트가 완료되었음을 표시
-        setIsInitialized(true);
+        console.log('[FinancialOverviewSlide] API 호출 완료');
       } catch (error) {
-        console.error('데이터 로딩 오류:', error);
-        setIsInitialized(true);
-      }
-    },
-    enabled: !!session?.user?.id,
-    manageLoading: false, // 직접 로딩 관리
-    debug: true,
-  });
-  
-  // 상태 업데이트가 완료되면 로딩 해제
-  useEffect(() => {
-    if (isInitialized) {
-      // React 상태 업데이트가 완료될 시간을 주기 위해 약간의 지연
-      const timeoutId = setTimeout(() => {
+        console.error('[FinancialOverviewSlide] 데이터 로딩 오류:', error);
+        // 에러 발생 시 키 리셋하여 재시도 가능하도록
+        lastFetchedKeyRef.current = '';
+      } finally {
         setLoading(false);
-      }, 100);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isInitialized, fixedIncome, fixedExpense, wallets, monthlySavings]);
+        prevIsVisibleRef.current = isVisible;
+      }
+    };
+
+    fetchData();
+  }, [isOpen, session?.user?.id, currentYear, currentMonth, fetchFixedTransactions, fetchMonthlySavings, fetchWallets]);
 
   // 금액 포맷팅
   const formatKRW = (amount: number) => {

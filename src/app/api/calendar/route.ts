@@ -138,11 +138,11 @@ export async function GET(request: NextRequest) {
       ORDER BY combined_trx.trx_date, combined_trx.created_at
     `;
 
-    console.log('=== Calendar Query with Shared Transactions ===');
-    console.log('Calendar SQL:', calendarSql);
-    console.log('Transactions SQL:', transactionsSql);
-    console.log('Parameters:', [usr_id, usr_id, usr_id, yyyy, mm]);
-    console.log('==========================================');
+    // console.log('=== Calendar Query with Shared Transactions ===');
+    // console.log('Calendar SQL:', calendarSql);
+    // console.log('Transactions SQL:', transactionsSql);
+    // console.log('Parameters:', [usr_id, usr_id, usr_id, yyyy, mm]);
+    // console.log('==========================================');
 
     // 쿼리 실행
     const [calendarRows, transactionRows] = await Promise.all([

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import DashboardCard from './DashboardCard';
 import styles from '../../styles/css/MostOrderedCard.module.css';
 import { get } from '@/lib/api/common';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 
 interface SavingsGoal {
   sav_goal_id: string;
@@ -25,8 +26,10 @@ const MostOrderedCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
 
-  useEffect(() => {
-    const fetchSavingsGoals = async () => {
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id],
+    fetchFn: async () => {
       if (!session?.user?.id) return;
 
       try {
@@ -52,10 +55,11 @@ const MostOrderedCard = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchSavingsGoals();
-  }, [session?.user?.id]);
+    },
+    enabled: !!session?.user?.id,
+    manageLoading: false,
+    debug: true,
+  });
 
   // KRW 포맷 함수 (3자리 콤마 + '원')
   const formatKRW = (value: number) => {
