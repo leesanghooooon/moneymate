@@ -3,6 +3,7 @@
 import HeaderWrapper from "../components/HeaderWrapper";
 import { SessionProvider } from "next-auth/react";
 import { ToastProvider } from "../components/Toast";
+import { CommonCodesProvider } from "../contexts/CommonCodesContext";
 
 export default function ClientLayout({
   children,
@@ -11,10 +12,12 @@ export default function ClientLayout({
 }) {
   return (
     <SessionProvider>
-      <ToastProvider>
-        <HeaderWrapper />
-        {children}
-      </ToastProvider>
+      <CommonCodesProvider>
+        <ToastProvider>
+          <HeaderWrapper />
+          {children}
+        </ToastProvider>
+      </CommonCodesProvider>
     </SessionProvider>
   );
 }

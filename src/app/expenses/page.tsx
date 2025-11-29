@@ -3,7 +3,8 @@
 import layoutStyles from '../../styles/css/page.module.css';
 import styles from '../../styles/css/expenses.module.css';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getCategories, getPayMethods, getBanks, getCards, getWallets, getIncome, CommonCode, Wallet } from '../../lib/api/commonCodes';
+import { getWallets, Wallet, CommonCode } from '../../lib/api/commonCodes';
+import { useCategories, usePayMethods, useBanks, useCards, useIncome } from '../../contexts/CommonCodesContext';
 import BulkExpenseModal from '../components/BulkExpenseModal';
 import { get, post, ApiError } from '../../lib/api/common';
 import { useSession } from 'next-auth/react';
@@ -77,14 +78,6 @@ export default function ExpensesPage() {
     }
   }, [session?.user?.id]);
 
-  const [categories, setCategories] = useState<CommonCode[]>([]);
-  const [incomeCategories, setIncomeCategories] = useState<CommonCode[]>([]);
-  const [payMethods, setPayMethods] = useState<CommonCode[]>([]);
-  const [banks, setBanks] = useState<CommonCode[]>([]);
-  const [cards, setCards] = useState<CommonCode[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
   // 수입 등록 모드 상태
   const [isIncomeMode, setIsIncomeMode] = useState<boolean>(false);
   
@@ -95,6 +88,22 @@ export default function ExpensesPage() {
   const [selectedTrxType, setSelectedTrxType] = useState<string>('EXPENSE');
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  
+  // 공통 코드는 Context에서 가져오기
+  const { categories: allCategories, loading: codesLoading } = useCategories();
+  const { income: allIncome } = useIncome();
+  const { payMethods, loading: payMethodsLoading } = usePayMethods();
+  const { banks, loading: banksLoading } = useBanks();
+  const { cards, loading: cardsLoading } = useCards();
+  
+  // 거래 유형에 따른 카테고리 필터링
+  const categories = useMemo(() => {
+    return selectedTrxType === 'EXPENSE' ? allCategories : allIncome;
+  }, [selectedTrxType, allCategories, allIncome]);
+  
+  const [incomeCategories, setIncomeCategories] = useState<CommonCode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오는 함수
   const getTodayDate = () => {
@@ -168,40 +177,15 @@ export default function ExpensesPage() {
 
   const isWalletCardSelected = getWalletCardType !== null;
 
-  // 공통 코드 조회는 세션이 있을 때만 실행
+  // 공통 코드는 Context에서 자동으로 로드되므로 여기서는 제거
+  // 로딩 상태는 공통 코드 로딩 상태와 동기화
   useEffect(() => {
-    if (!session?.user?.id) return;
-
-    let mounted = true;
-    setLoading(true);
-
-    const loadCommonCodes = async () => {
-      try {
-        // 카테고리는 거래 유형에 따라 별도로 로드하므로 여기서는 제외
-        const [pays, bks, crds] = await Promise.all([
-          getPayMethods(),
-          getBanks(),
-          getCards()
-        ]);
-
-        if (!mounted) return;
-        
-        setPayMethods(pays);
-        setBanks(bks);
-        setCards(crds);
-      } catch (e: any) {
-        if (!mounted) return;
-        setError(e?.message || '공통코드 조회 실패');
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadCommonCodes();
-    return () => { mounted = false; };
-  }, [session?.user?.id]);
+    if (codesLoading || payMethodsLoading || banksLoading || cardsLoading) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [codesLoading, payMethodsLoading, banksLoading, cardsLoading]);
 
   // 세션이 있을 때 모든 지갑 목록 조회
   useEffect(() => {
@@ -307,13 +291,8 @@ export default function ExpensesPage() {
       setExcelRowIds({});
       setSubmittedRows({});
       
-      // 수입 카테고리 로드
-      try {
-        const incomeData = await getIncome();
-        setIncomeCategories(incomeData);
-      } catch (error) {
-        console.error('수입 카테고리 조회 실패:', error);
-      }
+      // 수입 카테고리는 Context에서 가져오므로 설정
+      setIncomeCategories(allIncome);
       
       // 수입 데이터 조회 및 ExcelTableData 재구성
       await fetchMonthlyExpenses('INCOME', walletTypeFilter || undefined);
@@ -353,23 +332,12 @@ export default function ExpensesPage() {
     return wallets.filter(wallet => wallet.wlt_type === selectedPayMethod);
   }, [wallets, selectedPayMethod]);
 
-  // 거래유형 변경 시 카테고리 다시 로드
+  // 거래유형 변경 시 선택된 카테고리 초기화 (카테고리는 Context에서 가져오므로)
   useEffect(() => {
-    if (!session?.user?.id) return;
-    
-    const loadCategories = async () => {
-      try {
-        const categoryData = selectedTrxType === 'EXPENSE' ? await getCategories() : await getIncome();
-        setCategories(categoryData);
-        // 카테고리 변경 시 선택된 카테고리 초기화
-        setExpenseForm(prev => ({ ...prev, category_cd: '' }));
-      } catch (error) {
-        console.error('카테고리 조회 실패:', error);
-      }
-    };
-    
-    loadCategories();
-  }, [selectedTrxType, session?.user?.id]);
+    if (selectedTrxType) {
+      setExpenseForm(prev => ({ ...prev, category_cd: '' }));
+    }
+  }, [selectedTrxType]);
   // 오늘의 지출 데이터 로드는 session?.user?.id useEffect에서 처리하므로 제거
 
   useEffect(() => {

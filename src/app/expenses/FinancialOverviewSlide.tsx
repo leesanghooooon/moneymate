@@ -6,6 +6,7 @@ import styles from '../../styles/css/expenses.module.css';
 import { Wallet, getWallets } from '../../lib/api/commonCodes';
 import { get } from '../../lib/api/common';
 import { CurrencyDollarIcon, BanknotesIcon, WalletIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { useFetchOnce } from '../../hooks/useFetchOnce';
 
 interface FinancialOverviewSlideProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface FixedTransaction {
   memo: string | null;
   wlt_name: string;
   trx_date: string;
+  is_shared?: boolean;
 }
 
 interface SharedWallet extends Wallet {
@@ -40,60 +42,109 @@ export default function FinancialOverviewSlide({
   const [fixedExpense, setFixedExpense] = useState<FixedTransaction[]>([]);
   const [wallets, setWallets] = useState<SharedWallet[]>([]);
   const [monthlySavings, setMonthlySavings] = useState<MonthlySavings | null>(null);
-  const [loading, setLoading] = useState(true);
   
   // 현재 년도와 월 관리
   const now = new Date();
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(now.getMonth() + 1);
 
-  // 고정수입/고정지출 조회
+  // 캘린더 API 응답에서 고정수입 추출
+  const extractFixedIncome = (calendarData: any[]): FixedTransaction[] => {
+    const fixedIncomeList: FixedTransaction[] = [];
+    
+    calendarData.forEach((day: any) => {
+      if (day.trx_list && Array.isArray(day.trx_list)) {
+        day.trx_list.forEach((trx: any) => {
+          // 고정수입: INCOME 타입이고 category_cd가 SALARY, RENTAL_INCOME
+          if (trx.trx_type === 'INCOME' && 
+              (trx.category_cd === 'SALARY' || trx.category_cd === 'RENTAL_INCOME')) {
+            fixedIncomeList.push({
+              trx_id: trx.trx_id,
+              trx_type: trx.trx_type,
+              amount: Number(trx.amount) || 0,
+              category_name: trx.category_cd_nm || trx.category_cd || '',
+              memo: trx.memo || null,
+              wlt_name: trx.wlt_name || '',
+              trx_date: trx.trx_date || day.cal_dt,
+              is_shared: trx.is_shared === true || trx.is_shared === 1,
+            });
+          }
+        });
+      }
+    });
+    
+    return fixedIncomeList;
+  };
+
+  // 캘린더 API 응답에서 고정지출 추출
+  const extractFixedExpense = (calendarData: any[]): FixedTransaction[] => {
+    const fixedExpenseList: FixedTransaction[] = [];
+    
+    calendarData.forEach((day: any) => {
+      if (day.trx_list && Array.isArray(day.trx_list)) {
+        day.trx_list.forEach((trx: any) => {
+          // 고정지출: EXPENSE 타입이고 category_cd가 BILL, FINANCE, RENT, SUBSCRIPTION
+          if (trx.trx_type === 'EXPENSE' && 
+              (trx.category_cd === 'BILL' || trx.category_cd === 'FINANCE' || 
+               trx.category_cd === 'RENT' || trx.category_cd === 'SUBSCRIPTION')) {
+            fixedExpenseList.push({
+              trx_id: trx.trx_id,
+              trx_type: trx.trx_type,
+              amount: Number(trx.amount) || 0,
+              category_name: trx.category_cd_nm || trx.category_cd || '',
+              memo: trx.memo || null,
+              wlt_name: trx.wlt_name || '',
+              trx_date: trx.trx_date || day.cal_dt,
+              is_shared: trx.is_shared === true || trx.is_shared === 1,
+            });
+          }
+        });
+      }
+    });
+    
+    return fixedExpenseList;
+  };
+
+  // 고정수입/고정지출 조회 (캘린더 API 사용)
   const fetchFixedTransactions = useCallback(async () => {
     if (!session?.user?.id) return;
 
     try {
-      // 해당 월의 첫날과 마지막날 계산
-      const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
-      const lastDay = new Date(currentYear, currentMonth, 0).getDate();
-      const endDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-      // 고정수입 조회
-      const incomeResponse = await get('/expenses', {
+      // 캘린더 API 호출
+      const calendarResponse = await get('/calendar', {
         params: {
           usr_id: session.user.id,
-          trx_type: 'INCOME',
-          is_fixed: 'Y',
-          start_date: startDate,
-          end_date: endDate,
+          yyyy: String(currentYear),
+          mm: String(currentMonth).padStart(2, '0'),
         },
       });
-
-      // 고정지출 조회
-      const expenseResponse = await get('/expenses', {
-        params: {
-          usr_id: session.user.id,
-          trx_type: 'EXPENSE',
-          is_fixed: 'Y',
-          start_date: startDate,
-          end_date: endDate,
-        },
-      });
+      console.log('calendarResponse 호출..', calendarResponse.data);
 
       // API 응답 구조: common.ts의 get은 { data, status, headers } 반환
       // 실제 API 응답은 { data: [...] }
-      if (incomeResponse?.data?.data) {
-        setFixedIncome(Array.isArray(incomeResponse.data.data) ? incomeResponse.data.data : []);
-      }
-      if (expenseResponse?.data?.data) {
-        setFixedExpense(Array.isArray(expenseResponse.data.data) ? expenseResponse.data.data : []);
+      if (calendarResponse?.data?.data && Array.isArray(calendarResponse.data.data)) {
+        // 고정수입 추출
+        const incomeList = extractFixedIncome(calendarResponse.data.data);
+        setFixedIncome(incomeList);
+        console.log('setFixedIncome 호출 후 fixedIncome 상태:', incomeList);
+        
+        // 고정지출 추출
+        const expenseList = extractFixedExpense(calendarResponse.data.data);
+        setFixedExpense(expenseList);
+        console.log('setFixedExpense 호출 후 fixedExpense 상태:', expenseList);
+      } else {
+        setFixedIncome([]);
+        setFixedExpense([]);
       }
     } catch (error) {
       console.error('고정 거래 조회 오류:', error);
+      setFixedIncome([]);
+      setFixedExpense([]);
     }
   }, [session?.user?.id, currentYear, currentMonth]);
 
   // 월별 저축 금액 조회
-  const fetchMonthlySavings = async () => {
+  const fetchMonthlySavings = useCallback(async () => {
     if (!session?.user?.id) return;
 
     try {
@@ -132,10 +183,10 @@ export default function FinancialOverviewSlide({
       console.error('월별 저축 조회 오류:', error);
       setMonthlySavings(null);
     }
-  };
+  }, [session?.user?.id]);
 
   // 지갑 목록 조회 (본인 + 공유 지갑)
-  const fetchWallets = async () => {
+  const fetchWallets = useCallback(async () => {
     if (!session?.user?.id) return;
 
     try {
@@ -151,19 +202,47 @@ export default function FinancialOverviewSlide({
     } catch (error) {
       console.error('지갑 조회 오류:', error);
       setWallets([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [session?.user?.id]);
 
-  useEffect(() => {
-    if (session?.user?.id) {
+  // 로딩 상태 관리
+  const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // 중복 호출 방지를 위한 커스텀 훅 사용
+  useFetchOnce({
+    dependencies: [session?.user?.id, currentYear, currentMonth],
+    fetchFn: async () => {
       setLoading(true);
-      Promise.all([fetchFixedTransactions(), fetchMonthlySavings(), fetchWallets()]).finally(() => {
+      setIsInitialized(false);
+      try {
+        await Promise.all([
+          fetchFixedTransactions(),
+          fetchMonthlySavings(),
+          fetchWallets()
+        ]);
+        // 상태 업데이트가 완료되었음을 표시
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('데이터 로딩 오류:', error);
+        setIsInitialized(true);
+      }
+    },
+    enabled: !!session?.user?.id,
+    manageLoading: false, // 직접 로딩 관리
+    debug: true,
+  });
+  
+  // 상태 업데이트가 완료되면 로딩 해제
+  useEffect(() => {
+    if (isInitialized) {
+      // React 상태 업데이트가 완료될 시간을 주기 위해 약간의 지연
+      const timeoutId = setTimeout(() => {
         setLoading(false);
-      });
+      }, 100);
+      return () => clearTimeout(timeoutId);
     }
-  }, [session?.user?.id, fetchFixedTransactions]);
+  }, [isInitialized, fixedIncome, fixedExpense, wallets, monthlySavings]);
 
   // 금액 포맷팅
   const formatKRW = (amount: number) => {
@@ -275,7 +354,12 @@ export default function FinancialOverviewSlide({
                             {items.map((item) => (
                               <div key={item.trx_id} className={styles.transactionItem}>
                                 <div className={styles.transactionInfo}>
-                                  <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                                  <div className={styles.transactionMemoRow}>
+                                    <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                                    {item.is_shared && (
+                                      <span className={styles.sharedBadge}>공유</span>
+                                    )}
+                                  </div>
                                 </div>
                                 <span className={styles.transactionAmount} style={{ color: '#10b981' }}>
                                   +{formatKRW(item.amount)}원
@@ -340,7 +424,12 @@ export default function FinancialOverviewSlide({
                           {items.map((item) => (
                             <div key={item.trx_id} className={styles.transactionItem}>
                               <div className={styles.transactionInfo}>
-                                <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                                <div className={styles.transactionMemoRow}>
+                                  <span className={styles.transactionMemo}>{item.memo || '-'}</span>
+                                  {item.is_shared && (
+                                    <span className={styles.sharedBadge}>공유</span>
+                                  )}
+                                </div>
                               </div>
                               <span className={styles.transactionAmount} style={{ color: '#ef4444' }}>
                                 -{formatKRW(item.amount)}원

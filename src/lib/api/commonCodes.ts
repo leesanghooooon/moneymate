@@ -12,7 +12,7 @@ export type CommonCode = {
 import { get } from './common';
 
 export async function getCommonCodes(groupCode: string, useYn: 'Y' | 'N' = 'Y'): Promise<CommonCode[]> {
-  const response = await get<{ data: CommonCode[] }>('/common-codes', {
+    const response = await get<{ data: CommonCode[] }>('/common-codes', {
     params: {
       grp_cd: groupCode,
       use_yn: useYn
