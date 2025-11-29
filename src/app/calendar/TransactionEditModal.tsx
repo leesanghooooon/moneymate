@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Transaction } from './types';
-import { getCategories, getIncome, getWallets, CommonCode, Wallet } from '@/lib/api/commonCodes';
+import { getWallets, Wallet } from '@/lib/api/commonCodes';
+import { useCategories, useIncome } from '@/contexts/CommonCodesContext';
 import { put, del } from '@/lib/api/common';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
 import styles from '../../styles/css/TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
@@ -21,12 +23,19 @@ export default function TransactionEditModal({
   onSuccess,
   userId 
 }: TransactionEditModalProps) {
-  const [categories, setCategories] = useState<CommonCode[]>([]);
+  // 공통코드는 Context에서 가져오기 (중복 호출 방지)
+  const { categories: expenseCategories, loading: categoriesLoading } = useCategories();
+  const { income: incomeCategories, loading: incomeLoading } = useIncome();
+  
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // 현재 거래 유형에 따른 카테고리
+  const categories = transaction?.trx_type === 'EXPENSE' ? expenseCategories : incomeCategories;
+  const codesLoading = transaction?.trx_type === 'EXPENSE' ? categoriesLoading : incomeLoading;
 
   const [formData, setFormData] = useState({
     trx_date: '',
@@ -54,10 +63,32 @@ export default function TransactionEditModal({
     return `${date.getFullYear()}년 ${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일`;
   };
 
-  // 모달이 열릴 때 데이터 로드
+  // 모달이 열릴 때 지갑 정보만 로드 (공통코드는 Context에서 가져옴)
+  useFetchOnce({
+    dependencies: [isOpen, userId],
+    fetchFn: async () => {
+      if (!isOpen || !userId) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const walletList = await getWallets(userId);
+        setWallets(walletList);
+      } catch (error) {
+        console.error('지갑 정보 로드 오류:', error);
+        setError('지갑 정보를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    enabled: isOpen && !!userId,
+    manageLoading: false,
+  });
+
+  // 모달이 열릴 때 폼 데이터 초기화
   useEffect(() => {
-    if (isOpen && transaction && userId) {
-      loadInitialData();
+    if (isOpen && transaction) {
       setFormData({
         trx_date: transaction.trx_date.split(' ')[0],
         amount: formatAmountInput(transaction.amount.toString()),
@@ -66,25 +97,7 @@ export default function TransactionEditModal({
         wlt_id: transaction.wlt_id
       });
     }
-  }, [isOpen, transaction, userId]);
-
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      const [categoryData, walletList] = await Promise.all([
-        transaction?.trx_type === 'EXPENSE' ? getCategories() : getIncome(),
-        getWallets(userId)
-      ]);
-      
-      setCategories(categoryData);
-      setWallets(walletList);
-    } catch (error) {
-      console.error('데이터 로드 오류:', error);
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isOpen, transaction]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,7 +254,7 @@ export default function TransactionEditModal({
                 className={styles.select}
                 value={formData.category_cd}
                 onChange={(e) => setFormData(prev => ({ ...prev, category_cd: e.target.value }))}
-                disabled={loading}
+                disabled={loading || codesLoading}
                 required
               >
                 <option value="" disabled>선택하세요</option>
@@ -283,7 +296,7 @@ export default function TransactionEditModal({
                 <button
                   type="button"
                   onClick={handleDelete}
-                  disabled={deleting || loading}
+                  disabled={deleting || loading || codesLoading}
                   className={styles.buttonDanger}
                 >
                   {deleting ? '삭제 중...' : '삭제'}
@@ -299,7 +312,7 @@ export default function TransactionEditModal({
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || loading}
+                  disabled={saving || loading || codesLoading}
                   className={styles.buttonPrimary}
                 >
                   {saving ? '수정 중...' : '수정'}

@@ -9,6 +9,8 @@ import { Transaction, CalendarDay } from './types';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
+import { useFetchOnce } from '@/hooks/useFetchOnce';
+import { get } from '@/lib/api/common';
 
 interface EditModalState {
   isOpen: boolean;
@@ -68,49 +70,74 @@ export default function CalendarPage() {
   };
 
   // 공유 거래 아이콘 표시 함수
-  const getSharedIcon = (isShared: boolean | number) => {
-    // is_shared가 1 또는 true이면 👥 아이콘 표시
-    return (isShared === 1 || isShared === true) ? '👥 ' : '';
+  const getSharedIcon = (isShared: boolean) => {
+    // is_shared가 true이면 👥 아이콘 표시
+    return isShared ? '👥 ' : '';
   };
 
-  useEffect(() => {
-    // 세션이 로딩 중이거나 사용자 ID가 없으면 API 호출하지 않음
-    if (status === 'loading' || !session?.user?.id) {
-      setLoading(false);
-      return;
-    }
+  // 캘린더 데이터 조회 (중복 호출 방지)
+  useFetchOnce({
+    dependencies: [session?.user?.id, currentDate.year, currentDate.month],
+    fetchFn: async () => {
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
 
-    let mounted = true;
-    setLoading(true);
-
-    const loadData = async () => {
       try {
+        setLoading(true);
         const yyyy = currentDate.year.toString();
         const mm = currentDate.month.toString().padStart(2, '0');
         
-        const response = await fetch(
-          `/api/calendar?usr_id=${session.user.id}&yyyy=${yyyy}&mm=${mm}`
-        );
+        const response = await get('/calendar', {
+          params: {
+            usr_id: session.user.id,
+            yyyy,
+            mm
+          }
+        });
 
-        if (!response.ok) {
-          throw new Error('데이터 로딩 실패');
-        }
-
-        const result = await response.json();
+        // API 응답 구조 확인
+        // API는 { data: [...] } 형식으로 반환
+        // get 함수는 { data: { data: [...] }, status, headers } 형식으로 래핑
+        let calendarArray: CalendarDay[] = [];
         
-        if (!mounted) return;
-        setCalendarData(result.data);
-        setLoading(false);
+        if (response?.data) {
+          // response.data가 배열인 경우
+          if (Array.isArray(response.data)) {
+            calendarArray = response.data;
+          } 
+          // response.data가 객체이고 내부에 data 배열이 있는 경우
+          else if (response.data?.data && Array.isArray(response.data.data)) {
+            calendarArray = response.data.data;
+          }
+          // response.data가 객체인데 data가 없거나 배열이 아닌 경우
+          else {
+            console.error('예상치 못한 응답 형식:', {
+              responseData: response.data,
+              isArray: Array.isArray(response.data),
+              hasData: !!response.data?.data,
+              isDataArray: Array.isArray(response.data?.data)
+            });
+            calendarArray = [];
+          }
+        }
+        
+        // 항상 배열로 설정
+        setCalendarData(calendarArray);
+        setError(null);
       } catch (e: any) {
-        if (!mounted) return;
+        console.error('캘린더 데이터 로딩 오류:', e);
         setError(e?.message || '데이터 로딩 실패');
+        setCalendarData([]);
+      } finally {
         setLoading(false);
       }
-    };
-
-    loadData();
-    return () => { mounted = false; };
-  }, [currentDate, session?.user?.id, status]);
+    },
+    enabled: !!session?.user?.id && status === 'authenticated',
+    manageLoading: false,
+    debug: true,
+  });
 
   // 비로그인 상태에서는 데이터 로딩하지 않음
   if (status === 'unauthenticated') {
@@ -124,6 +151,9 @@ export default function CalendarPage() {
 
   // 달력 그리드 생성을 위한 계산
   const getCalendarDays = () => {
+    // calendarData가 배열이 아닌 경우 빈 배열로 처리
+    const safeCalendarData = Array.isArray(calendarData) ? calendarData : [];
+    
     const firstDay = new Date(currentDate.year, currentDate.month - 1, 1);
     const lastDay = new Date(currentDate.year, currentDate.month, 0);
     const startOffset = firstDay.getDay(); // 0 (일요일) ~ 6 (토요일)
@@ -131,7 +161,7 @@ export default function CalendarPage() {
     
     return Array.from({ length: 35 }, (_, i) => {
       const dayNumber = i - startOffset + 1;
-      const currentDayData = calendarData.find(
+      const currentDayData = safeCalendarData.find(
         day => day.cal_dt === `${currentDate.year}-${currentDate.month.toString().padStart(2, '0')}-${dayNumber.toString().padStart(2, '0')}`
       );
 
@@ -147,8 +177,7 @@ export default function CalendarPage() {
     <div className={layoutStyles.dashboard}>
       <main className={layoutStyles.dashboardBody}>
         <div className={styles.calendarPage}>
-          <div className="container">
-            <header className={styles.header}>
+          <header className={styles.header}>
               <div className={styles.headerTop}>
                 <div className={styles.headerLeft}>
                   <h1 className={styles.title}>캘린더</h1>
@@ -214,7 +243,7 @@ export default function CalendarPage() {
                                 {(() => {
                                   const handleTransactionClick = (trx: Transaction) => {
                                     // 공유가계부인 경우 수정 모달을 열지 않음
-                                    if (trx.is_shared === 1 || trx.is_shared === true) {
+                                    if (trx.is_shared) {
                                       return;
                                     }
                                     
@@ -225,16 +254,16 @@ export default function CalendarPage() {
                                   };
                                   
                                   return day.data.trx_list.slice(0, 2).map((trx) => (
-                                  <div 
-                                    key={trx.trx_id}
-                                    className={`${styles.transaction} ${
-                                      trx.trx_type === 'INCOME' ? styles.income : styles.expense
-                                    } ${trx.is_shared ? styles.shared : ''}`}
-                                    onClick={() => handleTransactionClick(trx)}
-                                    style={{ 
-                                      cursor: (trx.is_shared === 1 || trx.is_shared === true) ? 'default' : 'pointer' 
-                                    }}
-                                  >
+                                    <div 
+                                      key={trx.trx_id}
+                                      className={`${styles.transaction} ${
+                                        trx.trx_type === 'INCOME' ? styles.income : styles.expense
+                                      } ${trx.is_shared ? styles.shared : ''}`}
+                                      onClick={() => handleTransactionClick(trx)}
+                                      style={{ 
+                                        cursor: trx.is_shared ? 'default' : 'pointer' 
+                                      }}
+                                    >
                                     <span className={styles.amount}>
                                       {formatAmount(trx.amount, trx.trx_type)}
                                     </span>
@@ -267,7 +296,6 @@ export default function CalendarPage() {
                 </div>
               )}
             </section>
-          </div>
         </div>
       </main>
       {/* 거래 수정 모달 */}
