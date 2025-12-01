@@ -1,7 +1,7 @@
 .container {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 @media (min-width: 1024px) {
@@ -22,24 +22,24 @@
 
 .dataTableCard {
   background: white;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .filterSection {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
 }
 
 @media (min-width: 640px) {
@@ -51,27 +51,28 @@
 .searchContainer {
   position: relative;
   flex: 1;
-  max-width: 24rem;
+  max-width: 20rem;
 }
 
 .searchIcon {
   position: absolute;
-  left: 0.75rem;
+  left: 0.65rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.1rem;
+  height: 1.1rem;
   color: #9ca3af;
 }
 
 .searchInput {
   width: 100%;
-  padding-left: 2.5rem;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-left: 2.2rem;
+  padding-right: 0.85rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
 }
 
 .searchInput:focus {
@@ -83,19 +84,19 @@
 .entriesSelect {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .entriesLabel {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #4b5563;
 }
 
 .entriesDropdown {
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.75rem;
 }
 
 .entriesDropdown:focus {
@@ -119,9 +120,9 @@
 }
 
 .tableHeaderCell {
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 0.85rem;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: #4b5563;
   text-transform: uppercase;
@@ -147,8 +148,8 @@
 }
 
 .tableCell {
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.75rem;
   color: #111827;
 }
 
@@ -156,24 +157,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 1rem;
+  margin-top: 0.85rem;
 }
 
 .paginationInfo {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #4b5563;
 }
 
 .paginationControls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .paginationButton {
-  padding: 0.5rem;
+  padding: 0.4rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   background: white;
   cursor: pointer;
 }
@@ -188,11 +189,12 @@
 }
 
 .paginationPageButton {
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.65rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   background: white;
   cursor: pointer;
+  font-size: 0.75rem;
 }
 
 .paginationPageButton:hover {
@@ -208,19 +210,19 @@
 .rightColumn {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .card {
   background: white;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .faqItem {
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   overflow: hidden;
 }
 
@@ -229,7 +231,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
+  padding: 0.65rem;
   transition: background-color 0.15s;
   border: none;
   background: none;
@@ -243,43 +245,43 @@
 .faqQuestion {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .faqIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.1rem;
+  height: 1.1rem;
   color: #9ca3af;
 }
 
 .faqQuestionText {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #374151;
 }
 
 .faqAnswer {
-  padding: 0.75rem;
+  padding: 0.65rem;
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
 }
 
 .faqAnswerText {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #4b5563;
 }
 
 .userList {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .userItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+  padding: 0.4rem;
+  border-radius: 0.4rem;
   transition: background-color 0.15s;
 }
 
@@ -288,12 +290,12 @@
 }
 
 .userTime {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #374151;
 }
 
 .userName {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #111827;
 }

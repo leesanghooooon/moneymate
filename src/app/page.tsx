@@ -166,7 +166,7 @@ export default function Home() {
               disabled={currentPage === 1}
               className={styles.paginationButton}
             >
-              <ChevronLeftIcon style={{ width: '1rem', height: '1rem' }} />
+              <ChevronLeftIcon style={{ width: '0.9rem', height: '0.9rem' }} />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
@@ -184,7 +184,7 @@ export default function Home() {
               disabled={currentPage === totalPages}
               className={styles.paginationButton}
             >
-              <ChevronRightIcon style={{ width: '1rem', height: '1rem' }} />
+              <ChevronRightIcon style={{ width: '0.9rem', height: '0.9rem' }} />
             </button>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function Home() {
         {/* FAQ Panel */}
         <div className={styles.card}>
           <h2 className={styles.title}>FAQ</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {faqItems.map((item, index) => (
               <div key={index} className={styles.faqItem}>
                 <button
@@ -207,9 +207,9 @@ export default function Home() {
                     <span className={styles.faqQuestionText}>{item.question}</span>
                   </div>
                   {expandedFaq === index ? (
-                    <MinusIcon style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
+                    <MinusIcon style={{ width: '0.9rem', height: '0.9rem', color: '#9ca3af' }} />
                   ) : (
-                    <PlusIcon style={{ width: '1rem', height: '1rem', color: '#9ca3af' }} />
+                    <PlusIcon style={{ width: '0.9rem', height: '0.9rem', color: '#9ca3af' }} />
                   )}
                 </button>
                 {expandedFaq === index && (
