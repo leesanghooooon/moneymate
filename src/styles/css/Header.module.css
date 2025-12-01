@@ -1,464 +1,114 @@
 .header {
+  height: 4rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
-  height: var(--header-height, 80px);
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  transition: all 0.3s;
 }
 
-.headerInner {
+.headerCollapsed {
+  left: 5rem;
+}
+
+.headerExpanded {
+  left: 16rem;
+}
+
+.headerContent {
+  height: 100%;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 30px;
 }
 
-.headerLeft {
+.leftSection {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 1rem;
 }
 
-.logo h2 {
-  font-size: 24px;
-  font-weight: 800;
+.menuToggleButton {
+  padding: 0.5rem;
+  color: #4b5563;
+  transition: all 0.15s;
+  border-radius: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.menuToggleButton:hover {
   color: #111827;
-  margin: 0;
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.headerCenter {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  justify-content: center;
-}
-
-.navigation {
-  display: flex;
-  align-items: center;
-}
-
-.menuList {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.menuItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-.menuIcon {
-  width: 20px;
-  height: 20px;
-  stroke-width: 1.5;
-  transition: all 0.2s ease;
-}
-
-.menuItem:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.menuItem.active {
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  color: white;
-}
-
-.menuItem.active .menuIcon {
-  color: white;
-}
-
-.label {
-  font-weight: 500;
-}
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.authSection {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.loginButton {
-  background: none;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.loginButton:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
-}
-
-.signupButton {
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.signupButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-.welcomeMessage {
-  display: flex;
-  align-items: center;
-  margin-right: 16px;
-}
-
-.welcomeText {
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background-color: rgba(139, 92, 246, 0.1);
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.profileContainer {
-  position: relative;
-}
-
-.profileButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.profileButton:hover {
   background: #f3f4f6;
 }
 
-.profileImage {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
+.menuToggleIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.titleSection {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
-.defaultProfile {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.dropdownMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  width: 200px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.2s ease;
-  z-index: 1001;
-}
-
-.dropdownMenu.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.dropdownHeader {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.dropdownHeader strong {
-  display: block;
-  font-size: 14px;
+.pageTitle {
+  font-size: 1.125rem;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 4px;
 }
 
-.dropdownHeader span {
-  font-size: 12px;
+.pageDescription {
   color: #6b7280;
 }
 
-.dropdownDivider {
-  height: 1px;
-  background: #f3f4f6;
-  margin: 8px 0;
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.dropdownItem {
-  width: 100%;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 14px;
-  color: #374151;
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s;
 }
 
-.dropdownItem:hover {
+.userProfile:hover {
   background: #f9fafb;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .welcomeText {
-    font-size: 13px;
-    padding: 6px 12px;
-  }
-  .header {
-    --header-height: 72px; /* 태블릿 헤더 높이 */
-  }
+.userName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
 }
 
-@media (max-width: 768px) {
-  .header {
-    --header-height: 64px; /* 모바일 헤더 높이 */
-    padding: 0 12px;
-    position: fixed; /* 상단 고정 유지 */
-    width: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    z-index: 999; /* 하단 네비게이션보다 낮게 */
-  }
-  .headerCenter {
-    display: none; /* 모바일에서 데스크톱 네비게이션 숨김 */
-  }
-  .welcomeMessage {
-    display: none; /* 모바일에서 환영 메시지 숨김 */
-  }
-  .headerRight {
-    gap: 8px;
-  }
-  .profileButton {
-    width: 36px;
-    height: 36px;
-  }
-  .profileImage {
-    width: 32px;
-    height: 32px;
-  }
-  .defaultProfile {
-    font-size: 14px;
-  }
-
-  /* 드롭다운 메뉴 (모바일에서 상단 프로필용) */
-  .dropdownMenu {
-    position: absolute;
-    bottom: 100%; /* 프로필 버튼 위쪽으로 */
-    top: auto;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px); /* 초기 위치 조정 */
-    margin-bottom: 8px; /* 하단 네비게이션과의 간격 */
-    margin-top: 0;
-    width: 200px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 1002; /* 하단 네비게이션보다 위에 표시 */
-  }
-
-  .dropdownMenu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0); /* 최종 위치 */
-  }
-
-  /* 모바일 하단 네비게이션 */
-  .mobileBottomNav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    padding: 0;
-    height: 80px; /* 모바일 하단 네비게이션 높이 */
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mobileNavContainer {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    max-width: 500px; /* 최대 너비 제한 */
-  }
-
-  .mobileNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    padding: 8px 12px;
-    background: none;
-    border: none;
-    color: #6b7280;
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    min-width: 60px; /* 터치 영역 확보 */
-    min-height: 60px; /* 터치 영역 확보 */
-  }
-
-  .mobileNavItem:hover {
-    background: #f3f4f6;
-  }
-
-  .mobileNavItem.mobileActive {
-    background: #f0f9ff;
-    color: #4f46e5;
-  }
-
-  .mobileNavIcon {
-    width: 20px;
-    height: 20px;
-    stroke-width: 1.5;
-    transition: all 0.2s ease;
-    margin-bottom: 4px;
-    display: block;
-  }
-
-  .mobileNavLabel {
-    font-weight: 500;
-  }
+.dropdownIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #6b7280;
 }
 
-@media (max-width: 480px) {
-  .header {
-    --header-height: 56px; /* 작은 모바일 헤더 높이 */
-    padding: 0 8px;
-  }
-  .logo h2 {
-    font-size: 18px;
-  }
-  .profileButton {
-    width: 32px;
-    height: 32px;
-  }
-  .profileImage {
-    width: 28px;
-    height: 28px;
-  }
-  .defaultProfile {
-    font-size: 12px;
-  }
-  .mobileBottomNav {
-    height: 70px; /* 작은 모바일 하단 네비게이션 높이 */
-  }
-  .mobileNavItem {
-    min-width: 50px;
-    min-height: 50px;
-    padding: 6px 8px;
-  }
-  .mobileNavIcon {
-    width: 18px;
-    height: 18px;
-    stroke-width: 1.5;
-    margin-bottom: 2px;
-  }
-  .mobileNavLabel {
-    font-size: 9px;
-  }
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-left: 1px solid #e5e7eb;
+  padding-left: 1rem;
 }
 
-/* 데스크톱에서 모바일 네비게이션 숨김 */
-@media (min-width: 769px) {
-  .mobileBottomNav {
-    display: none;
-  }
+.breadcrumbItem {
+  color: #111827;
 }

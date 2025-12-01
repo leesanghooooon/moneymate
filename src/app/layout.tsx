@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MoneyMate",
-  description: "똑똑한 자산 관리의 시작",
+  title: "MoneyMate BackOffice",
+  description: "백오피스 관리 시스템",
 };
 
 export default function RootLayout({
