@@ -1,0 +1,101 @@
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.errorCode {
+  font-size: 8rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.errorTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.errorMessage {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+  max-width: 32rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primaryButton {
+  padding: 0.75rem 1.5rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+}
+
+.secondaryButton {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.secondaryButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.icon {
+  width: 12rem;
+  height: 12rem;
+  color: #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+  .errorCode {
+    font-size: 6rem;
+  }
+
+  .errorTitle {
+    font-size: 1.5rem;
+  }
+
+  .errorMessage {
+    font-size: 1rem;
+  }
+
+  .icon {
+    width: 8rem;
+    height: 8rem;
+  }
+}

@@ -1,0 +1,25 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.mainContent {
+  flex: 1;
+  transition: all 0.3s;
+}
+
+.mainContentCollapsed {
+  margin-left: 5rem;
+}
+
+.mainContentExpanded {
+  margin-left: 16rem;
+}
+
+.main {
+  padding-top: 4rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 1.5rem;
+}
