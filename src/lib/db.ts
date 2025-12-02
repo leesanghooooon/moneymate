@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 
+// 간단한 연결 풀 생성
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT || '3306', 10),
@@ -7,28 +8,15 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   waitForConnections: true,
-  connectionLimit: 20,
+  connectionLimit: 10,
   queueLimit: 0,
   timezone: '+09:00',
   dateStrings: true,
-  // 연결 관리 개선을 위한 설정 추가
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  // 유휴 연결 정리
-  idleTimeout: 60000, // 60초
-  // 연결 재사용
-  namedPlaceholders: true,
-  resetAfterUse: false
 });
 
+// 간단한 쿼리 함수
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   try {
-
-    console.log('================= Query =================');
-    console.log('SQL:', sql);
-    console.log('Parameters:', params);
-    console.log('==========================================');
-
     const [rows] = await pool.query(sql, params);
     return rows as T[];
   } catch (error) {
@@ -37,12 +25,5 @@ export async function query<T = any>(sql: string, params: any[] = []): Promise<T
   }
 }
 
-// 애플리케이션 종료 시 pool 정리
-process.on('SIGINT', () => {
-  pool.end().then(() => {
-    console.log('Pool connections terminated');
-    process.exit(0);
-  });
-});
-
 export default pool;
+

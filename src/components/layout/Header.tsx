@@ -14,8 +14,8 @@ const pageTitles: Record<string, string> = {
   '/': 'Home',
   '/main': 'Main',
   '/chart': 'Chart',
+  '/components': 'Components',
   '/board': 'Board',
-  '/calendar': 'Calendar',
   '/account': 'Account',
 };
 
@@ -23,8 +23,8 @@ const pageDescriptions: Record<string, string> = {
   '/': '메인페이지입니다.',
   '/main': '메인 페이지입니다.',
   '/chart': '차트 페이지입니다.',
+  '/components': '컴포넌트 샘플 모음입니다.',
   '/board': '게시판 페이지입니다.',
-  '/calendar': '캘린더 페이지입니다.',
   '/account': '계정 페이지입니다.',
 };
 

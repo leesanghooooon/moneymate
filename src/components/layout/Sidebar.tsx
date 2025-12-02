@@ -7,10 +7,10 @@ import {
   Squares2X2Icon,
   ChartBarIcon,
   ClipboardDocumentIcon,
-  CalendarIcon,
   UserIcon,
   Bars3Icon,
   XMarkIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/css/Sidebar.module.css';
 
@@ -35,15 +35,15 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    title: 'BOARD',
+    title: 'COMPONENTS',
     items: [
-      { name: 'Board', path: '/board', icon: ClipboardDocumentIcon },
+      { name: 'Components', path: '/components', icon: CubeIcon },
     ],
   },
   {
-    title: 'CALENDAR',
+    title: 'BOARD',
     items: [
-      { name: 'Calendar', path: '/calendar', icon: CalendarIcon },
+      { name: 'Board', path: '/board', icon: ClipboardDocumentIcon },
     ],
   },
   {
@@ -106,7 +106,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path;
+              const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
 
               return (
                 <button
