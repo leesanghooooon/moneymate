@@ -30,7 +30,7 @@ export const authOptions: AuthOptions = {
               password_hash,
               profile_image_url,
               status
-            FROM MMT_USR_MST
+            FROM moneymate.MMT_USR_MST
             WHERE id = ?
               AND status = 'ACTIVE'
           `;
@@ -52,7 +52,7 @@ export const authOptions: AuthOptions = {
 
           // 마지막 로그인 시간 업데이트
           const updateSql = `
-            UPDATE MMT_USR_MST
+            UPDATE moneymate.MMT_USR_MST
             SET last_login_at = CURRENT_TIMESTAMP
             WHERE id = ?
           `;

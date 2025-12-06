@@ -5,7 +5,8 @@
  */
 
 // API 기본 URL 설정 (변경 가능하도록 변수로 선언)
-let API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
+// Next.js App Router에서는 /api 경로가 자동으로 라우팅되므로 빈 문자열로 설정
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // 에러 타입 정의
 export class ApiError extends Error {
@@ -107,7 +108,12 @@ export async function get<T = any>(
   options?: RequestOptions
 ): Promise<T> {
   try {
-    let fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    let fullUrl = `${baseUrl}${url}`;
 
     // 쿼리 파라미터 추가
     if (options?.params) {
@@ -150,7 +156,12 @@ export async function post<T = any>(
   options?: RequestOptions
 ): Promise<T> {
   try {
-    const fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    const fullUrl = `${baseUrl}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'POST',
@@ -188,7 +199,12 @@ export async function put<T = any>(
   options?: RequestOptions
 ): Promise<T> {
   try {
-    const fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    const fullUrl = `${baseUrl}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'PUT',
@@ -226,7 +242,12 @@ export async function patch<T = any>(
   options?: RequestOptions
 ): Promise<T> {
   try {
-    const fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    const fullUrl = `${baseUrl}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'PATCH',
@@ -262,7 +283,12 @@ export async function del<T = any>(
   options?: RequestOptions
 ): Promise<T> {
   try {
-    const fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    const fullUrl = `${baseUrl}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'DELETE',
@@ -301,7 +327,12 @@ export async function upload<T = any>(
   options?: Omit<RequestOptions, 'headers'>
 ): Promise<T> {
   try {
-    const fullUrl = `${API_BASE_URL}${url}`;
+    // URL이 이미 /api로 시작하는지 확인하여 중복 방지
+    let baseUrl = API_BASE_URL;
+    if (url.startsWith('/api')) {
+      baseUrl = '';
+    }
+    const fullUrl = `${baseUrl}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'POST',

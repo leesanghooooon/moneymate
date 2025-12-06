@@ -11,6 +11,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   CubeIcon,
+  WalletIcon,
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/css/Sidebar.module.css';
 
@@ -32,6 +33,12 @@ const menuSections: MenuSection[] = [
       { name: 'Home', path: '/', icon: HomeIcon },
       { name: 'Main', path: '/main', icon: Squares2X2Icon },
       { name: 'Chart', path: '/chart', icon: ChartBarIcon },
+    ],
+  },
+  {
+    title: 'MANAGEMENT',
+    items: [
+      { name: '지갑', path: '/wallets', icon: WalletIcon },
     ],
   },
   {
