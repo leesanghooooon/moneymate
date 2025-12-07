@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import BackOfficeLayout from "@/components/layout/BackOfficeLayout";
+import { CommonCodeProvider } from "@/contexts/CommonCodeContext";
 
 export default function ClientLayout({
   children,
@@ -10,9 +11,11 @@ export default function ClientLayout({
 }) {
   return (
     <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
-      <BackOfficeLayout>
-        {children}
-      </BackOfficeLayout>
+      <CommonCodeProvider>
+        <BackOfficeLayout>
+          {children}
+        </BackOfficeLayout>
+      </CommonCodeProvider>
     </SessionProvider>
   );
 }

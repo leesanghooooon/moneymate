@@ -39,6 +39,8 @@ const menuSections: MenuSection[] = [
     title: 'MANAGEMENT',
     items: [
       { name: '지갑', path: '/wallets', icon: WalletIcon },
+      { name: '거래등록', path: '/transactions', icon: ClipboardDocumentIcon },
+      { name: '거래조회', path: '/transactions/list', icon: ClipboardDocumentIcon },
     ],
   },
   {
