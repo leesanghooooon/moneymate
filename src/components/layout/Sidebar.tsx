@@ -41,6 +41,7 @@ const menuSections: MenuSection[] = [
       { name: '지갑', path: '/wallets', icon: WalletIcon },
       { name: '거래등록', path: '/transactions', icon: ClipboardDocumentIcon },
       { name: '거래조회', path: '/transactions/list', icon: ClipboardDocumentIcon },
+      { name: '거래현황', path: '/transactions/summary', icon: ChartBarIcon },
     ],
   },
   {
@@ -115,7 +116,8 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
+              // 정확한 경로 일치만 활성화 (부분 일치 제거)
+              const isActive = pathname === item.path;
 
               return (
                 <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api/axios';
@@ -35,20 +35,22 @@ export default function TransactionsPage() {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  // 이미 로드된지 확인하기 위한 ref (중복 호출 방지)
+  const loadedRef = useRef<string>('');
 
   // 지갑 목록 조회
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.id) {
-      fetchWallets();
+  const fetchWallets = useCallback(async () => {
+    if (status !== 'authenticated' || !session?.user?.id) {
+      setLoading(false);
+      return;
     }
-  }, [status, session]);
 
-  const fetchWallets = async () => {
     try {
       setLoading(true);
       const response = await apiClient.get<Wallet[]>('/wallets', {
         params: {
-          usr_id: session?.user?.id,
+          usr_id: session.user.id,
           use_yn: 'Y',
         },
       });
@@ -67,7 +69,22 @@ export default function TransactionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, session?.user?.id]);
+
+  useEffect(() => {
+    // 현재 키 생성 (중복 호출 방지)
+    const currentKey = `${status}-${session?.user?.id}`;
+    
+    // 같은 키로 이미 로드했다면 스킵 (React Strict Mode 대응)
+    if (loadedRef.current === currentKey) {
+      return;
+    }
+    
+    if (status === 'authenticated' && session?.user?.id) {
+      loadedRef.current = currentKey;
+      fetchWallets();
+    }
+  }, [status, session?.user?.id, fetchWallets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

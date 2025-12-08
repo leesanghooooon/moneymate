@@ -22,4 +22,6 @@
   padding-left: 1.25rem;
   padding-right: 1.25rem;
   padding-bottom: 1.25rem;
+  font-size: 0.85rem; /* 메인 영역 폰트 크기 축소 (사이드바, 헤더보다 작게) */
+  line-height: 1.5;
 }

@@ -50,6 +50,14 @@ moneymate/
 │   │   ├── api/                      # API 라우트
 │   │   │   ├── auth/                 # 인증 API
 │   │   │   │   └── [...nextauth]/    # NextAuth 핸들러
+│   │   │   ├── common-codes/         # 공통코드 API
+│   │   │   │   └── route.ts          # 공통코드 조회
+│   │   │   ├── docs/                 # API 문서
+│   │   │   │   ├── route.ts          # Swagger UI
+│   │   │   │   └── swagger.json/     # Swagger JSON
+│   │   │   ├── transactions/         # 거래 API
+│   │   │   │   ├── [id]/             # 동적 라우트
+│   │   │   │   └── route.ts          # 목록 조회, 생성
 │   │   │   └── wallets/              # 지갑 API
 │   │   │       ├── [id]/             # 동적 라우트 (상세, 수정, 삭제)
 │   │   │       └── route.ts          # 목록 조회, 생성
@@ -67,7 +75,12 @@ moneymate/
 │   │   ├── api/
 │   │   │   ├── axios.ts              # Axios 인스턴스
 │   │   │   └── common.ts             # 공통 API 유틸리티 (fetch 기반)
-│   │   └── db.ts                     # 데이터베이스 연결
+│   │   ├── db.ts                     # 데이터베이스 연결
+│   │   └── utils/
+│   │       └── format.ts             # 포맷팅 유틸리티 (금액 콤마 처리 등)
+│   ├── contexts/                     # React Context (상태 관리)
+│   │   ├── CommonCodeContext.tsx     # 공통코드 Context
+│   │   └── README.md                 # Context 사용 가이드
 │   ├── styles/                       # 스타일 파일
 │   │   └── css/                      # CSS Modules
 │   │       ├── globals.css           # 전역 스타일
@@ -328,6 +341,52 @@ const deleteSql = "UPDATE table SET use_yn = 'N' WHERE id = ?";
 await query(deleteSql, [id]);
 ```
 
+### 공통코드 API
+
+프로젝트는 공통코드(`MMT_CMM_CD_MST`)를 조회하는 API를 제공합니다.
+
+#### 공통코드 조회 API
+
+**엔드포인트**: `GET /api/common-codes`
+
+**파라미터**:
+- `grp_cd` (선택): 코드 그룹 필터링 (예: `BANK`, `CATEGORY`, `GOAL_TYPE`)
+- `use_yn` (선택): 사용 여부 필터링 (기본값: `Y`)
+
+**응답 예시**:
+```json
+{
+  "data": [
+    {
+      "grp_cd": "BANK",
+      "cd": "004",
+      "cd_nm": "국민은행",
+      "cd_desc": "KB국민은행",
+      "sort_order": 1,
+      "use_yn": "Y",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+**사용 예시**:
+```typescript
+// 전체 공통코드 조회
+const response = await apiClient.get('/common-codes');
+
+// 특정 그룹 코드 조회
+const response = await apiClient.get('/common-codes', {
+  params: { grp_cd: 'BANK' }
+});
+
+// 사용 중인 코드만 조회
+const response = await apiClient.get('/common-codes', {
+  params: { use_yn: 'Y' }
+});
+```
+
 ## 🎨 프론트엔드 개발 가이드
 
 ### Axios를 사용한 API 호출
@@ -540,6 +599,78 @@ export default function LoginLayout({
 }
 ```
 
+### 공통코드 Context 사용 (Vue 스토어와 유사)
+
+프로젝트는 **React Context API**를 사용하여 공통코드를 중앙에서 관리합니다. Vue의 스토어와 유사하게 사용할 수 있습니다.
+
+#### 1. Context Provider 설정
+
+`CommonCodeProvider`가 이미 `src/app/client-layout.tsx`에서 설정되어 있어, 모든 컴포넌트에서 바로 사용할 수 있습니다.
+
+#### 2. 컴포넌트에서 사용
+
+```typescript
+'use client';
+
+import { useCommonCodes } from '@/contexts/CommonCodeContext';
+
+export default function MyComponent() {
+  const { 
+    codes,           // 전체 공통코드 배열
+    loading,         // 로딩 상태
+    error,           // 에러 메시지
+    getCodesByGroup, // 그룹 코드별 코드 목록 조회
+    getCodeName,     // 코드 이름 조회
+    refreshCodes,    // 전체 코드 새로고침
+  } = useCommonCodes();
+
+  // 그룹 코드별 코드 목록 조회
+  const bankCodes = getCodesByGroup('BANK');
+  const categoryCodes = getCodesByGroup('CATEGORY');
+
+  // 코드 이름 조회
+  const bankName = getCodeName('BANK', '004'); // '국민은행'
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+
+  return (
+    <div>
+      <select>
+        {bankCodes.map(code => (
+          <option key={code.cd} value={code.cd}>
+            {code.cd_nm}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+```
+
+#### 3. 주요 기능
+
+- **자동 로드**: 컴포넌트가 마운트될 때 자동으로 전체 공통코드를 조회합니다.
+- **그룹별 필터링**: `getCodesByGroup('BANK')` - 특정 그룹의 코드만 필터링
+- **코드 이름 조회**: `getCodeName('BANK', '004')` - 코드 그룹과 코드로 이름 조회
+- **수동 조회**: `fetchCodes('BANK')` - 특정 그룹 코드만 조회
+- **새로고침**: `refreshCodes()` - 전체 코드 다시 조회
+
+#### 4. Vue 스토어와의 비교
+
+| Vue 스토어 | React Context API |
+|-----------|------------------|
+| `this.$store.getters.getCodes` | `useCommonCodes().codes` |
+| `this.$store.dispatch('fetchCodes')` | `useCommonCodes().fetchCodes()` |
+| `this.$store.commit('SET_CODES')` | Context 내부에서 자동 관리 |
+
+#### 5. 파일 위치
+
+- **Context 파일**: `src/contexts/CommonCodeContext.tsx`
+- **API 파일**: `src/app/api/common-codes/route.ts`
+- **상세 가이드**: `src/contexts/README.md`
+
 ## 🔐 인증 및 보안
 
 ### NextAuth.js 사용
@@ -725,6 +856,7 @@ docker run -p 3000:3000 \
 ### 프로젝트 내 문서
 
 - `src/lib/api/README.md` - API 유틸리티 가이드 (fetch 기반)
+- `src/contexts/README.md` - 공통코드 Context 사용 가이드
 
 ## 🤝 개발 가이드
 

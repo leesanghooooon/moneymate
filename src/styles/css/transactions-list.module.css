@@ -30,6 +30,67 @@
   gap: 0.5rem;
 }
 
+.transactionTypeFilter {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 세그먼트 컨트롤 스타일 */
+.transactionTypeSegmentedControl {
+  display: inline-flex;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+  position: relative;
+  gap: 0;
+}
+
+.segmentButton {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.segmentLeft {
+  border-radius: 5px 0 0 5px;
+}
+
+.segmentRight {
+  border-radius: 0 5px 5px 0;
+  border-left: 1px solid #bfdbfe;
+}
+
+.segmentRight.segmentActive {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.segmentActive {
+  background: #3b82f6;
+  color: white;
+}
+
+.segmentInactive {
+  background: white;
+  color: #3b82f6;
+}
+
+.segmentButton:hover {
+  opacity: 0.9;
+}
+
+.segmentButton.segmentInactive:hover {
+  background: #eff6ff;
+}
+
 .filterButton {
   padding: 0.5rem 1rem;
   border: 1px solid #d1d5db;
@@ -56,6 +117,28 @@
 .filterButtonActive:hover {
   background: #047857;
   border-color: #047857;
+}
+
+.saveButton {
+  padding: 0.5rem 1.5rem;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #047857;
+}
+
+.saveButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .monthButton {
@@ -153,6 +236,31 @@
   background: #2563eb;
 }
 
+.addRowButtonContainer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.addRowButton {
+  padding: 0.5rem 1rem;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.addRowButton:hover {
+  background: #047857;
+}
+
 .tableWrapper {
   overflow-x: auto;
 }
@@ -217,6 +325,38 @@
   border-right: none;
 }
 
+/* 삭제 버튼 스타일 (최소화) */
+.deleteButton {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin: 0 auto;
+  opacity: 0.6;
+}
+
+.deleteButton:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  opacity: 1;
+}
+
+.deleteButton:active {
+  background: #fecaca;
+  color: #dc2626;
+}
+
 .emptyRow {
   padding: 1.5rem;
   text-align: center;
@@ -254,4 +394,91 @@
   background: transparent;
   font-size: 0.85rem;
   color: #111827;
+}
+
+.editableSelect {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 0.85rem;
+  color: #111827;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.editableSelect:focus {
+  outline: none;
+  border: 1px solid #3b82f6;
+  background: white;
+  border-radius: 3px;
+}
+
+.editableSelect:hover {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+/* 거래 유형 토글 버튼 */
+.typeToggleButton {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 3rem;
+}
+
+.typeExpense {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+}
+
+.typeExpense:hover {
+  background: #fecaca !important;
+  border-color: #f87171 !important;
+}
+
+.typeIncome {
+  background: #dbeafe !important;
+  color: #2563eb !important;
+  border-color: #93c5fd !important;
+}
+
+.typeIncome:hover {
+  background: #bfdbfe !important;
+  border-color: #60a5fa !important;
+}
+
+/* 거래 유형별 row 색상 */
+.expenseRow {
+  background-color: #fef2f2 !important;
+}
+
+.incomeRow {
+  background-color: #eff6ff !important;
+}
+
+.expenseRow:hover {
+  background-color: #fee2e2 !important;
+}
+
+.incomeRow:hover {
+  background-color: #dbeafe !important;
+}
+
+/* 금액 색상 */
+.amountExpense {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.amountIncome {
+  color: #2563eb !important;
+  font-weight: 600;
 }

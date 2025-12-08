@@ -205,6 +205,21 @@ export async function PUT(
       }
     }
 
+    // 필수 필드 검증 (trx_date, amount는 필수)
+    if (trx_date === undefined || trx_date === null || trx_date === '') {
+      return NextResponse.json(
+        { message: '거래 날짜는 필수입니다.' },
+        { status: 400 }
+      );
+    }
+
+    if (amount === undefined || amount === null || isNaN(amount) || amount < 0) {
+      return NextResponse.json(
+        { message: '거래 금액은 필수이며 0 이상이어야 합니다.' },
+        { status: 400 }
+      );
+    }
+
     // 거래 수정
     const updateSql = `
       UPDATE moneymate.MMT_TRX_TRN
@@ -225,7 +240,7 @@ export async function PUT(
       trx_type || existing[0].trx_type,
       trx_date,
       amount,
-      category_cd,
+      category_cd !== undefined ? category_cd : null,
       memo !== undefined ? memo : null,
       is_fixed || 'N',
       trx_id,

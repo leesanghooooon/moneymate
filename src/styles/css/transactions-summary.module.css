@@ -1,0 +1,229 @@
+.container {
+  padding: 1rem;
+  background: #f9fafb;
+  min-height: calc(100vh - 3.25rem);
+}
+
+.header {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dateSelector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.monthButton {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.monthButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.dateDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.year {
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.month {
+  font-size: 1.5rem;
+  color: #3b82f6;
+}
+
+.errorMessage {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* 월별 전체 통계 */
+.monthlySummary {
+  margin-bottom: 2rem;
+}
+
+.summaryTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summaryCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid;
+}
+
+.incomeCard {
+  border-left-color: #10b981;
+}
+
+.expenseCard {
+  border-left-color: #ef4444;
+}
+
+.balanceCard {
+  border-left-color: #3b82f6;
+}
+
+.balanceCard.positive {
+  border-left-color: #10b981;
+}
+
+.balanceCard.negative {
+  border-left-color: #ef4444;
+}
+
+.cardLabel {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.cardValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.incomeCard .cardValue {
+  color: #10b981;
+}
+
+.expenseCard .cardValue {
+  color: #ef4444;
+}
+
+.balanceCard.positive .cardValue {
+  color: #10b981;
+}
+
+.balanceCard.negative .cardValue {
+  color: #ef4444;
+}
+
+/* 지갑별 통계 */
+.walletSummaries {
+  margin-bottom: 2rem;
+}
+
+.walletCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.walletCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-top: 3px solid #3b82f6;
+}
+
+.walletHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.walletName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.walletType {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.walletStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.incomeValue {
+  color: #10b981;
+}
+
+.expenseValue {
+  color: #ef4444;
+}
+
+.positiveValue {
+  color: #10b981;
+}
+
+.negativeValue {
+  color: #ef4444;
+}
+
