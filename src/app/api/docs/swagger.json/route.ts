@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import swaggerJSDoc from 'swagger-jsdoc';
 
-const options = {
+// 기본 옵션 (서버 URL은 동적으로 설정)
+const getOptions = (baseUrl: string) => ({
   definition: {
     openapi: '3.0.0',
     info: {
@@ -11,9 +12,13 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
-        description: 'Development server',
+        url: `${baseUrl}/api`,
+        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
+      ...(baseUrl !== 'http://localhost:3000' ? [{
+        url: 'http://localhost:3000/api',
+        description: 'Local development server',
+      }] : []),
     ],
     components: {
       schemas: {
@@ -392,10 +397,17 @@ const options = {
     './src/app/api/**/*.ts', // API 라우트 파일 경로 (개발 환경)
     './app/api/**/*.ts', // 빌드 환경 경로
   ],
-};
+});
 
 export async function GET(request: NextRequest) {
   try {
+    // 요청 URL에서 base URL 동적으로 추출
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    
+    // 동적으로 서버 URL 설정
+    const options = getOptions(baseUrl);
+    
     const specs = swaggerJSDoc(options);
     return NextResponse.json(specs);
   } catch (error: any) {
