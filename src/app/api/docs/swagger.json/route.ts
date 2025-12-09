@@ -401,9 +401,25 @@ const getOptions = (baseUrl: string) => ({
 
 export async function GET(request: NextRequest) {
   try {
-    // 요청 URL에서 base URL 동적으로 추출
-    const url = new URL(request.url);
-    const baseUrl = `${url.protocol}//${url.host}`;
+    // 환경 변수 또는 요청 헤더에서 base URL 동적으로 추출
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // 환경 변수가 없으면 요청 헤더나 URL에서 추출
+    if (!baseUrl) {
+      // X-Forwarded-Host 또는 Host 헤더 확인 (프록시 환경 대응)
+      const host = request.headers.get('x-forwarded-host') || 
+                   request.headers.get('host') || 
+                   null;
+      const protocol = request.headers.get('x-forwarded-proto') || 
+                       (request.url.startsWith('https') ? 'https' : 'http');
+      
+      if (host) {
+        baseUrl = `${protocol}://${host}`;
+      } else {
+        const url = new URL(request.url);
+        baseUrl = `${url.protocol}//${url.host}`;
+      }
+    }
     
     // 동적으로 서버 URL 설정
     const options = getOptions(baseUrl);
