@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import swaggerJSDoc from 'swagger-jsdoc';
+import path from 'path';
 
 // 기본 옵션 (서버 URL은 동적으로 설정)
 const getOptions = (baseUrl: string) => ({
@@ -394,8 +395,9 @@ const getOptions = (baseUrl: string) => ({
     },
   },
   apis: [
-    './src/app/api/**/*.ts', // API 라우트 파일 경로 (개발 환경)
-    './app/api/**/*.ts', // 빌드 환경 경로
+    path.join(process.cwd(), 'src/app/api/**/*.ts'), // 개발 소스 경로
+    path.join(process.cwd(), 'app/api/**/*.ts'), // 빌드 경로 (App Router)
+    path.join(process.cwd(), '.next/server/app/api/**/*.js'), // 프로덕션 빌드 산출물
   ],
 });
 
