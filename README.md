@@ -833,15 +833,55 @@ npm start
 # Docker 이미지 빌드
 docker build -t moneymate-backoffice .
 
-# Docker 컨테이너 실행
-docker run -p 3000:3000 \
+# Docker 컨테이너 실행 (host 네트워크 모드 - 외부 DB 접근용)
+docker run --network=host \
+  -e NODE_ENV=production \
   -e DB_HOST=your_db_host \
+  -e DB_PORT=3306 \
   -e DB_USER=your_db_user \
   -e DB_PASSWORD=your_db_password \
   -e DB_DATABASE=moneymate \
+  -e NEXTAUTH_URL=your_app_url \
   -e NEXTAUTH_SECRET=your_secret \
   moneymate-backoffice
 ```
+
+또는 `docker-compose.example.yml` 파일을 참고하여 docker-compose를 사용할 수 있습니다:
+
+```bash
+# docker-compose.yml 파일 생성 (docker-compose.example.yml 참고)
+cp docker-compose.example.yml docker-compose.yml
+
+# 환경변수 설정 (.env 파일 또는 docker-compose.yml에 직접)
+# docker-compose 실행
+docker-compose up -d
+```
+
+#### Docker 네트워크 문제 해결
+
+Docker 컨테이너에서 외부 데이터베이스에 연결할 수 없는 경우:
+
+1. **Host 네트워크 모드 사용** (권장)
+   ```bash
+   docker run --network=host ...
+   ```
+   - 컨테이너가 호스트의 네트워크를 직접 사용하여 외부 DB 접근 가능
+
+2. **헬스체크 API로 진단**
+   ```bash
+   curl http://localhost:3000/api/health
+   ```
+   - DNS 해석 상태 확인
+   - 포트 연결 가능 여부 확인
+   - DB 연결 상태 확인
+
+3. **방화벽/보안 그룹 확인**
+   - DB 서버의 3306 포트가 외부 접근을 허용하는지 확인
+   - Docker 호스트 서버의 방화벽 설정 확인
+
+4. **DB 서버 설정 확인**
+   - MySQL의 `bind-address` 설정이 외부 접근을 허용하는지 확인
+   - 사용자 권한이 외부 IP에서 접근 가능한지 확인
 
 ## 📚 참고 자료
 

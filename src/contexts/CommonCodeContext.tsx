@@ -55,7 +55,12 @@ export function CommonCodeProvider({ children }: CommonCodeProviderProps) {
       setCodes(response.data || []);
     } catch (err: any) {
       console.error('공통코드 조회 오류:', err);
-      setError(err.response?.data?.message || '공통코드 조회 중 오류가 발생했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError(err.response?.data?.message || err.message || '공통코드 조회 중 오류가 발생했습니다.');
+      }
     } finally {
       setLoading(false);
     }

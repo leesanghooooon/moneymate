@@ -225,7 +225,12 @@ export default function TransactionsListPage() {
       setOriginalTransactions(formattedTransactions.map(t => ({ ...t })));
     } catch (err: any) {
       console.error('거래 목록 조회 오류:', err);
-      setError('거래 목록을 불러오는데 실패했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError('거래 목록을 불러오는데 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }
@@ -543,7 +548,10 @@ export default function TransactionsListPage() {
           await operation();
           successCount++;
         } catch (err: any) {
-          const errorMessage = err.response?.data?.message || `${type === 'create' ? '등록' : '수정'} 중 오류가 발생했습니다.`;
+          // 네트워크 에러 처리
+          const errorMessage = err.isNetworkError || !err.response
+            ? (err.message || '네트워크 오류가 발생했습니다.')
+            : (err.response?.data?.message || `${type === 'create' ? '등록' : '수정'} 중 오류가 발생했습니다.`);
           errors.push(errorMessage);
           console.error(`${type === 'create' ? '거래 등록' : '거래 수정'} 오류:`, err);
         }
@@ -577,7 +585,12 @@ export default function TransactionsListPage() {
       setError('');
     } catch (err: any) {
       console.error('일괄 저장 오류:', err);
-      setError(err.response?.data?.message || '저장에 실패했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError(err.response?.data?.message || err.message || '저장에 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }
@@ -603,7 +616,12 @@ export default function TransactionsListPage() {
       setError('');
     } catch (err: any) {
       console.error('거래 삭제 오류:', err);
-      setError(err.response?.data?.message || '거래 삭제에 실패했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError(err.response?.data?.message || err.message || '거래 삭제에 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }

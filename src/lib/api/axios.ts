@@ -8,8 +8,11 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 // Axios 인스턴스 생성
+// 환경 변수에서 API base URL을 가져오거나 기본값으로 '/api' 사용
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api', // Next.js App Router에서는 /api 경로가 자동으로 라우팅됨
+  baseURL: API_BASE_URL, // Next.js App Router에서는 /api 경로가 자동으로 라우팅됨
   timeout: 30000, // 30초 타임아웃
   headers: {
     'Content-Type': 'application/json',
@@ -57,6 +60,7 @@ apiClient.interceptors.response.use(
         message,
         url: error.config?.url,
         method: error.config?.method,
+        fullUrl: error.config?.baseURL + error.config?.url,
       });
 
       // 401 Unauthorized 처리 예시
@@ -65,11 +69,32 @@ apiClient.interceptors.response.use(
         // window.location.href = '/login';
       }
     } else if (error.request) {
-      // 요청이 전송되었지만 응답을 받지 못함
-      console.error('Network Error:', error.message);
+      // 요청이 전송되었지만 응답을 받지 못함 (네트워크 에러, 타임아웃 등)
+      const errorMessage = error.code === 'ECONNABORTED' 
+        ? '요청 시간이 초과되었습니다. 네트워크 연결을 확인해주세요.'
+        : error.message || '네트워크 오류가 발생했습니다. 서버에 연결할 수 없습니다.';
+      
+      console.error('Network Error:', {
+        message: errorMessage,
+        code: error.code,
+        url: error.config?.url,
+        method: error.config?.method,
+        fullUrl: error.config?.baseURL + error.config?.url,
+      });
+
+      // 네트워크 에러를 더 명확하게 전달하기 위해 에러 객체 수정
+      const networkError = new Error(errorMessage) as any;
+      networkError.isNetworkError = true;
+      networkError.code = error.code;
+      networkError.config = error.config;
+      return Promise.reject(networkError);
     } else {
       // 요청 설정 중 에러 발생
-      console.error('Request Setup Error:', error.message);
+      console.error('Request Setup Error:', {
+        message: error.message,
+        url: error.config?.url,
+        method: error.config?.method,
+      });
     }
 
     return Promise.reject(error);

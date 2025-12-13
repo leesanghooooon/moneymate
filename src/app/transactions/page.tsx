@@ -65,7 +65,12 @@ export default function TransactionsPage() {
       }
     } catch (err: any) {
       console.error('지갑 목록 조회 오류:', err);
-      setError('지갑 목록을 불러오는데 실패했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError('지갑 목록을 불러오는데 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }
@@ -123,7 +128,14 @@ export default function TransactionsPage() {
       alert('거래가 등록되었습니다.');
     } catch (err: any) {
       console.error('거래 등록 오류:', err);
-      setError(err.response?.data?.message || '거래 등록에 실패했습니다.');
+      
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        // 서버 응답 에러
+        setError(err.response?.data?.message || err.message || '거래 등록에 실패했습니다.');
+      }
     } finally {
       setSubmitting(false);
     }

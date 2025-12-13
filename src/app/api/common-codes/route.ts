@@ -44,6 +44,16 @@ import { query } from '@/lib/db';
  */
 export async function GET(request: NextRequest) {
   try {
+    // 환경변수 확인 (디버깅용)
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_DATABASE) {
+      console.error('[API] Missing DB environment variables:', {
+        hasHost: !!process.env.DB_HOST,
+        hasUser: !!process.env.DB_USER,
+        hasPassword: !!process.env.DB_PASSWORD,
+        hasDatabase: !!process.env.DB_DATABASE,
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const grp_cd = searchParams.get('grp_cd');
     const use_yn = searchParams.get('use_yn') || 'Y';

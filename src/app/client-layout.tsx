@@ -10,7 +10,10 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
+    <SessionProvider 
+      refetchInterval={0} 
+      refetchOnWindowFocus={false}
+    >
       <CommonCodeProvider>
         <BackOfficeLayout>
           {children}

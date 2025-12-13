@@ -123,7 +123,12 @@ export default function TransactionsSummaryPage() {
       setTransactions(formattedTransactions);
     } catch (err: any) {
       console.error('거래 목록 조회 오류:', err);
-      setError('거래 목록을 불러오는데 실패했습니다.');
+      // 네트워크 에러 처리
+      if (err.isNetworkError || !err.response) {
+        setError(err.message || '네트워크 오류가 발생했습니다. 서버 연결을 확인해주세요.');
+      } else {
+        setError('거래 목록을 불러오는데 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }
